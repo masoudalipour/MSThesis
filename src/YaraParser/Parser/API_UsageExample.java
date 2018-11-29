@@ -17,7 +17,7 @@ public class API_UsageExample {
     public static void main(String[] args) throws Exception {
         String modelFile = args[0];
         int numOfThreads = 8;
-
+//mmammad
         InfStruct infStruct = new InfStruct(modelFile);
 
         ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
