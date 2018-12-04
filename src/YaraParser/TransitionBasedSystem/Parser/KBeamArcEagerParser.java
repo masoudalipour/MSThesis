@@ -66,7 +66,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         pool = new ExecutorCompletionService<ArrayList<BeamElement>>(executor);
     }
 
-    private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence, boolean rootFirst, int beamWidth) throws Exception {
+    private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence, boolean rootFirst, int beamWidth) {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
@@ -201,7 +201,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         return bestConfiguration;
     }
 
-    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth, boolean rootFirst) throws Exception {
+    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth, boolean rootFirst) {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;

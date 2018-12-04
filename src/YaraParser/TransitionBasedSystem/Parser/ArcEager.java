@@ -11,7 +11,7 @@ import YaraParser.TransitionBasedSystem.Configuration.State;
 import java.util.ArrayList;
 
 public class ArcEager extends TransitionBasedParser {
-    public static void shift(State state) throws Exception {
+    public static void shift(State state) {
         state.push(state.bufferHead());
         state.incrementBufferHead();
 
@@ -20,7 +20,7 @@ public class ArcEager extends TransitionBasedParser {
             state.setEmptyFlag(true);
     }
 
-    public static void unShift(State state) throws Exception {
+    public static void unShift(State state) {
         if (!state.stackEmpty())
             state.setBufferH(state.pop());
         // to make sure
@@ -28,17 +28,17 @@ public class ArcEager extends TransitionBasedParser {
         state.setMaxSentenceSize(state.bufferHead());
     }
 
-    public static void reduce(State state) throws Exception {
+    public static void reduce(State state) {
         state.pop();
         if (state.stackEmpty() && state.bufferEmpty())
             state.setEmptyFlag(true);
     }
 
-    public static void leftArc(State state, int dependency) throws Exception {
+    public static void leftArc(State state, int dependency) {
         state.addArc(state.pop(), state.bufferHead(), dependency);
     }
 
-    public static void rightArc(State state, int dependency) throws Exception {
+    public static void rightArc(State state, int dependency) {
         state.addArc(state.bufferHead(), state.peek(), dependency);
         state.push(state.bufferHead());
         state.incrementBufferHead();

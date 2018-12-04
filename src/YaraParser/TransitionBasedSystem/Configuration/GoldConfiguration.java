@@ -101,9 +101,8 @@ public class GoldConfiguration {
      * @param dependency
      * @param state
      * @return oracle cost of the action
-     * @throws Exception
      */
-    public int actionCost(Actions action, int dependency, State state) throws Exception {
+    public int actionCost(Actions action, int dependency, State state) {
         if (!ArcEager.canDo(action, state))
             return Integer.MAX_VALUE;
         int cost = 0;
