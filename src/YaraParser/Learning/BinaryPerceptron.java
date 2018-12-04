@@ -21,7 +21,7 @@ import java.util.List;
  * Techniques for Natural Language Processing", PhD thesis, ISI USC, 2006.
  * http://www.umiacs.umd.edu/~hal/docs/daume06thesis.pdf
  */
-public class AveragedPerceptron {
+public class BinaryPerceptron {
     /**
      * For the weights for all features
      */
@@ -41,7 +41,7 @@ public class AveragedPerceptron {
     public List<HashMap<Object, CompactArray>> leftArcFeatureAveragedWeights;
     public List<HashMap<Object, CompactArray>> rightArcFeatureAveragedWeights;
 
-    public AveragedPerceptron(int featSize, int dependencySize) {
+    public BinaryPerceptron(int featSize, int dependencySize) {
         shiftFeatureWeights = new ArrayList<>(featSize);
         reduceFeatureWeights = new ArrayList<>(featSize);
         leftArcFeatureWeights = new ArrayList<>(featSize);
@@ -67,10 +67,10 @@ public class AveragedPerceptron {
         this.dependencySize = dependencySize;
     }
 
-    private AveragedPerceptron(List<HashMap<Object, Float>> shiftFeatureAveragedWeights,
-            List<HashMap<Object, Float>> reduceFeatureAveragedWeights,
-            List<HashMap<Object, CompactArray>> leftArcFeatureAveragedWeights,
-            List<HashMap<Object, CompactArray>> rightArcFeatureAveragedWeights, int dependencySize) {
+    private BinaryPerceptron(List<HashMap<Object, Float>> shiftFeatureAveragedWeights,
+                               List<HashMap<Object, Float>> reduceFeatureAveragedWeights,
+                               List<HashMap<Object, CompactArray>> leftArcFeatureAveragedWeights,
+                               List<HashMap<Object, CompactArray>> rightArcFeatureAveragedWeights, int dependencySize) {
         this.shiftFeatureAveragedWeights = shiftFeatureAveragedWeights;
         this.reduceFeatureAveragedWeights = reduceFeatureAveragedWeights;
         this.leftArcFeatureAveragedWeights = leftArcFeatureAveragedWeights;
@@ -78,7 +78,7 @@ public class AveragedPerceptron {
         this.dependencySize = dependencySize;
     }
 
-    public AveragedPerceptron(InfStruct infStruct) {
+    public BinaryPerceptron(InfStruct infStruct) {
         this(infStruct.shiftFeatureAveragedWeights, infStruct.reduceFeatureAveragedWeights,
                 infStruct.leftArcFeatureAveragedWeights, infStruct.rightArcFeatureAveragedWeights,
                 infStruct.dependencySize);
@@ -121,7 +121,7 @@ public class AveragedPerceptron {
     }
 
     private void changeFeatureWeight(HashMap<Object, CompactArray> map, HashMap<Object, CompactArray> aMap,
-            Object featureName, int labelIndex, float change) {
+                                     Object featureName, int labelIndex, float change) {
         CompactArray values = map.get(featureName);
         CompactArray aValues;
         if (values != null) {
