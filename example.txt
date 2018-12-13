@@ -1,0 +1,1 @@
+java -jar out/artifacts/MSThesis_jar/MSThesis.jar train -train-file sample_data/train.conll -dev sample_data/dev.conll -model out/model/model iter:10 -punc punc_files/google_universal.puncs

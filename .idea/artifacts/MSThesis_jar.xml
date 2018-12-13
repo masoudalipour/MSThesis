@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="MSThesis:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/MSThesis_jar</output-path>
+    <root id="archive" name="MSThesis.jar">
+      <element id="module-output" name="MSThesis" />
+    </root>
+  </artifact>
+</component>
