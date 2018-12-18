@@ -106,7 +106,7 @@ public class ArcEagerBeamTrainer {
             InfStruct infStruct = new InfStruct(classifier, maps, dependencyRelations, options);
             InfStruct bInfStruct = new InfStruct(bClassifier, maps, dependencyRelations, options);
             infStruct.saveModel(modelPath + "_iter" + i);
-            bInfStruct.saveModel(modelPath + "_Binary_iter" + i);
+            bInfStruct.saveModel(modelPath + "_Binary_iter" + i);                                       //ourModel
 
             System.out.println("done\n");
 
@@ -151,12 +151,13 @@ public class ArcEagerBeamTrainer {
                         + format.format(raRatio) + "%");
                 System.out.println("size of LA features in memory:" + effectiveLaSize + "/" + laSize + "->"
                         + format.format(laRatio) + "%");
-                KBeamArcEagerParser parser = new KBeamArcEagerParser(binaryPerceptron, dependencyRelations,
-                        featureLength, maps, options.numOfThreads);
+                
+                //KBeamArcEagerParser parser = new KBeamArcEagerParser(binaryPerceptron, dependencyRelations,featureLength, maps, options.numOfThreads);
+
                 BinaryModelEvaluator bEval = new BinaryModelEvaluator(modelPath + "_Binary_iter" + i, classifier,
                         bClassifier, options, dependencyRelations, featureLength);
                 bEval.evaluate();
-                parser.shutDownLiveThreads();
+                //parser.shutDownLiveThreads();
             }
         }
         boolean isTerminated = executor.isTerminated();

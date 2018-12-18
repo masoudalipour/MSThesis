@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 
 public class BinaryModelEvaluator {
     private Options options;
-    private AveragedPerceptron classifier;
+    private AveragedPerceptron classifier;                          //maybe no needed
     private BinaryPerceptron bClassifier;
     private String model;
     private ArrayList<Integer> dependencyRelations;
@@ -189,7 +189,7 @@ public class BinaryModelEvaluator {
                     repBeam.add(newConfig);
                     all++;
                     // Binary classifier update
-                    if (oracles.containsKey(newConfig) == isBestOracle(newConfig, label))
+                    if (oracles.containsKey(newConfig) == isOracle(newConfig, label))
                         match++;
                 }
                 beam = repBeam;
@@ -433,14 +433,14 @@ public class BinaryModelEvaluator {
         }
     }
 
-    private boolean isBestOracle(Configuration bestConfiguration, int label) {
+    private boolean isOracle(Configuration bestConfiguration, int label) {
         State currentState = bestConfiguration.state;
         float prevScore = bestConfiguration.score;
         int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
         float score;
         if (lastAction == 0) {
-            score = bClassifier.shiftScore(features, false);
+            score = bClassifier.shiftScore(features, false);                    //shiftFeatureAveragedWeights--->>>infStruct    readObject
         } else if (lastAction == 1) {
             score = bClassifier.reduceScore(features, false);
         }
