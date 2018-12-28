@@ -2,7 +2,9 @@ package YaraParser.Accessories;
 
 import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Learning.BinaryPerceptron;
+import YaraParser.Structures.CompactArray;
 import YaraParser.Structures.IndexMaps;
+import YaraParser.Structures.InfStruct;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.*;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
@@ -48,28 +50,33 @@ public class BinaryModelEvaluator {
         CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<ArrayList<BeamElement>>(
                 executor);
 
-        CoNLLReader goldReader = new CoNLLReader(options.devPath);
-        IndexMaps maps = CoNLLReader.createIndices(options.devPath, options.labeled, options.lowercase,
+        CoNLLReader goldReader = new CoNLLReader(options.inputFile);
+        IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase,
                 options.clusterFile);
         ArrayList<GoldConfiguration> trainData = goldReader.readData(Integer.MAX_VALUE, false, options.labeled,
                 options.rootFirst, options.lowercase, maps);
         for (int i = 1; i <= options.trainingIter; i++) {
             long start = System.currentTimeMillis();
-
+            System.out.println("### BinaryModelEvaluator:");
             int dataCount = 0;
-
+            int progress = Math.max(trainData.size() / 100, 100 / trainData.size());
+            int percentage = 0;
             all = 0;
             match = 0f;
+            System.out.println("train size " + trainData.size());
+            System.out.print("progress: " + percentage++ + "%\r");
             for (GoldConfiguration goldConfiguration : trainData) {
                 dataCount++;
-                if (dataCount % 1000 == 0)
-                    System.out.print(dataCount + "...");
+                if (dataCount % progress == 0)
+                    System.out.print("progress: " + percentage++ + "%\r");
+                System.out.println("Entering trainOnOneSample");
                 trainOnOneSample(goldConfiguration, i, dataCount, pool);
-
+                System.out.println("Come Out of trainOnOneSample");
                 classifier.incrementIteration();
                 bClassifier.incrementIteration();
             }
             System.out.print("\n");
+            System.out.println("train phase completed!");
             long end = System.currentTimeMillis();
             long timeSec = (end - start) / 1000;
             System.out.println("iteration " + i + " took " + timeSec + " seconds\n");
@@ -191,6 +198,7 @@ public class BinaryModelEvaluator {
                     // Binary classifier update
                     if (oracles.containsKey(newConfig) == isOracle(newConfig, label))
                         match++;
+                    System.out.println("all: " + all + "match: " + match);
                 }
                 beam = repBeam;
 
@@ -433,24 +441,80 @@ public class BinaryModelEvaluator {
         }
     }
 
-    private boolean isOracle(Configuration bestConfiguration, int label) {
-        State currentState = bestConfiguration.state;
-        float prevScore = bestConfiguration.score;
+    private boolean isOracle(Configuration bestConfiguration, int label) throws Exception {
+        InfStruct infStruct = new InfStruct(model);
+        /*dependencyLabels = (ArrayList<Integer>) reader.readObject();
+        maps = (IndexMaps) reader.readObject();
+        options = (Options) reader.readObject();
+        shiftFeatureAveragedWeights = (HashMap<Object, Float>[]) reader.readObject();
+        reduceFeatureAveragedWeights = (HashMap<Object, Float>[]) reader.readObject();
+        leftArcFeatureAveragedWeights = (HashMap<Object, CompactArray>[]) reader.readObject();
+        rightArcFeatureAveragedWeights = (HashMap<Object, CompactArray>[]) reader.readObject();
+        dependencySize = reader.readInt();*/
+//        State currentState = bestConfiguration.state;
+//        float prevScore = bestConfiguration.score;
         int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
-        float score;
+
+        float score = 0.0f;
+        //float score;
         if (lastAction == 0) {
-            score = bClassifier.shiftScore(features, false);                    //shiftFeatureAveragedWeights--->>>infStruct    readObject
+
+            for (int i = 0; i < features.length; i++) {
+                if (features[i] == null || (i >= 26 && i < 32))
+                    continue;
+                Float values = infStruct.shiftFeatureAveragedWeights[i].get(features[i]);
+                if (values != null) {
+                    score += values;
+                }
+            }
+            //score = bClassifier.shiftScore(features, false);                    //shiftFeatureAveragedWeights--->>>infStruct    readObject
         } else if (lastAction == 1) {
-            score = bClassifier.reduceScore(features, false);
+            for (int i = 0; i < features.length; i++) {
+                if (features[i] == null || (i >= 26 && i < 32))
+                    continue;
+                Float values = infStruct.reduceFeatureAveragedWeights[i].get(features[i]);
+                if (values != null) {
+                    score += values;
+                }
+            }
+            //score = bClassifier.reduceScore(features, false);
         }
 
         else if ((lastAction - 3 - label) == 0) {
-            float[] rightArcScores = bClassifier.rightArcScores(features, false);
-            score = rightArcScores[label];
+            float scores[] = new float[infStruct.dependencySize];
+            for (int i = 0; i < features.length; i++) {
+                if (features[i] == null)
+                    continue;
+                CompactArray values = infStruct.rightArcFeatureAveragedWeights[i].get(features[i]);
+                if (values != null) {
+                    int offset = values.getOffset();
+                    float[] weightVector = values.getArray();
+
+                    for (int d = offset; d < offset + weightVector.length; d++) {
+                        scores[d] += weightVector[d - offset];
+                    }
+                }
+            }
+            //float[] rightArcScores = bClassifier.rightArcScores(features, false);
+            score = scores[label];
         } else {
-            float[] leftArcScores = bClassifier.leftArcScores(features, false);
-            score = leftArcScores[label];
+            float scores[] = new float[infStruct.dependencySize];
+            for (int i = 0; i < features.length; i++) {
+                if (features[i] == null)
+                    continue;
+                CompactArray values = infStruct.leftArcFeatureAveragedWeights[i].get(features[i]);
+                if (values != null) {
+                    int offset = values.getOffset();
+                    float[] weightVector = values.getArray();
+
+                    for (int d = offset; d < offset + weightVector.length; d++) {
+                        scores[d] += weightVector[d - offset];
+                    }
+                }
+            }
+//            float[] leftArcScores = bClassifier.leftArcScores(features, false);
+            score = scores[label];
         }
         return (score >= 0);
     }
