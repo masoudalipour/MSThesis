@@ -85,19 +85,23 @@ public class ArcEagerBeamTrainer {
 
         for (int i = 1; i <= maxIteration; i++) {
             long start = System.currentTimeMillis();
-
+            System.out.println("### ArcEagerBeamTrainer:");
             int dataCount = 0;
-
+            int progress = Math.max(trainData.size() / 100, 100 / trainData.size());
+            int percentage = 0;
+            System.out.println("train size " + trainData.size());
+            System.out.print("progress: " + percentage++ + "%\r");
             for (GoldConfiguration goldConfiguration : trainData) {
                 dataCount++;
-                if (dataCount % 1000 == 0)
-                    System.out.print(dataCount + "...");
+                if (dataCount % progress == 0)
+                    System.out.print("progress: " + (trainData.size() * 100) / (trainData.size() * percentage++) + "%\r");
                 trainOnOneSample(goldConfiguration, partialTreeIter, i, dataCount, pool);
 
                 classifier.incrementIteration();
                 bClassifier.incrementIteration();
             }
             System.out.print("\n");
+            System.out.println("train phase completed!");
             long end = System.currentTimeMillis();
             long timeSec = (end - start) / 1000;
             System.out.println("iteration " + i + " took " + timeSec + " seconds\n");
@@ -106,11 +110,12 @@ public class ArcEagerBeamTrainer {
             InfStruct infStruct = new InfStruct(classifier, maps, dependencyRelations, options);
             InfStruct bInfStruct = new InfStruct(bClassifier, maps, dependencyRelations, options);
             infStruct.saveModel(modelPath + "_iter" + i);
-            bInfStruct.saveModel(modelPath + "_Binary_iter" + i);                                       //ourModel
+            bInfStruct.saveModel(modelPath + "_Binary_iter" + i); // ourModel
 
             System.out.println("done\n");
 
             if (!devPath.equals("")) {
+                System.out.println("AveragedPerceptron:");
                 AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
 
                 int raSize = averagedPerceptron.raSize();
@@ -136,6 +141,7 @@ public class ArcEagerBeamTrainer {
             }
 
             if (!devPath.equals("")) {
+                System.out.println("BinaryPerceptron:");
                 BinaryPerceptron binaryPerceptron = new BinaryPerceptron(bInfStruct);
 
                 int raSize = binaryPerceptron.raSize();
@@ -151,13 +157,14 @@ public class ArcEagerBeamTrainer {
                         + format.format(raRatio) + "%");
                 System.out.println("size of LA features in memory:" + effectiveLaSize + "/" + laSize + "->"
                         + format.format(laRatio) + "%");
-                
-                //KBeamArcEagerParser parser = new KBeamArcEagerParser(binaryPerceptron, dependencyRelations,featureLength, maps, options.numOfThreads);
+
+                // KBeamArcEagerParser parser = new KBeamArcEagerParser(binaryPerceptron,
+                // dependencyRelations,featureLength, maps, options.numOfThreads);
 
                 BinaryModelEvaluator bEval = new BinaryModelEvaluator(modelPath + "_Binary_iter" + i, classifier,
                         bClassifier, options, dependencyRelations, featureLength);
                 bEval.evaluate();
-                //parser.shutDownLiveThreads();
+                // parser.shutDownLiveThreads();
             }
         }
         boolean isTerminated = executor.isTerminated();
