@@ -503,9 +503,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
         DecimalFormat format = new DecimalFormat("##.00");
 
-        System.err.print(format.format(eacharc) + " ms for each arc!\n");
-        System.err.print(format.format(each) + " ms for each sentence!\n\n");
-
+        System.out.println(format.format(eacharc) + " ms for each arc!");
+        System.out.println(format.format(each) + " ms for each sentence!");
+        System.out.println();
         BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
         BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));
         BufferedWriter pwriter = new BufferedWriter(new FileWriter(outputFile));
@@ -685,9 +685,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
         DecimalFormat format = new DecimalFormat("##.00");
 
-        System.err.print(format.format(eacharc) + " ms for each arc!\n");
-        System.err.print(format.format(each) + " ms for each sentence!\n\n");
-
+        System.out.println(format.format(eacharc) + " ms for each arc!");
+        System.out.println(format.format(each) + " ms for each sentence!");
+        System.out.println();
         BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
         BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));
         BufferedWriter pwriter = new BufferedWriter(new FileWriter(outputFile));

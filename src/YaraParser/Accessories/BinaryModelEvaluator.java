@@ -23,22 +23,24 @@ public class BinaryModelEvaluator {
     private Options options;
     private AveragedPerceptron classifier;                          //maybe no needed
     private BinaryPerceptron bClassifier;
-    private String model;
     private ArrayList<Integer> dependencyRelations;
     private int featureLength;
     private int all;
     private float match;
     private Random randGen;
+    private InfStruct infStruct;
+
+    
 
     public BinaryModelEvaluator(String modelFile, AveragedPerceptron classifier, BinaryPerceptron bClassifier,
-            Options options, ArrayList<Integer> dependencyRelations, int featureLength) {
-        model = modelFile;
+            Options options, ArrayList<Integer> dependencyRelations, int featureLength) throws Exception {
         this.classifier = classifier;
         this.bClassifier = bClassifier;
         this.options = options;
         this.dependencyRelations = dependencyRelations;
         this.featureLength = featureLength;
         randGen = new Random();
+        infStruct = new InfStruct(modelFile);
     }
 
     public void evaluate() throws Exception {
@@ -81,7 +83,7 @@ public class BinaryModelEvaluator {
             long timeSec = (end - start) / 1000;
             System.out.println("iteration " + i + " took " + timeSec + " seconds\n");
             DecimalFormat format = new DecimalFormat("##.00");
-            System.err.println("Accuracy: " + format.format(100.0 * match / all));
+            System.out.println("Accuracy: " + format.format(100.0 * match / all));
             System.out.println("done\n");
         }
         boolean isTerminated = executor.isTerminated();
@@ -440,19 +442,12 @@ public class BinaryModelEvaluator {
             }
         }
     }
+    
 
+    
     private boolean isOracle(Configuration bestConfiguration, int label) throws Exception {
-        InfStruct infStruct = new InfStruct(model);
-        /*dependencyLabels = (ArrayList<Integer>) reader.readObject();
-        maps = (IndexMaps) reader.readObject();
-        options = (Options) reader.readObject();
-        shiftFeatureAveragedWeights = (HashMap<Object, Float>[]) reader.readObject();
-        reduceFeatureAveragedWeights = (HashMap<Object, Float>[]) reader.readObject();
-        leftArcFeatureAveragedWeights = (HashMap<Object, CompactArray>[]) reader.readObject();
-        rightArcFeatureAveragedWeights = (HashMap<Object, CompactArray>[]) reader.readObject();
-        dependencySize = reader.readInt();*/
-//        State currentState = bestConfiguration.state;
-//        float prevScore = bestConfiguration.score;
+        
+
         int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
 
@@ -468,7 +463,7 @@ public class BinaryModelEvaluator {
                     score += values;
                 }
             }
-            //score = bClassifier.shiftScore(features, false);                    //shiftFeatureAveragedWeights--->>>infStruct    readObject
+            
         } else if (lastAction == 1) {
             for (int i = 0; i < features.length; i++) {
                 if (features[i] == null || (i >= 26 && i < 32))
@@ -478,7 +473,7 @@ public class BinaryModelEvaluator {
                     score += values;
                 }
             }
-            //score = bClassifier.reduceScore(features, false);
+            
         }
 
         else if ((lastAction - 3 - label) == 0) {

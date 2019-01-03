@@ -87,14 +87,16 @@ public class ArcEagerBeamTrainer {
             long start = System.currentTimeMillis();
             System.out.println("### ArcEagerBeamTrainer:");
             int dataCount = 0;
-            int progress = Math.max(trainData.size() / 100, 100 / trainData.size());
-            int percentage = 0;
+            int progress = trainData.size() / 100;
+            if(progress == 0) {
+                progress = 1;
+            }
             System.out.println("train size " + trainData.size());
-            System.out.print("progress: " + percentage++ + "%\r");
+            System.out.print("progress: 0%\r");
             for (GoldConfiguration goldConfiguration : trainData) {
                 dataCount++;
                 if (dataCount % progress == 0)
-                    System.out.print("progress: " + (trainData.size() * 100) / (trainData.size() * percentage++) + "%\r");
+                    System.out.print("progress: " + (dataCount * 100) / trainData.size() + "%\r");
                 trainOnOneSample(goldConfiguration, partialTreeIter, i, dataCount, pool);
 
                 classifier.incrementIteration();
