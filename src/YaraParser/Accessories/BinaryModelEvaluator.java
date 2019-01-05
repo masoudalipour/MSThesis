@@ -52,8 +52,8 @@ public class BinaryModelEvaluator {
         CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<ArrayList<BeamElement>>(
                 executor);
 
-        CoNLLReader goldReader = new CoNLLReader(options.inputFile);
-        IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase,
+        CoNLLReader goldReader = new CoNLLReader(options.devPath);
+        IndexMaps maps = CoNLLReader.createIndices(options.devPath, options.labeled, options.lowercase,
                 options.clusterFile);
         ArrayList<GoldConfiguration> trainData = goldReader.readData(Integer.MAX_VALUE, false, options.labeled,
                 options.rootFirst, options.lowercase, maps);
