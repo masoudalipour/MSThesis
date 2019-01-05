@@ -71,9 +71,7 @@ public class BinaryModelEvaluator {
                 dataCount++;
                 if (dataCount % progress == 0)
                     System.out.print("progress: " + percentage++ + "%\r");
-                System.out.println("Entering trainOnOneSample");
                 trainOnOneSample(goldConfiguration, i, dataCount, pool);
-                System.out.println("Come Out of trainOnOneSample");
                 classifier.incrementIteration();
                 bClassifier.incrementIteration();
             }
@@ -200,7 +198,6 @@ public class BinaryModelEvaluator {
                     // Binary classifier update
                     if (oracles.containsKey(newConfig) == isOracle(newConfig, label))
                         match++;
-                    System.out.println("all: " + all + "match: " + match);
                 }
                 beam = repBeam;
 
