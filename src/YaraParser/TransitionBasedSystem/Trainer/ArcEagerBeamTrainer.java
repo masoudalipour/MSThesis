@@ -88,7 +88,7 @@ public class ArcEagerBeamTrainer {
             System.out.println("### ArcEagerBeamTrainer:");
             int dataCount = 0;
             int progress = trainData.size() / 100;
-            if(progress == 0) {
+            if (progress == 0) {
                 progress = 1;
             }
             System.out.println("train size " + trainData.size());
@@ -106,7 +106,8 @@ public class ArcEagerBeamTrainer {
             System.out.println("train phase completed!");
             long end = System.currentTimeMillis();
             long timeSec = (end - start) / 1000;
-            System.out.println("iteration " + i + " took " + timeSec + " seconds\n");
+            long timeMiliSec = (end - start) % 1000;
+            System.out.println("iteration " + i + " took " + timeSec + "." + timeMiliSec + " seconds\n");
 
             System.out.print("saving the model...");
             InfStruct infStruct = new InfStruct(classifier, maps, dependencyRelations, options);
