@@ -699,6 +699,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             if (line.trim().length() > 0) {
                 while (gLine.trim().length() == 0)
                     gLine = gReader.readLine();
+                if (gLine.startsWith("#"))
+                    continue;
                 String[] ps = line.split("\t");
                 String[] gs = gLine.split("\t");
                 gs[6] = ps[0];

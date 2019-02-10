@@ -188,6 +188,8 @@ public class CoNLLReader {
                     break;
                 }
             } else {
+                if (line.startsWith("#"))
+                    continue;
                 String[] splitLine = line.split("\t");
                 if (splitLine.length < 8)
                     throw new Exception("wrong file format");
@@ -262,6 +264,8 @@ public class CoNLLReader {
         HashMap<Integer, Pair<Integer, String>> goldDependencies = new HashMap<Integer, Pair<Integer, String>>();
         while ((line = fileReader.readLine()) != null) {
             line = line.trim();
+            if (line.startsWith("#"))
+                continue;
             if (line.length() == 0) {
                 if (tags.size() >= 1) {
                     CompactTree goldConfiguration = new CompactTree(goldDependencies, tags);
