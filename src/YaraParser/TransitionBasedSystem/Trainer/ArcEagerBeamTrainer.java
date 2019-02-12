@@ -24,6 +24,7 @@ import YaraParser.TransitionBasedSystem.Parser.ArcEager;
 import YaraParser.TransitionBasedSystem.Parser.BeamScorerThread;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.CompletionService;
@@ -109,6 +110,13 @@ public class ArcEagerBeamTrainer {
             System.out.println("iteration " + i + " took " + timeSec + " seconds\n");
 
             System.out.print("saving the model...");
+            if(modelPath.lastIndexOf("/") > 0) {
+                String modelFolder = modelPath.substring(0, modelPath.lastIndexOf("/"));
+                File modelDirectory = new File(modelFolder);
+                if(!modelDirectory.exists()){
+                    modelDirectory.mkdirs();
+                }
+            }
             InfStruct infStruct = new InfStruct(classifier, maps, dependencyRelations, options);
             InfStruct bInfStruct = new InfStruct(bClassifier, maps, dependencyRelations, options);
             infStruct.saveModel(modelPath + "_iter" + i);
