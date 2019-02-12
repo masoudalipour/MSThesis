@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.TransitionBasedSystem.Trainer;
 
 import YaraParser.Accessories.Evaluator;
@@ -75,28 +70,31 @@ public class ArcEagerBeamTrainer {
 
     public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath,
             boolean lowerCased, HashSet<String> punctuations, int partialTreeIter) throws Exception {
-        /**
-         * Actions: 0=shift, 1=reduce, 2=unshift, ra_dep=3+dep,
-         * la_dep=3+dependencyRelations.size()+dep
+        /*
+          Actions: 0=shift, 1=reduce, 2=unshift, ra_dep=3+dep,
+          la_dep=3+dependencyRelations.size()+dep
          */
         ExecutorService executor = Executors.newFixedThreadPool(options.numOfThreads);
         CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<ArrayList<BeamElement>>(
                 executor);
-
+        final int trainSize = trainData.size();
         for (int i = 1; i <= maxIteration; i++) {
             long start = System.currentTimeMillis();
             System.out.println("### ArcEagerBeamTrainer:");
             int dataCount = 0;
-            int progress = trainData.size() / 100;
-            if (progress == 0) {
-                progress = 1;
+            double progress = 1.0;
+            if(trainSize > 100){
+                progress = (double) trainSize / 100;
             }
-            System.out.println("train size " + trainData.size());
+            if (trainSize < 100) {
+                progress = (double) 100 / trainSize;
+            }
+            System.out.println("train size " + trainSize);
             System.out.print("progress: 0%\r");
             for (GoldConfiguration goldConfiguration : trainData) {
                 dataCount++;
-                if (dataCount % progress == 0)
-                    System.out.print("progress: " + (dataCount * 100) / trainData.size() + "%\r");
+                if ((int) (dataCount % progress) == 0)
+                    System.out.print("progress: " + (dataCount * 100) / trainSize + "%\r");
                 trainOnOneSample(goldConfiguration, partialTreeIter, i, dataCount, pool);
 
                 classifier.incrementIteration();
