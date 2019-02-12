@@ -25,8 +25,10 @@ public class BinaryModelEvaluator {
     private BinaryPerceptron bClassifier;
     private ArrayList<Integer> dependencyRelations;
     private int featureLength;
-    private int all;
-    private float match;
+    private int TP;
+    private int FP;
+    private int TN;
+    private int FN;
     private Random randGen;
     private InfStruct infStruct;
 
@@ -63,8 +65,10 @@ public class BinaryModelEvaluator {
         if (progress == 0) {
             progress = 1;
         }
-        all = 0;
-        match = 0f;
+        TP = 0;
+        FP = 0;
+        TN = 0;
+        FN = 0;
         System.out.println("train size " + trainData.size());
         System.out.print("progress: 0%\r");
         for (GoldConfiguration goldConfiguration : trainData) {
@@ -81,8 +85,20 @@ public class BinaryModelEvaluator {
         long timeSec = (end - start) / 1000;
         long timeMiliSec = (end - start) % 1000;
         System.out.println("The evaluation took " + timeSec + "." + timeMiliSec + " seconds\n");
-        DecimalFormat format = new DecimalFormat("##.00");
-        System.out.println("Accuracy: " + format.format(100.0 * match / all));
+        DecimalFormat accuracyFormat = new DecimalFormat("0.00%");
+        DecimalFormat decimalFormat = new DecimalFormat("0.000");
+        double accuracy = (double) (TP+TN)/(TP+TN+FP+FN);
+        double precision = (double) TP/(TP+FP);
+        double recall = (double) TP/(TP+FN);
+        double f1Score = 2 * (recall * precision) / (recall + precision);
+        System.out.println("TP: " + TP);
+        System.out.println("FP: " + FP);
+        System.out.println("TN: " + TN);
+        System.out.println("FN: " + FN);
+        System.out.println("Accuracy: " + accuracyFormat.format(accuracy));
+        System.out.println("Precision: " + decimalFormat.format(precision));
+        System.out.println("Recall: " + decimalFormat.format(recall));
+        System.out.println("F1 Score: " + decimalFormat.format(f1Score));
         System.out.println("done\n");
 
         boolean isTerminated = executor.isTerminated();
@@ -188,10 +204,20 @@ public class BinaryModelEvaluator {
                     }
                     newConfig.setScore(sc);
                     repBeam.add(newConfig);
-                    all++;
                     // Binary classifier update
-                    if (oracles.containsKey(newConfig) == isOracle(newConfig, label))
-                        match++;
+                    boolean oracle = oracles.containsKey(newConfig);
+                    boolean prediction = isOracle(newConfig, label);
+                    if (oracle) {
+                        if (prediction)
+                            TP++;
+                        else
+                            FN++;
+                    } else {
+                        if (prediction)
+                            FP++;
+                        else
+                            TN++;
+                    }
                 }
                 beam = repBeam;
 
