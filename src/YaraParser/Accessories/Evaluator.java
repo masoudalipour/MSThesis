@@ -20,12 +20,12 @@ public class Evaluator {
         ArrayList<CompactTree> goldConfiguration = goldReader.readStringData();
         ArrayList<CompactTree> predConfiguration = predictedReader.readStringData();
 
-        float unlabMatch = 0f;
-        float labMatch = 0f;
+        double unlabMatch = 0;
+        double labMatch = 0;
         int all = 0;
 
-        float fullULabMatch = 0f;
-        float fullLabMatch = 0f;
+        double fullULabMatch = 0;
+        double fullLabMatch = 0;
         int numTree = 0;
 
         for (int i = 0; i < predConfiguration.size(); i++) {
@@ -66,14 +66,15 @@ public class Evaluator {
                 fullULabMatch++;
         }
 
-        DecimalFormat format = new DecimalFormat("##.00");
-        double labeledAccuracy = 100.0 * labMatch / all;
-        double unlabaledAccuracy = 100.0 * unlabMatch / all;
-        System.out.println("Labeled accuracy: " + format.format(labeledAccuracy));
-        System.out.println("Unlabeled accuracy:  " + format.format(unlabaledAccuracy));
-        double labExact = 100.0 * fullLabMatch / numTree;
-        double ulabExact = 100.0 * fullULabMatch / numTree;
-        System.out.println("Labeled exact match:  " + format.format(labExact));
-        System.out.println("Unlabeled exact match:  " + format.format(ulabExact) + " \n");
+        DecimalFormat decimalFormat = new DecimalFormat("0.00%");
+        double labeledAccuracy = labMatch / all;
+        double unlabaledAccuracy = unlabMatch / all;
+        System.out.println("Labeled accuracy: " + decimalFormat.format(labeledAccuracy));
+        System.out.println("Unlabeled accuracy:  " + decimalFormat.format(unlabaledAccuracy));
+        double labExact = fullLabMatch / numTree;
+        double ulabExact = fullULabMatch / numTree;
+        System.out.println("Labeled exact match:  " + decimalFormat.format(labExact));
+        System.out.println("Unlabeled exact match:  " + decimalFormat.format(ulabExact));
+        System.out.println();
     }
 }

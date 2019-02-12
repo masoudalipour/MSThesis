@@ -21,16 +21,16 @@ import java.util.concurrent.Executors;
 
 public class BinaryModelEvaluator {
     private Options options;
-    private AveragedPerceptron classifier;                          //maybe no needed
+    private AveragedPerceptron classifier; // maybe no needed
     private BinaryPerceptron bClassifier;
     private ArrayList<Integer> dependencyRelations;
     private int featureLength;
-    private int all;
-    private float match;
+    private int TP;
+    private int FP;
+    private int TN;
+    private int FN;
     private Random randGen;
     private InfStruct infStruct;
-
-    
 
     public BinaryModelEvaluator(String modelFile, AveragedPerceptron classifier, BinaryPerceptron bClassifier,
             Options options, ArrayList<Integer> dependencyRelations, int featureLength) throws Exception {
@@ -57,33 +57,50 @@ public class BinaryModelEvaluator {
                 options.clusterFile);
         ArrayList<GoldConfiguration> trainData = goldReader.readData(Integer.MAX_VALUE, false, options.labeled,
                 options.rootFirst, options.lowercase, maps);
-        for (int i = 1; i <= options.trainingIter; i++) {
-            long start = System.currentTimeMillis();
-            System.out.println("### BinaryModelEvaluator:");
-            int dataCount = 0;
-            int progress = Math.max(trainData.size() / 100, 100 / trainData.size());
-            int percentage = 0;
-            all = 0;
-            match = 0f;
-            System.out.println("train size " + trainData.size());
-            System.out.print("progress: " + percentage++ + "%\r");
-            for (GoldConfiguration goldConfiguration : trainData) {
-                dataCount++;
-                if (dataCount % progress == 0)
-                    System.out.print("progress: " + percentage++ + "%\r");
-                trainOnOneSample(goldConfiguration, i, dataCount, pool);
-                classifier.incrementIteration();
-                bClassifier.incrementIteration();
-            }
-            System.out.print("\n");
-            System.out.println("train phase completed!");
-            long end = System.currentTimeMillis();
-            long timeSec = (end - start) / 1000;
-            System.out.println("iteration " + i + " took " + timeSec + " seconds\n");
-            DecimalFormat format = new DecimalFormat("##.00");
-            System.out.println("Accuracy: " + format.format(100.0 * match / all));
-            System.out.println("done\n");
+
+        long start = System.currentTimeMillis();
+        System.out.println("### BinaryModelEvaluator:");
+        int dataCount = 0;
+        int progress = trainData.size() / 100;
+        if (progress == 0) {
+            progress = 1;
         }
+        TP = 0;
+        FP = 0;
+        TN = 0;
+        FN = 0;
+        System.out.println("train size " + trainData.size());
+        System.out.print("progress: 0%\r");
+        for (GoldConfiguration goldConfiguration : trainData) {
+            dataCount++;
+            if (dataCount % progress == 0)
+                System.out.print("progress: " + (dataCount * 100) / trainData.size() + "%\r");
+            trainOnOneSample(goldConfiguration, dataCount, pool);
+            classifier.incrementIteration();
+            bClassifier.incrementIteration();
+        }
+        System.out.print("\n");
+        System.out.println("train phase completed!");
+        long end = System.currentTimeMillis();
+        long timeSec = (end - start) / 1000;
+        long timeMiliSec = (end - start) % 1000;
+        System.out.println("The evaluation took " + timeSec + "." + timeMiliSec + " seconds\n");
+        DecimalFormat accuracyFormat = new DecimalFormat("0.00%");
+        DecimalFormat decimalFormat = new DecimalFormat("0.000");
+        double accuracy = (double) (TP+TN)/(TP+TN+FP+FN);
+        double precision = (double) TP/(TP+FP);
+        double recall = (double) TP/(TP+FN);
+        double f1Score = 2 * (recall * precision) / (recall + precision);
+        System.out.println("TP: " + TP);
+        System.out.println("FP: " + FP);
+        System.out.println("TN: " + TN);
+        System.out.println("FN: " + FN);
+        System.out.println("Accuracy: " + accuracyFormat.format(accuracy));
+        System.out.println("Precision: " + decimalFormat.format(precision));
+        System.out.println("Recall: " + decimalFormat.format(recall));
+        System.out.println("F1 Score: " + decimalFormat.format(f1Score));
+        System.out.println("done\n");
+
         boolean isTerminated = executor.isTerminated();
         while (!isTerminated) {
             executor.shutdownNow();
@@ -91,13 +108,9 @@ public class BinaryModelEvaluator {
         }
     }
 
-    private void trainOnOneSample(GoldConfiguration goldConfiguration, int i, int dataCount,
+    private void trainOnOneSample(GoldConfiguration goldConfiguration, int dataCount,
             CompletionService<ArrayList<BeamElement>> pool) throws Exception {
         boolean isPartial = goldConfiguration.isPartial(options.rootFirst);
-
-        if (options.partialTrainingStartingIteration > i && isPartial)
-            return;
-
         Sentence sentence = goldConfiguration.getSentence();
 
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
@@ -122,9 +135,6 @@ public class BinaryModelEvaluator {
          * Association for Computational Linguistics: Human Language Technologies, pp.
          * 142-151. Association for Computational Linguistics, 2012.
          */
-        float maxViol = Float.NEGATIVE_INFINITY;
-        Pair<Configuration, Configuration> maxViolPair = null;
-
         Configuration bestScoringOracle = null;
 
         while (!ArcEager.isTerminal(beam) && beam.size() > 0) {
@@ -194,10 +204,20 @@ public class BinaryModelEvaluator {
                     }
                     newConfig.setScore(sc);
                     repBeam.add(newConfig);
-                    all++;
                     // Binary classifier update
-                    if (oracles.containsKey(newConfig) == isOracle(newConfig, label))
-                        match++;
+                    boolean oracle = oracles.containsKey(newConfig);
+                    boolean prediction = isOracle(newConfig, label);
+                    if (oracle) {
+                        if (prediction)
+                            TP++;
+                        else
+                            FN++;
+                    } else {
+                        if (prediction)
+                            FP++;
+                        else
+                            TN++;
+                    }
                 }
                 beam = repBeam;
 
@@ -309,7 +329,6 @@ public class BinaryModelEvaluator {
             if (!configuration.state.isTerminalState()) {
                 State currentState = configuration.state;
                 Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-                int accepted = 0;
                 // I only assumed that we need zero cost ones
                 if (goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
                     Configuration newConfig = configuration.clone();
@@ -323,7 +342,6 @@ public class BinaryModelEvaluator {
                         bestScore = newConfig.getScore(true);
                         bestScoringOracle = newConfig;
                     }
-                    accepted++;
                 }
                 if (ArcEager.canDo(Actions.RightArc, currentState)) {
                     float[] rightArcScores = classifier.rightArcScores(features, false);
@@ -340,7 +358,6 @@ public class BinaryModelEvaluator {
                                 bestScore = newConfig.getScore(true);
                                 bestScoringOracle = newConfig;
                             }
-                            accepted++;
                         }
                     }
                 }
@@ -360,7 +377,6 @@ public class BinaryModelEvaluator {
                                 bestScore = newConfig.getScore(true);
                                 bestScoringOracle = newConfig;
                             }
-                            accepted++;
                         }
                     }
                 }
@@ -376,7 +392,6 @@ public class BinaryModelEvaluator {
                         bestScore = newConfig.getScore(true);
                         bestScoringOracle = newConfig;
                     }
-                    accepted++;
                 }
             } else {
                 newOracles.put(configuration, oracles.get(configuration));
@@ -439,19 +454,13 @@ public class BinaryModelEvaluator {
             }
         }
     }
-    
 
-    
     private boolean isOracle(Configuration bestConfiguration, int label) throws Exception {
-        
-
         int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
 
         float score = 0.0f;
-        //float score;
         if (lastAction == 0) {
-
             for (int i = 0; i < features.length; i++) {
                 if (features[i] == null || (i >= 26 && i < 32))
                     continue;
@@ -460,7 +469,6 @@ public class BinaryModelEvaluator {
                     score += values;
                 }
             }
-            
         } else if (lastAction == 1) {
             for (int i = 0; i < features.length; i++) {
                 if (features[i] == null || (i >= 26 && i < 32))
@@ -470,10 +478,7 @@ public class BinaryModelEvaluator {
                     score += values;
                 }
             }
-            
-        }
-
-        else if ((lastAction - 3 - label) == 0) {
+        } else if ((lastAction - 3 - label) == 0) {
             float scores[] = new float[infStruct.dependencySize];
             for (int i = 0; i < features.length; i++) {
                 if (features[i] == null)
@@ -488,7 +493,6 @@ public class BinaryModelEvaluator {
                     }
                 }
             }
-            //float[] rightArcScores = bClassifier.rightArcScores(features, false);
             score = scores[label];
         } else {
             float scores[] = new float[infStruct.dependencySize];
@@ -505,7 +509,6 @@ public class BinaryModelEvaluator {
                     }
                 }
             }
-//            float[] leftArcScores = bClassifier.leftArcScores(features, false);
             score = scores[label];
         }
         return (score >= 0);
