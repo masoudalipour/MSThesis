@@ -21,6 +21,7 @@ import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 
 import java.io.File;
 import java.text.DecimalFormat;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
@@ -81,6 +82,7 @@ public class ArcEagerBeamTrainer {
         final int trainSize = trainData.size();
         for (int i = 1; i <= maxIteration; i++) {
             long start = System.currentTimeMillis();
+            long startInNanos = System.nanoTime();
             System.out.println("### ArcEagerBeamTrainer:");
             int dataCount = 0;
             double progress = 1.0;
@@ -104,6 +106,12 @@ public class ArcEagerBeamTrainer {
             System.out.print("\n");
             System.out.println("train phase completed!");
             long end = System.currentTimeMillis();
+            long endInNanos = System.nanoTime();
+            Duration duration = Duration.ofNanos(endInNanos - startInNanos);
+            System.out.println("iteration " + i + " took " + duration.toString()
+                    .substring(2)
+                    .replaceAll("(\\d[HMS])(?!$)", "$1 ")
+                    .toLowerCase());
             long timeSec = (end - start) / 1000;
             long timeMiliSec = (end - start) % 1000;
             System.out.println("iteration " + i + " took " + timeSec + "." + timeMiliSec + " seconds\n");
