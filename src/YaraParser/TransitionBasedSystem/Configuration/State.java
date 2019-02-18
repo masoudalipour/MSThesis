@@ -82,8 +82,8 @@ public class State implements Cloneable {
     public void addArc(int dependent, int head, int dependency) {
         arcs[dependent] = new Pair<>(head, dependency);
         long value = 1L << (dependency);
-        
-        assert dependency<64;
+
+        assert dependency < 64;
 
         if (dependent > head) { //right dep
             if (rightMostArcs[head] == 0 || dependent > rightMostArcs[head])

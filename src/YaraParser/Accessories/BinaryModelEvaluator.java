@@ -6,7 +6,10 @@ import YaraParser.Structures.CompactArray;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
 import YaraParser.Structures.Sentence;
-import YaraParser.TransitionBasedSystem.Configuration.*;
+import YaraParser.TransitionBasedSystem.Configuration.BeamElement;
+import YaraParser.TransitionBasedSystem.Configuration.Configuration;
+import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
+import YaraParser.TransitionBasedSystem.Configuration.State;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import YaraParser.TransitionBasedSystem.Parser.Actions;
 import YaraParser.TransitionBasedSystem.Parser.ArcEager;
@@ -33,7 +36,7 @@ public class BinaryModelEvaluator {
     private InfStruct infStruct;
 
     public BinaryModelEvaluator(String modelFile, AveragedPerceptron classifier, BinaryPerceptron bClassifier,
-            Options options, ArrayList<Integer> dependencyRelations, int featureLength) throws Exception {
+                                Options options, ArrayList<Integer> dependencyRelations, int featureLength) throws Exception {
         this.classifier = classifier;
         this.bClassifier = bClassifier;
         this.options = options;
@@ -87,9 +90,9 @@ public class BinaryModelEvaluator {
         System.out.println("The evaluation took " + timeSec + "." + timeMiliSec + " seconds\n");
         DecimalFormat accuracyFormat = new DecimalFormat("0.00%");
         DecimalFormat decimalFormat = new DecimalFormat("0.000");
-        double accuracy = (double) (TP+TN)/(TP+TN+FP+FN);
-        double precision = (double) TP/(TP+FP);
-        double recall = (double) TP/(TP+FN);
+        double accuracy = (double) (TP + TN) / (TP + TN + FP + FN);
+        double precision = (double) TP / (TP + FP);
+        double recall = (double) TP / (TP + FN);
         double f1Score = 2 * (recall * precision) / (recall + precision);
         System.out.println("TP: " + TP);
         System.out.println("FP: " + FP);
@@ -109,7 +112,7 @@ public class BinaryModelEvaluator {
     }
 
     private void trainOnOneSample(GoldConfiguration goldConfiguration, int dataCount,
-            CompletionService<ArrayList<BeamElement>> pool) throws Exception {
+                                  CompletionService<ArrayList<BeamElement>> pool) throws Exception {
         boolean isPartial = goldConfiguration.isPartial(options.rootFirst);
         Sentence sentence = goldConfiguration.getSentence();
 
@@ -228,7 +231,7 @@ public class BinaryModelEvaluator {
                         oracles.put(bestConfig, 0.0f);
                     } else {
                         if (options.useRandomOracleSelection) { // choosing randomly, otherwise using latent structured
-                                                                // Perceptron
+                            // Perceptron
                             List<Configuration> keys = new ArrayList<>(oracles.keySet());
                             Configuration randomKey = keys.get(randGen.nextInt(keys.size()));
                             oracles = new HashMap<>();
@@ -246,7 +249,7 @@ public class BinaryModelEvaluator {
     }
 
     private Configuration staticOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Float> oracles,
-            HashMap<Configuration, Float> newOracles) throws Exception {
+                                       HashMap<Configuration, Float> newOracles) throws Exception {
         Configuration bestScoringOracle = null;
         int top = -1;
         int first = -1;
@@ -321,7 +324,7 @@ public class BinaryModelEvaluator {
     }
 
     private Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration,
-            HashMap<Configuration, Float> oracles, HashMap<Configuration, Float> newOracles) throws Exception {
+                                                HashMap<Configuration, Float> oracles, HashMap<Configuration, Float> newOracles) throws Exception {
         float bestScore = Float.NEGATIVE_INFINITY;
         Configuration bestScoringOracle = null;
 

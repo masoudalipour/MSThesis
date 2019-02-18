@@ -46,18 +46,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     ExecutorService executor;
     CompletionService<ArrayList<BeamElement>> pool;
 
-    public static KBeamArcEagerParser createParser(String modelPath,int numOfThreads) throws Exception{
-        InfStruct infStruct = new InfStruct(modelPath);
-
-        ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
-        IndexMaps maps = infStruct.maps;
-        AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
-
-        int featureSize = averagedPerceptron.featureSize();
-        return new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, numOfThreads);
-        
-    }
-    
     public KBeamArcEagerParser(AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations,
                                int featureLength, IndexMaps maps, int numOfThreads) {
         this.classifier = classifier;
@@ -67,7 +55,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         executor = Executors.newFixedThreadPool(numOfThreads);
         pool = new ExecutorCompletionService<>(executor);
     }
-    
+
     public KBeamArcEagerParser(BinaryPerceptron classifier, ArrayList<Integer> dependencyRelations,
                                int featureLength, IndexMaps maps, int numOfThreads) {
         this.bClassifier = classifier;
@@ -76,6 +64,18 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         this.maps = maps;
         executor = Executors.newFixedThreadPool(numOfThreads);
         pool = new ExecutorCompletionService<>(executor);
+    }
+
+    public static KBeamArcEagerParser createParser(String modelPath, int numOfThreads) throws Exception {
+        InfStruct infStruct = new InfStruct(modelPath);
+
+        ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
+        IndexMaps maps = infStruct.maps;
+        AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
+
+        int featureSize = averagedPerceptron.featureSize();
+        return new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, numOfThreads);
+
     }
 
     private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence, boolean rootFirst, int beamWidth) throws Exception {

@@ -10,6 +10,7 @@ import YaraParser.Structures.InfStruct;
 import YaraParser.TransitionBasedSystem.Parser.Actions;
 
 import java.util.HashMap;
+
 /**
  * This class tries to implement averaged Perceptron algorithm
  * Collins, Michael. "Discriminative training methods for hidden Markov models: Theory and experiments with Perceptron algorithms."

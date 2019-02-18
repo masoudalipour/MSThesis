@@ -1,6 +1,6 @@
 /**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ * Copyright 2014, Yahoo! Inc.
+ * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
  **/
 
 package YaraParser.Parser;
@@ -38,7 +38,7 @@ public class API_UsageExample {
         } else {
             for (int i = 0; i < words.length; i++) {
                 int head = bestParse.state.getHead(i + 1);
-                if (head == words.length+1)
+                if (head == words.length + 1)
                     head = 0;
                 System.out.println(words[i] + "\t" + tags[i] + "\t" + head + "\t" + maps.revWords[bestParse.state.getDependency(i + 1)]);
             }
