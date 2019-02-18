@@ -65,7 +65,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         this.featureLength = featureLength;
         this.maps = maps;
         executor = Executors.newFixedThreadPool(numOfThreads);
-        pool = new ExecutorCompletionService<ArrayList<BeamElement>>(executor);
+        pool = new ExecutorCompletionService<>(executor);
     }
     
     public KBeamArcEagerParser(BinaryPerceptron classifier, ArrayList<Integer> dependencyRelations,
@@ -75,7 +75,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         this.featureLength = featureLength;
         this.maps = maps;
         executor = Executors.newFixedThreadPool(numOfThreads);
-        pool = new ExecutorCompletionService<ArrayList<BeamElement>>(executor);
+        pool = new ExecutorCompletionService<>(executor);
     }
 
     private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence, boolean rootFirst, int beamWidth) throws Exception {
@@ -146,11 +146,11 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     public Configuration parse(Sentence sentence, boolean rootFirst, int beamWidth, int numOfThreads) throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
 
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
         while (!ArcEager.isTerminal(beam)) {
-            TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+            TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             if (numOfThreads == 1) {
                 parseWithOneThread(beam, beamPreserver, sentence, rootFirst, beamWidth);
@@ -169,7 +169,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
 
-            ArrayList<Configuration> repBeam = new ArrayList<Configuration>(beamWidth);
+            ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
             for (BeamElement beamElement : beamPreserver.descendingSet()) {
                 if (repBeam.size() >= beamWidth)
                     break;
@@ -357,11 +357,11 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             isNonProjective = true;
         }
 
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
         while (!ArcEager.isTerminal(beam)) {
-            TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+            TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             if (numOfThreads == 1) {
                 parsePartialWithOneThread(beam, beamPreserver, isNonProjective, goldConfiguration, beamWidth, rootFirst);
@@ -379,7 +379,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 }
             }
 
-            ArrayList<Configuration> repBeam = new ArrayList<Configuration>(beamWidth);
+            ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
             for (BeamElement beamElement : beamPreserver.descendingSet()) {
                 if (repBeam.size() >= beamWidth)
                     break;
@@ -444,7 +444,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         boolean addScore = false;
         if (scorePath.trim().length() > 0)
             addScore = true;
-        ArrayList<Float> scoreList = new ArrayList<Float>();
+        ArrayList<Float> scoreList = new ArrayList<>();
 
         long start = System.currentTimeMillis();
         int allArcs = 0;
@@ -549,7 +549,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         long start = System.currentTimeMillis();
 
         ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
-        CompletionService<Pair<String, Integer>> pool = new ExecutorCompletionService<Pair<String, Integer>>(executor);
+        CompletionService<Pair<String, Integer>> pool = new ExecutorCompletionService<>(executor);
 
 
         String line;
@@ -610,10 +610,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         boolean addScore = false;
         if (scorePath.trim().length() > 0)
             addScore = true;
-        ArrayList<Float> scoreList = new ArrayList<Float>();
+        ArrayList<Float> scoreList = new ArrayList<>();
 
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-        CompletionService<Pair<Configuration, Integer>> pool = new ExecutorCompletionService<Pair<Configuration, Integer>>(executor);
+        CompletionService<Pair<Configuration, Integer>> pool = new ExecutorCompletionService<>(executor);
 
         long start = System.currentTimeMillis();
         int allArcs = 0;

@@ -37,7 +37,7 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
 
 
     public ArrayList<BeamElement> call() {
-        ArrayList<BeamElement> elements = new ArrayList<BeamElement>(dependencyRelations.size() * 2 + 3);
+        ArrayList<BeamElement> elements = new ArrayList<>(dependencyRelations.size() * 2 + 3);
 
         State currentState = configuration.state;
         float prevScore = configuration.score;

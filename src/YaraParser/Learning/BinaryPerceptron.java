@@ -53,16 +53,16 @@ public class BinaryPerceptron {
         leftArcFeatureAveragedWeights = new HashMap[featSize];
         rightArcFeatureAveragedWeights = new HashMap[featSize];
         for (int i = 0; i < featSize; i++) {
-            shiftFeatureWeights[i] = new HashMap<Object, Float>();
-            reduceFeatureWeights[i] = new HashMap<Object, Float>();
-            leftArcFeatureWeights[i] = new HashMap<Object, CompactArray>();
-            rightArcFeatureWeights[i] = new HashMap<Object, CompactArray>();
+            shiftFeatureWeights[i] = new HashMap<>();
+            reduceFeatureWeights[i] = new HashMap<>();
+            leftArcFeatureWeights[i] = new HashMap<>();
+            rightArcFeatureWeights[i] = new HashMap<>();
 
 
-            shiftFeatureAveragedWeights[i] = new HashMap<Object, Float>();
-            reduceFeatureAveragedWeights[i] = new HashMap<Object, Float>();
-            leftArcFeatureAveragedWeights[i] = new HashMap<Object, CompactArray>();
-            rightArcFeatureAveragedWeights[i] = new HashMap<Object, CompactArray>();
+            shiftFeatureAveragedWeights[i] = new HashMap<>();
+            reduceFeatureAveragedWeights[i] = new HashMap<>();
+            leftArcFeatureAveragedWeights[i] = new HashMap<>();
+            rightArcFeatureAveragedWeights[i] = new HashMap<>();
         }
 
         iteration = 1;

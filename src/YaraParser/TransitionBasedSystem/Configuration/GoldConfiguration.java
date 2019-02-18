@@ -20,14 +20,14 @@ public class GoldConfiguration {
     protected Sentence sentence;
 
     public GoldConfiguration(Sentence sentence, HashMap<Integer, Pair<Integer, Integer>> goldDependencies) {
-        this.goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
-        reversedDependencies = new HashMap<Integer, HashSet<Integer>>();
+        this.goldDependencies = new HashMap<>();
+        reversedDependencies = new HashMap<>();
         for (int head : goldDependencies.keySet())
             this.goldDependencies.put(head, goldDependencies.get(head).clone());
         for (int dependent : goldDependencies.keySet()) {
             int head = goldDependencies.get(dependent).first;
             if (!reversedDependencies.containsKey(head))
-                reversedDependencies.put(head, new HashSet<Integer>());
+                reversedDependencies.put(head, new HashSet<>());
             reversedDependencies.get(head).add(dependent);
         }
         this.sentence = sentence;

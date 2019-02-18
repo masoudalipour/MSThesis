@@ -49,7 +49,7 @@ public class BinaryModelEvaluator {
          * la_dep=3+dependencyRelations.size()+dep
          */
         ExecutorService executor = Executors.newFixedThreadPool(options.numOfThreads);
-        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<ArrayList<BeamElement>>(
+        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<>(
                 executor);
 
         CoNLLReader goldReader = new CoNLLReader(options.devPath);
@@ -115,7 +115,7 @@ public class BinaryModelEvaluator {
 
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(options.beamWidth);
         beam.add(initialConfiguration);
 
         /**
@@ -124,7 +124,7 @@ public class BinaryModelEvaluator {
          * Oracles." TACL 1 (2013): 403-414. for the mean while we just use zero-cost
          * oracles
          */
-        HashMap<Configuration, Float> oracles = new HashMap<Configuration, Float>();
+        HashMap<Configuration, Float> oracles = new HashMap<>();
 
         oracles.put(firstOracle, 0.0f);
 
@@ -141,7 +141,7 @@ public class BinaryModelEvaluator {
             /**
              * generating new oracles it keeps the oracles which are in the terminal state
              */
-            HashMap<Configuration, Float> newOracles = new HashMap<Configuration, Float>();
+            HashMap<Configuration, Float> newOracles = new HashMap<>();
 
             if (options.useDynamicOracle || isPartial) {
                 bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, newOracles);
@@ -154,7 +154,7 @@ public class BinaryModelEvaluator {
             }
             oracles = newOracles;
 
-            TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+            TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             if (options.numOfThreads == 1 || beam.size() == 1) {
                 beamSortOneThread(beam, beamPreserver, sentence);
@@ -175,7 +175,7 @@ public class BinaryModelEvaluator {
             if (beamPreserver.size() == 0 || beam.size() == 0) {
                 break;
             } else {
-                ArrayList<Configuration> repBeam = new ArrayList<Configuration>(options.beamWidth);
+                ArrayList<Configuration> repBeam = new ArrayList<>(options.beamWidth);
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
                     if (repBeam.size() >= options.beamWidth)
                         break;
@@ -224,18 +224,18 @@ public class BinaryModelEvaluator {
                 if (beam.size() > 0 && oracles.size() > 0) {
                     Configuration bestConfig = beam.get(0);
                     if (oracles.containsKey(bestConfig)) {
-                        oracles = new HashMap<Configuration, Float>();
+                        oracles = new HashMap<>();
                         oracles.put(bestConfig, 0.0f);
                     } else {
                         if (options.useRandomOracleSelection) { // choosing randomly, otherwise using latent structured
                                                                 // Perceptron
-                            List<Configuration> keys = new ArrayList<Configuration>(oracles.keySet());
+                            List<Configuration> keys = new ArrayList<>(oracles.keySet());
                             Configuration randomKey = keys.get(randGen.nextInt(keys.size()));
-                            oracles = new HashMap<Configuration, Float>();
+                            oracles = new HashMap<>();
                             oracles.put(randomKey, 0.0f);
                             bestScoringOracle = randomKey;
                         } else {
-                            oracles = new HashMap<Configuration, Float>();
+                            oracles = new HashMap<>();
                             oracles.put(bestScoringOracle, 0.0f);
                         }
                     }

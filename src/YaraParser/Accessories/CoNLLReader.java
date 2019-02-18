@@ -32,11 +32,11 @@ public class CoNLLReader {
     }
 
     public static IndexMaps createIndices(String filePath, boolean labeled, boolean lowercased, String clusterFile) throws Exception {
-        HashMap<String, Integer> wordMap = new HashMap<String, Integer>();
-        HashMap<Integer, Integer> labels = new HashMap<Integer, Integer>();
-        HashMap<String, Integer> clusterMap = new HashMap<String, Integer>();
-        HashMap<Integer, Integer> cluster4Map = new HashMap<Integer, Integer>();
-        HashMap<Integer, Integer> cluster6Map = new HashMap<Integer, Integer>();
+        HashMap<String, Integer> wordMap = new HashMap<>();
+        HashMap<Integer, Integer> labels = new HashMap<>();
+        HashMap<String, Integer> clusterMap = new HashMap<>();
+        HashMap<Integer, Integer> cluster4Map = new HashMap<>();
+        HashMap<Integer, Integer> cluster6Map = new HashMap<>();
 
         int labelCount = 1;
         String rootString = "ROOT";
@@ -138,16 +138,16 @@ public class CoNLLReader {
      */
     public ArrayList<GoldConfiguration> readData(int limit, boolean keepNonProjective, boolean labeled, boolean rootFirst, boolean lowerCased, IndexMaps maps) throws Exception {
         HashMap<String, Integer> wordMap = maps.getWordMap();
-        ArrayList<GoldConfiguration> configurationSet = new ArrayList<GoldConfiguration>();
+        ArrayList<GoldConfiguration> configurationSet = new ArrayList<>();
 
         String line;
-        ArrayList<Integer> tokens = new ArrayList<Integer>();
-        ArrayList<Integer> tags = new ArrayList<Integer>();
-        ArrayList<Integer> cluster4Ids = new ArrayList<Integer>();
-        ArrayList<Integer> cluster6Ids = new ArrayList<Integer>();
-        ArrayList<Integer> clusterIds = new ArrayList<Integer>();
+        ArrayList<Integer> tokens = new ArrayList<>();
+        ArrayList<Integer> tags = new ArrayList<>();
+        ArrayList<Integer> cluster4Ids = new ArrayList<>();
+        ArrayList<Integer> cluster6Ids = new ArrayList<>();
+        ArrayList<Integer> clusterIds = new ArrayList<>();
 
-        HashMap<Integer, Pair<Integer, Integer>> goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
+        HashMap<Integer, Pair<Integer, Integer>> goldDependencies = new HashMap<>();
         int sentenceCounter = 0;
         while ((line = fileReader.readLine()) != null) {
             line = line.trim();
@@ -169,19 +169,19 @@ public class CoNLLReader {
                     GoldConfiguration goldConfiguration = new GoldConfiguration(currentSentence, goldDependencies);
                     if (keepNonProjective || !goldConfiguration.isNonprojective())
                         configurationSet.add(goldConfiguration);
-                    goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
-                    tokens = new ArrayList<Integer>();
-                    tags = new ArrayList<Integer>();
-                    cluster4Ids = new ArrayList<Integer>();
-                    cluster6Ids = new ArrayList<Integer>();
-                    clusterIds = new ArrayList<Integer>();
+                    goldDependencies = new HashMap<>();
+                    tokens = new ArrayList<>();
+                    tags = new ArrayList<>();
+                    cluster4Ids = new ArrayList<>();
+                    cluster6Ids = new ArrayList<>();
+                    clusterIds = new ArrayList<>();
                 } else {
-                    goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
-                    tokens = new ArrayList<Integer>();
-                    tags = new ArrayList<Integer>();
-                    cluster4Ids = new ArrayList<Integer>();
-                    cluster6Ids = new ArrayList<Integer>();
-                    clusterIds = new ArrayList<Integer>();
+                    goldDependencies = new HashMap<>();
+                    tokens = new ArrayList<>();
+                    tags = new ArrayList<>();
+                    cluster4Ids = new ArrayList<>();
+                    cluster6Ids = new ArrayList<>();
+                    clusterIds = new ArrayList<>();
                 }
                 if (sentenceCounter >= limit) {
                     System.out.println("buffer full..." + configurationSet.size());
@@ -232,7 +232,7 @@ public class CoNLLReader {
                 cluster6Ids.add(ids[2]);
 
                 if (headIndex >= 0)
-                    goldDependencies.put(wordIndex, new Pair<Integer, Integer>(headIndex, ri));
+                    goldDependencies.put(wordIndex, new Pair<>(headIndex, ri));
             }
         }
         if (tokens.size() > 0) {
@@ -256,12 +256,12 @@ public class CoNLLReader {
     }
 
     public ArrayList<CompactTree> readStringData() throws Exception {
-        ArrayList<CompactTree> treeSet = new ArrayList<CompactTree>();
+        ArrayList<CompactTree> treeSet = new ArrayList<>();
 
         String line;
-        ArrayList<String> tags = new ArrayList<String>();
+        ArrayList<String> tags = new ArrayList<>();
 
-        HashMap<Integer, Pair<Integer, String>> goldDependencies = new HashMap<Integer, Pair<Integer, String>>();
+        HashMap<Integer, Pair<Integer, String>> goldDependencies = new HashMap<>();
         while ((line = fileReader.readLine()) != null) {
             line = line.trim();
             if (line.startsWith("#"))
@@ -271,8 +271,8 @@ public class CoNLLReader {
                     CompactTree goldConfiguration = new CompactTree(goldDependencies, tags);
                     treeSet.add(goldConfiguration);
                 }
-                tags = new ArrayList<String>();
-                goldDependencies = new HashMap<Integer, Pair<Integer, String>>();
+                tags = new ArrayList<>();
+                goldDependencies = new HashMap<>();
             } else {
                 String[] splitLine = line.split("\t");
                 if (splitLine.length < 8)
@@ -290,7 +290,7 @@ public class CoNLLReader {
                 }
 
                 if (pos.length() > 0)
-                    goldDependencies.put(wordIndex, new Pair<Integer, String>(headIndex, relation));
+                    goldDependencies.put(wordIndex, new Pair<>(headIndex, relation));
             }
         }
 

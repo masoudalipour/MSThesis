@@ -47,11 +47,11 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
         String[] words = new String[wrds.length];
         String[] posTags = new String[wrds.length];
 
-        ArrayList<Integer> tokens = new ArrayList<Integer>();
-        ArrayList<Integer> tags = new ArrayList<Integer>();
-        ArrayList<Integer> brownCluster4thPrefix=new ArrayList<Integer>();
-        ArrayList<Integer> brownCluster6thPrefix=new ArrayList<Integer>();
-        ArrayList<Integer> brownClusterFullString =new ArrayList<Integer>();
+        ArrayList<Integer> tokens = new ArrayList<>();
+        ArrayList<Integer> tags = new ArrayList<>();
+        ArrayList<Integer> brownCluster4thPrefix= new ArrayList<>();
+        ArrayList<Integer> brownCluster6thPrefix= new ArrayList<>();
+        ArrayList<Integer> brownClusterFullString = new ArrayList<>();
 
         int i = 0;
         for (String w : wrds) {
@@ -118,8 +118,8 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
             if (words.length > 0)
                 finalOutput.append("\n");
 
-            return new Pair<String, Integer>(finalOutput.toString(), lineNum);
+            return new Pair<>(finalOutput.toString(), lineNum);
         }
-        return new Pair<String, Integer>("", lineNum);
+        return new Pair<>("", lineNum);
     }
 }

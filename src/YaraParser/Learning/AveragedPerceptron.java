@@ -10,19 +10,18 @@ import YaraParser.Structures.InfStruct;
 import YaraParser.TransitionBasedSystem.Parser.Actions;
 
 import java.util.HashMap;
-
+/**
+ * This class tries to implement averaged Perceptron algorithm
+ * Collins, Michael. "Discriminative training methods for hidden Markov models: Theory and experiments with Perceptron algorithms."
+ * In Proceedings of the ACL-02 conference on Empirical methods in natural language processing-Volume 10, pp. 1-8.
+ * Association for Computational Linguistics, 2002.
+ * <p/>
+ * The averaging update is also optimized by using the trick introduced in Hal Daume's dissertation.
+ * For more information see the second chapter of his thesis:
+ * Harold Charles Daume' III. "Practical Structured YaraParser.Learning Techniques for Natural Language Processing", PhD thesis, ISI USC, 2006.
+ * http://www.umiacs.umd.edu/~hal/docs/daume06thesis.pdf
+ */
 public class AveragedPerceptron {
-    /**
-     * This class tries to implement averaged Perceptron algorithm
-     * Collins, Michael. "Discriminative training methods for hidden Markov models: Theory and experiments with Perceptron algorithms."
-     * In Proceedings of the ACL-02 conference on Empirical methods in natural language processing-Volume 10, pp. 1-8.
-     * Association for Computational Linguistics, 2002.
-     * <p/>
-     * The averaging update is also optimized by using the trick introduced in Hal Daume's dissertation.
-     * For more information see the second chapter of his thesis:
-     * Harold Charles Daume' III. "Practical Structured YaraParser.Learning Techniques for Natural Language Processing", PhD thesis, ISI USC, 2006.
-     * http://www.umiacs.umd.edu/~hal/docs/daume06thesis.pdf
-     */
     /**
      * For the weights for all features
      */
@@ -53,16 +52,16 @@ public class AveragedPerceptron {
         leftArcFeatureAveragedWeights = new HashMap[featSize];
         rightArcFeatureAveragedWeights = new HashMap[featSize];
         for (int i = 0; i < featSize; i++) {
-            shiftFeatureWeights[i] = new HashMap<Object, Float>();
-            reduceFeatureWeights[i] = new HashMap<Object, Float>();
-            leftArcFeatureWeights[i] = new HashMap<Object, CompactArray>();
-            rightArcFeatureWeights[i] = new HashMap<Object, CompactArray>();
+            shiftFeatureWeights[i] = new HashMap<>();
+            reduceFeatureWeights[i] = new HashMap<>();
+            leftArcFeatureWeights[i] = new HashMap<>();
+            rightArcFeatureWeights[i] = new HashMap<>();
 
 
-            shiftFeatureAveragedWeights[i] = new HashMap<Object, Float>();
-            reduceFeatureAveragedWeights[i] = new HashMap<Object, Float>();
-            leftArcFeatureAveragedWeights[i] = new HashMap<Object, CompactArray>();
-            rightArcFeatureAveragedWeights[i] = new HashMap<Object, CompactArray>();
+            shiftFeatureAveragedWeights[i] = new HashMap<>();
+            reduceFeatureAveragedWeights[i] = new HashMap<>();
+            leftArcFeatureAveragedWeights[i] = new HashMap<>();
+            rightArcFeatureAveragedWeights[i] = new HashMap<>();
         }
 
         iteration = 1;

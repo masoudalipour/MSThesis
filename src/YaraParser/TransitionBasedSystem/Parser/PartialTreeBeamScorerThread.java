@@ -38,7 +38,7 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
 
 
     public ArrayList<BeamElement> call() throws Exception {
-        ArrayList<BeamElement> elements = new ArrayList<BeamElement>(dependencyRelations.size() * 2 + 3);
+        ArrayList<BeamElement> elements = new ArrayList<>(dependencyRelations.size() * 2 + 3);
 
         boolean isNonProjective = false;
         if (goldConfiguration.isNonprojective()) {

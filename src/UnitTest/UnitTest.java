@@ -56,11 +56,11 @@ public class UnitTest {
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
         System.out.println("CoNLL data reading done!");
 
-        ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+        ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab : maps.getLabels().keySet())
             dependencyLabels.add(lab);
 
-        HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = new HashMap<Integer, HashMap<Integer, HashSet<Integer>>>();
+        HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = new HashMap<>();
 
         for (GoldConfiguration configuration : dataSet) {
             Sentence sentence = configuration.getSentence();
@@ -72,9 +72,9 @@ public class UnitTest {
                 int head = sentence.posAt(headDepPair.first);
 
                 if (!headDepSet.containsKey(head))
-                    headDepSet.put(head, new HashMap<Integer, HashSet<Integer>>());
+                    headDepSet.put(head, new HashMap<>());
                 if (!headDepSet.get(head).containsKey(dependent))
-                    headDepSet.get(head).put(dependent, new HashSet<Integer>());
+                    headDepSet.get(head).put(dependent, new HashSet<>());
                 headDepSet.get(head).get(dependent).add(relation);
             }
         }
@@ -85,7 +85,7 @@ public class UnitTest {
 
         System.out.println("size of training data (#sens): " + dataSet.size());
 
-        HashMap<String, Integer> labels = new HashMap<String, Integer>();
+        HashMap<String, Integer> labels = new HashMap<>();
         int labIndex = 0;
         labels.put("sh", labIndex++);
         labels.put("rd", labIndex++);

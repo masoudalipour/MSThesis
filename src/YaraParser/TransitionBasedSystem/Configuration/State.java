@@ -36,7 +36,7 @@ public class State implements Cloneable {
 
     public State(int size) {
         emptyFlag = false;
-        stack = new ArrayDeque<Integer>();
+        stack = new ArrayDeque<>();
         arcs = new Pair[size + 1];
 
         leftMostArcs = new int[size + 1];
@@ -80,7 +80,7 @@ public class State implements Cloneable {
     }
 
     public void addArc(int dependent, int head, int dependency) {
-        arcs[dependent] = new Pair<Integer, Integer>(head, dependency);
+        arcs[dependent] = new Pair<>(head, dependency);
         long value = 1L << (dependency);
         
         assert dependency<64;
@@ -217,7 +217,7 @@ public class State implements Cloneable {
     @Override
     public State clone() {
         State state = new State(arcs.length - 1);
-        state.stack = new ArrayDeque<Integer>(stack);
+        state.stack = new ArrayDeque<>(stack);
 
         for (int dependent = 0; dependent < arcs.length; dependent++) {
             if (arcs[dependent] != null) {

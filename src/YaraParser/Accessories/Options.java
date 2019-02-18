@@ -73,7 +73,7 @@ public class Options implements Serializable {
 
         partialTrainingStartingIteration = 3;
 
-        punctuations = new HashSet<String>();
+        punctuations = new HashSet<>();
         punctuations.add("#");
         punctuations.add("''");
         punctuations.add("(");
@@ -226,10 +226,10 @@ public class Options implements Serializable {
     }
 
     public static ArrayList<Options> getAllPossibleOptions(Options option) {
-        ArrayList<Options> options = new ArrayList<Options>();
+        ArrayList<Options> options = new ArrayList<>();
         options.add(option);
 
-        ArrayList<Options> tmp = new ArrayList<Options>();
+        ArrayList<Options> tmp = new ArrayList<>();
 
         for (Options opt : options) {
             Options o1 = opt.clone();
@@ -242,7 +242,7 @@ public class Options implements Serializable {
         }
 
         options = tmp;
-        tmp = new ArrayList<Options>();
+        tmp = new ArrayList<>();
 
 
         for (Options opt : options) {
@@ -256,7 +256,7 @@ public class Options implements Serializable {
         }
 
         options = tmp;
-        tmp = new ArrayList<Options>();
+        tmp = new ArrayList<>();
 
         for (Options opt : options) {
             Options o1 = opt.clone();
@@ -269,7 +269,7 @@ public class Options implements Serializable {
         }
 
         options = tmp;
-        tmp = new ArrayList<Options>();
+        tmp = new ArrayList<>();
 
         for (Options opt : options) {
             Options o1 = opt.clone();
@@ -282,7 +282,7 @@ public class Options implements Serializable {
         }
 
         options = tmp;
-        tmp = new ArrayList<Options>();
+        tmp = new ArrayList<>();
 
         for (Options opt : options) {
             Options o1 = opt.clone();
@@ -295,7 +295,7 @@ public class Options implements Serializable {
         }
 
         options = tmp;
-        tmp = new ArrayList<Options>();
+        tmp = new ArrayList<>();
 
         for (Options opt : options) {
             Options o1 = opt.clone();
@@ -308,7 +308,7 @@ public class Options implements Serializable {
         }
 
         options = tmp;
-        tmp = new ArrayList<Options>();
+        tmp = new ArrayList<>();
 
 
         for (Options opt : options) {
@@ -328,7 +328,7 @@ public class Options implements Serializable {
     public void changePunc(String puncPath) throws Exception {
         BufferedReader reader = new BufferedReader(new FileReader(puncPath));
 
-        punctuations = new HashSet<String>();
+        punctuations = new HashSet<>();
         String line;
         while ((line = reader.readLine()) != null) {
             line = line.trim();

@@ -90,7 +90,7 @@ public class YaraParser {
                     options.rootFirst, options.lowercase, maps);
             System.out.println("CoNLL data reading done!");
 
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab : maps.getLabels().keySet())
                 dependencyLabels.add(lab);
 
@@ -100,7 +100,7 @@ public class YaraParser {
 
             System.out.println("size of training data (#sens): " + dataSet.size());
 
-            HashMap<String, Integer> labels = new HashMap<String, Integer>();
+            HashMap<String, Integer> labels = new HashMap<>();
             int labIndex = 0;
             labels.put("sh", labIndex++);
             labels.put("rd", labIndex++);

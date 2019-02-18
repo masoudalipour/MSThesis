@@ -37,11 +37,11 @@ public class IndexMaps implements Serializable {
     }
 
     public Sentence makeSentence(String[] words, String[] posTags, boolean rootFirst, boolean lowerCased) {
-        ArrayList<Integer> tokens = new ArrayList<Integer>();
-        ArrayList<Integer> tags = new ArrayList<Integer>();
-        ArrayList<Integer> bc4 = new ArrayList<Integer>();
-        ArrayList<Integer> bc6 = new ArrayList<Integer>();
-        ArrayList<Integer> bcf = new ArrayList<Integer>();
+        ArrayList<Integer> tokens = new ArrayList<>();
+        ArrayList<Integer> tags = new ArrayList<>();
+        ArrayList<Integer> bc4 = new ArrayList<>();
+        ArrayList<Integer> bc6 = new ArrayList<>();
+        ArrayList<Integer> bcf = new ArrayList<>();
 
         int i = 0;
         for (String word : words) {

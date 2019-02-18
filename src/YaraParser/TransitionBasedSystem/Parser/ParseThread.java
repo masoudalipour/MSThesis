@@ -52,18 +52,18 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     public Pair<Configuration, Integer> call() throws Exception {
         if (!partial)
             return parse();
-        else return new Pair<Configuration, Integer>(parsePartial(), id);
+        else return new Pair<>(parsePartial(), id);
     }
 
     Pair<Configuration, Integer> parse() throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
 
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
         while (!ArcEager.isTerminal(beam)) {
             if (beamWidth != 1) {
-                TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+                TreeSet<BeamElement> beamPreserver = new TreeSet<>();
                 for (int b = 0; b < beam.size(); b++) {
                     Configuration configuration = beam.get(b);
                     State currentState = configuration.state;
@@ -126,7 +126,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
                 }
 
-                ArrayList<Configuration> repBeam = new ArrayList<Configuration>(beamWidth);
+                ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
                     if (repBeam.size() >= beamWidth)
                         break;
@@ -250,7 +250,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 bestConfiguration = configuration;
             }
         }
-        return new Pair<Configuration, Integer>(bestConfiguration, id);
+        return new Pair<>(bestConfiguration, id);
     }
 
     public Configuration parsePartial() throws Exception {
@@ -260,15 +260,15 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             isNonProjective = true;
         }
 
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
         while (!ArcEager.isTerminal(beam)) {
-            TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+            TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             parsePartialWithOneThread(beam, beamPreserver, isNonProjective, goldConfiguration, beamWidth);
 
-            ArrayList<Configuration> repBeam = new ArrayList<Configuration>(beamWidth);
+            ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
             for (BeamElement beamElement : beamPreserver.descendingSet()) {
                 if (repBeam.size() >= beamWidth)
                     break;

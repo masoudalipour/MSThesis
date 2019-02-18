@@ -77,7 +77,7 @@ public class ArcEagerBeamTrainer {
           la_dep=3+dependencyRelations.size()+dep
          */
         ExecutorService executor = Executors.newFixedThreadPool(options.numOfThreads);
-        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<ArrayList<BeamElement>>(
+        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<>(
                 executor);
         final int trainSize = trainData.size();
         for (int i = 1; i <= maxIteration; i++) {
@@ -116,7 +116,7 @@ public class ArcEagerBeamTrainer {
             long timeMiliSec = (end - start) % 1000;
             System.out.println("iteration " + i + " took " + timeSec + "." + timeMiliSec + " seconds\n");
 
-            System.out.print("saving the model...");
+            System.out.println("saving the model");
             if(modelPath.lastIndexOf("/") > 0) {
                 String modelFolder = modelPath.substring(0, modelPath.lastIndexOf("/"));
                 File modelDirectory = new File(modelFolder);
@@ -127,9 +127,8 @@ public class ArcEagerBeamTrainer {
             InfStruct infStruct = new InfStruct(classifier, maps, dependencyRelations, options);
             InfStruct bInfStruct = new InfStruct(bClassifier, maps, dependencyRelations, options);
             infStruct.saveModel(modelPath + "_iter" + i);
-            bInfStruct.saveModel(modelPath + "_Binary_iter" + i); // ourModel
-
-            System.out.println("done\n");
+            bInfStruct.saveModel(modelPath + "_Binary_iter" + i);
+            System.out.println("done");
 
             if (!devPath.equals("")) {
                 System.out.println("AveragedPerceptron:");
@@ -175,13 +174,9 @@ public class ArcEagerBeamTrainer {
                 System.out.println("size of LA features in memory:" + effectiveLaSize + "/" + laSize + "->"
                         + format.format(laRatio) + "%");
 
-                // KBeamArcEagerParser parser = new KBeamArcEagerParser(binaryPerceptron,
-                // dependencyRelations,featureLength, maps, options.numOfThreads);
-
                 BinaryModelEvaluator bEval = new BinaryModelEvaluator(modelPath + "_Binary_iter" + i, classifier,
                         bClassifier, options, dependencyRelations, featureLength);
                 bEval.evaluate();
-                // parser.shutDownLiveThreads();
             }
         }
         boolean isTerminated = executor.isTerminated();
@@ -195,32 +190,30 @@ public class ArcEagerBeamTrainer {
             CompletionService<ArrayList<BeamElement>> pool) throws Exception {
         boolean isPartial = goldConfiguration.isPartial(options.rootFirst);
 
-        if (partialTreeIter > i && isPartial)
+        if (isPartial && partialTreeIter > i)
             return;
-
-        Sentence sentence = goldConfiguration.getSentence();
 
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(options.beamWidth);
         beam.add(initialConfiguration);
 
-        /**
-         * The float is the oracle's cost For more information see: Yoav Goldberg and
-         * Joakim Nivre. "Training Deterministic Parsers with Non-Deterministic
-         * Oracles." TACL 1 (2013): 403-414. for the mean while we just use zero-cost
-         * oracles
+        /*
+          The float is the oracle's cost For more information see: Yoav Goldberg and
+          Joakim Nivre. "Training Deterministic Parsers with Non-Deterministic
+          Oracles." TACL 1 (2013): 403-414. for the mean while we just use zero-cost
+          oracles
          */
-        HashMap<Configuration, Float> oracles = new HashMap<Configuration, Float>();
+        HashMap<Configuration, Float> oracles = new HashMap<>();
 
         oracles.put(firstOracle, 0.0f);
 
-        /**
-         * For keeping track of the violations For more information see: Liang Huang,
-         * Suphan Fayong and Yang Guo. "Structured perceptron with inexact search." In
-         * Proceedings of the 2012 Conference of the North American Chapter of the
-         * Association for Computational Linguistics: Human Language Technologies, pp.
-         * 142-151. Association for Computational Linguistics, 2012.
+        /*
+          For keeping track of the violations For more information see: Liang Huang,
+          Suphan Fayong and Yang Guo. "Structured perceptron with inexact search." In
+          Proceedings of the 2012 Conference of the North American Chapter of the
+          Association for Computational Linguistics: Human Language Technologies, pp.
+          142-151. Association for Computational Linguistics, 2012.
          */
         float maxViol = Float.NEGATIVE_INFINITY;
         Pair<Configuration, Configuration> maxViolPair = null;
@@ -229,10 +222,10 @@ public class ArcEagerBeamTrainer {
         boolean oracleInBeam = false;
 
         while (!ArcEager.isTerminal(beam) && beam.size() > 0) {
-            /**
-             * generating new oracles it keeps the oracles which are in the terminal state
+            /*
+              generating new oracles it keeps the oracles which are in the terminal state
              */
-            HashMap<Configuration, Float> newOracles = new HashMap<Configuration, Float>();
+            HashMap<Configuration, Float> newOracles = new HashMap<>();
 
             if (options.useDynamicOracle || isPartial) {
                 bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, newOracles);
@@ -245,10 +238,10 @@ public class ArcEagerBeamTrainer {
             }
             oracles = newOracles;
 
-            TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+            TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             if (options.numOfThreads == 1 || beam.size() == 1) {
-                beamSortOneThread(beam, beamPreserver, sentence);
+                beamSortOneThread(beam, beamPreserver);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new BeamScorerThread(false, classifier, beam.get(b), dependencyRelations, featureLength,
@@ -268,7 +261,7 @@ public class ArcEagerBeamTrainer {
             } else {
                 oracleInBeam = false;
 
-                ArrayList<Configuration> repBeam = new ArrayList<Configuration>(options.beamWidth);
+                ArrayList<Configuration> repBeam = new ArrayList<>(options.beamWidth);
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
                     if (repBeam.size() >= options.beamWidth)
                         break;
@@ -310,18 +303,18 @@ public class ArcEagerBeamTrainer {
                 if (beam.size() > 0 && oracles.size() > 0) {
                     Configuration bestConfig = beam.get(0);
                     if (oracles.containsKey(bestConfig)) {
-                        oracles = new HashMap<Configuration, Float>();
+                        oracles = new HashMap<>();
                         oracles.put(bestConfig, 0.0f);
                     } else {
                         if (options.useRandomOracleSelection) { // choosing randomly, otherwise using latent structured
                                                                 // Perceptron
-                            List<Configuration> keys = new ArrayList<Configuration>(oracles.keySet());
+                            List<Configuration> keys = new ArrayList<>(oracles.keySet());
                             Configuration randomKey = keys.get(randGen.nextInt(keys.size()));
-                            oracles = new HashMap<Configuration, Float>();
+                            oracles = new HashMap<>();
                             oracles.put(randomKey, 0.0f);
                             bestScoringOracle = randomKey;
                         } else {
-                            oracles = new HashMap<Configuration, Float>();
+                            oracles = new HashMap<>();
                             oracles.put(bestScoringOracle, 0.0f);
                         }
                     }
@@ -337,7 +330,7 @@ public class ArcEagerBeamTrainer {
                                                                                                         // bestScoringOracle.getScore(true));
                         if (violation > maxViol) {
                             maxViol = violation;
-                            maxViolPair = new Pair<Configuration, Configuration>(beam.get(0), bestScoringOracle);
+                            maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
                         }
                     }
                 } else
@@ -512,8 +505,7 @@ public class ArcEagerBeamTrainer {
         return bestScoringOracle;
     }
 
-    private void beamSortOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence)
-            throws Exception {
+    private void beamSortOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver) {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
@@ -569,8 +561,8 @@ public class ArcEagerBeamTrainer {
     private void updateWeights(Configuration initialConfiguration, float maxViol, boolean isPartial,
             Configuration bestScoringOracle, Pair<Configuration, Configuration> maxViolPair,
             ArrayList<Configuration> beam) throws Exception {
-        Configuration predicted = null;
-        Configuration finalOracle = null;
+        Configuration predicted;
+        Configuration finalOracle;
         if (!updateMode.equals("max_violation")) {
             finalOracle = bestScoringOracle;
             predicted = beam.get(0);
@@ -579,7 +571,7 @@ public class ArcEagerBeamTrainer {
                                                                                              // -
                                                                                              // bestScoringOracle.getScore(true));
             if (violation > maxViol) {
-                maxViolPair = new Pair<Configuration, Configuration>(beam.get(0), bestScoringOracle);
+                maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
             }
             predicted = maxViolPair.first;
             finalOracle = maxViolPair.second;
@@ -612,7 +604,7 @@ public class ArcEagerBeamTrainer {
             if (isTrueFeature) { // if the made dependency is truely for the word
                 Object[] feats = FeatureExtractor.extractAllParseFeatures(oracleConfiguration, featureLength);
                 for (int f = 0; f < feats.length; f++) {
-                    Pair<Integer, Object> featName = new Pair<Integer, Object>(action, feats[f]);
+                    Pair<Integer, Object> featName = new Pair<>(action, feats[f]);
                     HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) oracleFeatures[f];
                     Float value = map.get(featName);
                     if (value == null)
@@ -653,7 +645,7 @@ public class ArcEagerBeamTrainer {
                 Object[] feats = FeatureExtractor.extractAllParseFeatures(predictedConfiguration, featureLength);
                 if (action != 2) // do not take into account for unshift
                     for (int f = 0; f < feats.length; f++) {
-                        Pair<Integer, Object> featName = new Pair<Integer, Object>(action, feats[f]);
+                        Pair<Integer, Object> featName = new Pair<>(action, feats[f]);
                         HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) predictedFeatures[f];
                         Float value = map.get(featName);
                         if (value == null)
@@ -771,7 +763,7 @@ public class ArcEagerBeamTrainer {
 
             Object[] feats = FeatureExtractor.extractAllParseFeatures(oracleConfiguration, featureLength);
             for (int f = 0; f < feats.length; f++) {
-                Pair<Integer, Object> featName = new Pair<Integer, Object>(action, feats[f]);
+                Pair<Integer, Object> featName = new Pair<>(action, feats[f]);
                 HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) oracleFeatures[f];
                 Float value = map.get(featName);
                 if (value == null)
@@ -798,7 +790,7 @@ public class ArcEagerBeamTrainer {
             Object[] feats = FeatureExtractor.extractAllParseFeatures(predictedConfiguration, featureLength);
             if (action != 2) // do not take into account for unshift
                 for (int f = 0; f < feats.length; f++) {
-                    Pair<Integer, Object> featName = new Pair<Integer, Object>(action, feats[f]);
+                    Pair<Integer, Object> featName = new Pair<>(action, feats[f]);
                     HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) predictedFeatures[f];
                     Float value = map.get(featName);
                     if (value == null)
