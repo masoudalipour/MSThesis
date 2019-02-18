@@ -95,8 +95,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
         Configuration configuration = new Configuration(sentence);
 
         ArrayList<Integer> history = new ArrayList<>(actionHistory.size());
-        for (int i = 0; i < actionHistory.size(); i++)
-            history.add(actionHistory.get(i));
+        for (Integer integer : actionHistory) history.add(integer);
 
         configuration.actionHistory = history;
 

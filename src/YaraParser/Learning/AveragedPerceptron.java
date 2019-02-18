@@ -247,9 +247,9 @@ public class AveragedPerceptron {
 
     public int laSize() {
         int size = 0;
-        for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
-            for (Object feat : leftArcFeatureAveragedWeights[i].keySet()) {
-                size += leftArcFeatureAveragedWeights[i].get(feat).length();
+        for (HashMap<Object, CompactArray> leftArcFeatureAveragedWeight : leftArcFeatureAveragedWeights) {
+            for (Object feat : leftArcFeatureAveragedWeight.keySet()) {
+                size += leftArcFeatureAveragedWeight.get(feat).length();
             }
         }
         return size;
@@ -257,9 +257,9 @@ public class AveragedPerceptron {
 
     public int effectiveLaSize() {
         int size = 0;
-        for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
-            for (Object feat : leftArcFeatureAveragedWeights[i].keySet()) {
-                for (float f : leftArcFeatureAveragedWeights[i].get(feat).getArray())
+        for (HashMap<Object, CompactArray> leftArcFeatureAveragedWeight : leftArcFeatureAveragedWeights) {
+            for (Object feat : leftArcFeatureAveragedWeight.keySet()) {
+                for (float f : leftArcFeatureAveragedWeight.get(feat).getArray())
                     if (f != 0f)
                         size++;
             }

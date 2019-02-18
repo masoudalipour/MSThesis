@@ -1,14 +1,13 @@
 package YaraParser.TransitionBasedSystem.Trainer;
 
-import YaraParser.Accessories.Evaluator;
 import YaraParser.Accessories.BinaryModelEvaluator;
+import YaraParser.Accessories.Evaluator;
 import YaraParser.Accessories.Options;
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Learning.BinaryPerceptron;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
-import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
@@ -21,7 +20,7 @@ import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 
 import java.io.File;
 import java.text.DecimalFormat;
-import java.time.*;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
@@ -48,7 +47,7 @@ public class ArcEagerBeamTrainer {
     private IndexMaps maps;
 
     public ArcEagerBeamTrainer(String updateMode, AveragedPerceptron classifier, Options options,
-            ArrayList<Integer> dependencyRelations, int featureLength, IndexMaps maps) {
+                               ArrayList<Integer> dependencyRelations, int featureLength, IndexMaps maps) {
         this.updateMode = updateMode;
         this.classifier = classifier;
         this.options = options;
@@ -59,7 +58,7 @@ public class ArcEagerBeamTrainer {
     }
 
     public ArcEagerBeamTrainer(String updateMode, AveragedPerceptron classifier, BinaryPerceptron bClassifier,
-            Options options, ArrayList<Integer> dependencyRelations, int featureLength, IndexMaps maps) {
+                               Options options, ArrayList<Integer> dependencyRelations, int featureLength, IndexMaps maps) {
         this.updateMode = updateMode;
         this.classifier = classifier;
         this.bClassifier = bClassifier;
@@ -71,14 +70,13 @@ public class ArcEagerBeamTrainer {
     }
 
     public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath,
-            boolean lowerCased, HashSet<String> punctuations, int partialTreeIter) throws Exception {
+                      boolean lowerCased, HashSet<String> punctuations, int partialTreeIter) throws Exception {
         /*
           Actions: 0=shift, 1=reduce, 2=unshift, ra_dep=3+dep,
           la_dep=3+dependencyRelations.size()+dep
          */
         ExecutorService executor = Executors.newFixedThreadPool(options.numOfThreads);
-        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<>(
-                executor);
+        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<>(executor);
         final int trainSize = trainData.size();
         for (int i = 1; i <= maxIteration; i++) {
             long start = System.currentTimeMillis();
@@ -86,7 +84,7 @@ public class ArcEagerBeamTrainer {
             System.out.println("### ArcEagerBeamTrainer:");
             int dataCount = 0;
             double progress = 1.0;
-            if(trainSize > 100){
+            if (trainSize > 100) {
                 progress = (double) trainSize / 100;
             }
             if (trainSize < 100) {
@@ -117,10 +115,10 @@ public class ArcEagerBeamTrainer {
             System.out.println("iteration " + i + " took " + timeSec + "." + timeMiliSec + " seconds\n");
 
             System.out.println("saving the model");
-            if(modelPath.lastIndexOf("/") > 0) {
+            if (modelPath.lastIndexOf("/") > 0) {
                 String modelFolder = modelPath.substring(0, modelPath.lastIndexOf("/"));
                 File modelDirectory = new File(modelFolder);
-                if(!modelDirectory.exists()){
+                if (!modelDirectory.exists()) {
                     modelDirectory.mkdirs();
                 }
             }
@@ -187,7 +185,7 @@ public class ArcEagerBeamTrainer {
     }
 
     private void trainOnOneSample(GoldConfiguration goldConfiguration, int partialTreeIter, int i, int dataCount,
-            CompletionService<ArrayList<BeamElement>> pool) throws Exception {
+                                  CompletionService<ArrayList<BeamElement>> pool) throws Exception {
         boolean isPartial = goldConfiguration.isPartial(options.rootFirst);
 
         if (isPartial && partialTreeIter > i)
@@ -216,9 +214,9 @@ public class ArcEagerBeamTrainer {
           142-151. Association for Computational Linguistics, 2012.
          */
         float maxViol = Float.NEGATIVE_INFINITY;
-        Pair<Configuration, Configuration> maxViolPair = null;
 
-        Configuration bestScoringOracle = null;
+        Configuration bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, new HashMap<>());
+        Pair<Configuration, Configuration> maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
         boolean oracleInBeam = false;
 
         while (!ArcEager.isTerminal(beam) && beam.size() > 0) {
@@ -307,7 +305,7 @@ public class ArcEagerBeamTrainer {
                         oracles.put(bestConfig, 0.0f);
                     } else {
                         if (options.useRandomOracleSelection) { // choosing randomly, otherwise using latent structured
-                                                                // Perceptron
+                            // Perceptron
                             List<Configuration> keys = new ArrayList<>(oracles.keySet());
                             Configuration randomKey = keys.get(randGen.nextInt(keys.size()));
                             oracles = new HashMap<>();
@@ -326,8 +324,8 @@ public class ArcEagerBeamTrainer {
                     // keep violations
                     if (beam.size() > 0 && !oracleInBeam && updateMode.equals("max_violation")) {
                         float violation = beam.get(0).getScore(true) - bestScoringOracle.getScore(true);// Math.abs(beam.get(0).getScore(true)
-                                                                                                        // -
-                                                                                                        // bestScoringOracle.getScore(true));
+                        // -
+                        // bestScoringOracle.getScore(true));
                         if (violation > maxViol) {
                             maxViol = violation;
                             maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
@@ -338,14 +336,15 @@ public class ArcEagerBeamTrainer {
             }
         }
 
-        // updating weights
-        if (!oracleInBeam || !bestScoringOracle.equals(beam.get(0))) {
-            updateWeights(initialConfiguration, maxViol, isPartial, bestScoringOracle, maxViolPair, beam);
+        /* updating weights */
+        if (oracleInBeam && bestScoringOracle.equals(beam.get(0))) {
+            return;
         }
+        updateWeights(initialConfiguration, maxViol, isPartial, bestScoringOracle, maxViolPair, beam);
     }
 
     private Configuration staticOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Float> oracles,
-            HashMap<Configuration, Float> newOracles) throws Exception {
+                                       HashMap<Configuration, Float> newOracles) throws Exception {
         Configuration bestScoringOracle = null;
         int top = -1;
         int first = -1;
@@ -420,7 +419,7 @@ public class ArcEagerBeamTrainer {
     }
 
     private Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration,
-            HashMap<Configuration, Float> oracles, HashMap<Configuration, Float> newOracles) throws Exception {
+                                                HashMap<Configuration, Float> oracles, HashMap<Configuration, Float> newOracles) throws Exception {
         float bestScore = Float.NEGATIVE_INFINITY;
         Configuration bestScoringOracle = null;
 
@@ -559,8 +558,8 @@ public class ArcEagerBeamTrainer {
     }
 
     private void updateWeights(Configuration initialConfiguration, float maxViol, boolean isPartial,
-            Configuration bestScoringOracle, Pair<Configuration, Configuration> maxViolPair,
-            ArrayList<Configuration> beam) throws Exception {
+                               Configuration bestScoringOracle, Pair<Configuration, Configuration> maxViolPair,
+                               ArrayList<Configuration> beam) throws Exception {
         Configuration predicted;
         Configuration finalOracle;
         if (!updateMode.equals("max_violation")) {
@@ -568,8 +567,8 @@ public class ArcEagerBeamTrainer {
             predicted = beam.get(0);
         } else {
             float violation = beam.get(0).getScore(true) - bestScoringOracle.getScore(true); // Math.abs(beam.get(0).getScore(true)
-                                                                                             // -
-                                                                                             // bestScoringOracle.getScore(true));
+            // -
+            // bestScoringOracle.getScore(true));
             if (violation > maxViol) {
                 maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
             }
@@ -734,9 +733,7 @@ public class ArcEagerBeamTrainer {
             score = bClassifier.shiftScore(features, false);
         } else if (lastAction == 1) {
             score = bClassifier.reduceScore(features, false);
-        }
-
-        else if ((lastAction - 3 - label) == 0) {
+        } else if ((lastAction - 3 - label) == 0) {
             float[] rightArcScores = bClassifier.rightArcScores(features, false);
             score = rightArcScores[label];
         } else {

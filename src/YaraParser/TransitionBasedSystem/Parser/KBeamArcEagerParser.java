@@ -431,7 +431,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     }
 
     /**
-     * Needs Conll 2006 format
+     * Needs CoNLL 2006 format
      *
      * @param inputFile
      * @param outputFile
@@ -522,8 +522,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 gs[6] = ps[0];
                 gs[7] = ps[1];
                 StringBuilder output = new StringBuilder();
-                for (int i = 0; i < gs.length; i++) {
-                    output.append(gs[i]).append("\t");
+                for (String g : gs) {
+                    output.append(g).append("\t");
                 }
                 pwriter.write(output.toString().trim() + "\n");
             } else {
@@ -536,8 +536,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         if (addScore) {
             BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));
 
-            for (int i = 0; i < scoreList.size(); i++)
-                scoreWriter.write(scoreList.get(i) + "\n");
+            for (Float aFloat : scoreList) scoreWriter.write(aFloat + "\n");
             scoreWriter.flush();
             scoreWriter.close();
         }
@@ -706,8 +705,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 gs[6] = ps[0];
                 gs[7] = ps[1];
                 StringBuilder output = new StringBuilder();
-                for (int i = 0; i < gs.length; i++) {
-                    output.append(gs[i]).append("\t");
+                for (String g : gs) {
+                    output.append(g).append("\t");
                 }
                 pwriter.write(output.toString().trim() + "\n");
             } else {
@@ -720,8 +719,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         if (addScore) {
             BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));
 
-            for (int i = 0; i < scoreList.size(); i++)
-                scoreWriter.write(scoreList.get(i) + "\n");
+            for (Float aFloat : scoreList) scoreWriter.write(aFloat + "\n");
             scoreWriter.flush();
             scoreWriter.close();
         }
