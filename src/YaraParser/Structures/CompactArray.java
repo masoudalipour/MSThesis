@@ -11,8 +11,8 @@ import java.io.Serializable;
  */
 
 public class CompactArray implements Serializable {
-    float[] array;
-    int offset;
+    private float[] array;
+    private int offset;
 
     public CompactArray(int offset, float[] array) {
         this.offset = offset;
@@ -27,9 +27,7 @@ public class CompactArray implements Serializable {
             int newSize = gap + array.length;
             float[] newArray = new float[newSize];
             newArray[0] = value;
-            for (int i = 0; i < array.length; i++) {
-                newArray[gap + i] = array[i];
-            }
+            System.arraycopy(array, 0, newArray, gap, array.length);
             this.offset = index;
             this.array = newArray;
         } else {
@@ -37,9 +35,7 @@ public class CompactArray implements Serializable {
             int newSize = array.length + gap;
             float[] newArray = new float[newSize];
             newArray[newSize - 1] = value;
-            for (int i = 0; i < array.length; i++) {
-                newArray[i] = array[i];
-            }
+            System.arraycopy(array, 0, newArray, 0, array.length);
             this.array = newArray;
         }
     }

@@ -140,7 +140,7 @@ public class BinaryModelEvaluator {
          */
         Configuration bestScoringOracle = null;
 
-        while (!ArcEager.isTerminal(beam) && beam.size() > 0) {
+        while (ArcEager.isNotTerminal(beam) && beam.size() > 0) {
             /**
              * generating new oracles it keeps the oracles which are in the terminal state
              */
@@ -265,7 +265,7 @@ public class BinaryModelEvaluator {
             if (!state.bufferEmpty())
                 first = state.bufferHead();
 
-            if (!configuration.state.isTerminalState()) {
+            if (configuration.state.isNotTerminalState()) {
                 Configuration newConfig = configuration.clone();
 
                 if (first > 0 && goldDependencies.containsKey(first) && goldDependencies.get(first).first == top) {
@@ -329,7 +329,7 @@ public class BinaryModelEvaluator {
         Configuration bestScoringOracle = null;
 
         for (Configuration configuration : oracles.keySet()) {
-            if (!configuration.state.isTerminalState()) {
+            if (configuration.state.isNotTerminalState()) {
                 State currentState = configuration.state;
                 Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                 // I only assumed that we need zero cost ones
@@ -404,8 +404,7 @@ public class BinaryModelEvaluator {
         return bestScoringOracle;
     }
 
-    private void beamSortOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence)
-            throws Exception {
+    private void beamSortOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence) {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
@@ -458,7 +457,7 @@ public class BinaryModelEvaluator {
         }
     }
 
-    private boolean isOracle(Configuration bestConfiguration, int label) throws Exception {
+    private boolean isOracle(Configuration bestConfiguration, int label) {
         int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
 
@@ -482,7 +481,7 @@ public class BinaryModelEvaluator {
                 }
             }
         } else if ((lastAction - 3 - label) == 0) {
-            float scores[] = new float[infStruct.dependencySize];
+            float[] scores = new float[infStruct.dependencySize];
             for (int i = 0; i < features.length; i++) {
                 if (features[i] == null)
                     continue;
@@ -498,7 +497,7 @@ public class BinaryModelEvaluator {
             }
             score = scores[label];
         } else {
-            float scores[] = new float[infStruct.dependencySize];
+            float[] scores = new float[infStruct.dependencySize];
             for (int i = 0; i < features.length; i++) {
                 if (features[i] == null)
                     continue;

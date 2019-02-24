@@ -61,7 +61,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
-        while (!ArcEager.isTerminal(beam)) {
+        while (ArcEager.isNotTerminal(beam)) {
             if (beamWidth != 1) {
                 TreeSet<BeamElement> beamPreserver = new TreeSet<>();
                 for (int b = 0; b < beam.size(); b++) {
@@ -263,7 +263,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
-        while (!ArcEager.isTerminal(beam)) {
+        while (ArcEager.isNotTerminal(beam)) {
             TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             parsePartialWithOneThread(beam, beamPreserver, isNonProjective, goldConfiguration, beamWidth);
@@ -312,7 +312,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         return bestConfiguration;
     }
 
-    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth) throws Exception {
+    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth) {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;

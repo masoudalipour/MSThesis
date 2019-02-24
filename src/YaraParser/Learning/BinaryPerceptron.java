@@ -176,7 +176,7 @@ public class BinaryPerceptron {
     }
 
     public float[] leftArcScores(final Object[] features, boolean decode) {
-        float scores[] = new float[dependencySize];
+        float[] scores = new float[dependencySize];
 
         HashMap<Object, CompactArray>[] map = decode ? leftArcFeatureAveragedWeights : leftArcFeatureWeights;
 
@@ -198,7 +198,7 @@ public class BinaryPerceptron {
     }
 
     public float[] rightArcScores(final Object[] features, boolean decode) {
-        float scores[] = new float[dependencySize];
+        float[] scores = new float[dependencySize];
 
         HashMap<Object, CompactArray>[] map = decode ? rightArcFeatureAveragedWeights : rightArcFeatureWeights;
 

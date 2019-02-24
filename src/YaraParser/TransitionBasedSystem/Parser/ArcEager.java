@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.TransitionBasedSystem.Parser;
 
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -11,37 +6,34 @@ import YaraParser.TransitionBasedSystem.Configuration.State;
 import java.util.ArrayList;
 
 public class ArcEager extends TransitionBasedParser {
-    public static void shift(State state) throws Exception {
-        state.push(state.bufferHead());
-        state.incrementBufferHead();
-
+    public static void shift(State state) {
+        state.pushStack();
         // changing the constraint
         if (state.bufferEmpty())
             state.setEmptyFlag(true);
     }
 
-    public static void unShift(State state) throws Exception {
+    public static void unShift(State state) {
         if (!state.stackEmpty())
-            state.setBufferH(state.pop());
+            state.setBufferH(state.popStack());
         // to make sure
         state.setEmptyFlag(true);
         state.setMaxSentenceSize(state.bufferHead());
     }
 
-    public static void reduce(State state) throws Exception {
-        state.pop();
+    public static void reduce(State state) {
+        state.popStack();
         if (state.stackEmpty() && state.bufferEmpty())
             state.setEmptyFlag(true);
     }
 
-    public static void leftArc(State state, int dependency) throws Exception {
-        state.addArc(state.pop(), state.bufferHead(), dependency);
+    public static void leftArc(State state, int dependency) {
+        state.addArc(state.popStack(), state.bufferHead(), dependency);
     }
 
-    public static void rightArc(State state, int dependency) throws Exception {
+    public static void rightArc(State state, int dependency) {
         state.addArc(state.bufferHead(), state.peek(), dependency);
-        state.push(state.bufferHead());
-        state.incrementBufferHead();
+        state.pushStack();
         if (!state.isEmptyFlag() && state.bufferEmpty())
             state.setEmptyFlag(true);
     }
@@ -71,16 +63,16 @@ public class ArcEager extends TransitionBasedParser {
     }
 
     /**
-     * Shows true if all of the configurations in the beam are in the terminal state
+     * Shows false if all of the configurations in the beam are in the terminal state
      *
      * @param beam the current beam
-     * @return true if all of the configurations in the beam are in the terminal state
+     * @return false if all of the configurations in the beam are in the terminal state
      */
-    public static boolean isTerminal(ArrayList<Configuration> beam) {
+    public static boolean isNotTerminal(ArrayList<Configuration> beam) {
         for (Configuration configuration : beam)
-            if (!configuration.state.isTerminalState())
-                return false;
-        return true;
+            if (configuration.state.isNotTerminalState())
+                return true;
+        return false;
     }
 
 
