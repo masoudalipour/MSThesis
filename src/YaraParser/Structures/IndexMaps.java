@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.Structures;
 
 import java.io.Serializable;
@@ -108,8 +103,6 @@ public class IndexMaps implements Serializable {
     }
 
     public boolean hasClusters() {
-        if (brownFullClusters != null && brownFullClusters.size() > 0)
-            return true;
-        return false;
+        return brownFullClusters != null && brownFullClusters.size() > 0;
     }
 }

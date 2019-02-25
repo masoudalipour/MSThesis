@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.Accessories;
 
 import java.io.BufferedReader;
@@ -94,16 +89,7 @@ public class Options implements Serializable {
         punctuations.add("-LCB-");
         punctuations.add("-RCB-");
         punctuations.add("!");
-        punctuations.add(".");
-        punctuations.add("#");
         punctuations.add("$");
-        punctuations.add("''");
-        punctuations.add("(");
-        punctuations.add(")");
-        punctuations.add(",");
-        punctuations.add("-LRB-");
-        punctuations.add("-RRB-");
-        punctuations.add(":");
         punctuations.add("?");
     }
 
@@ -353,35 +339,31 @@ public class Options implements Serializable {
             builder.append("partial training starting iteration: ").append(partialTrainingStartingIteration).append("\n");
             return builder.toString();
         } else if (parseConllFile) {
-            String builder = ("parse conll" + "\n") +
+            return ("parse conll" + "\n") +
                     "input file: " + inputFile + "\n" +
                     "output file: " + outputFile + "\n" +
                     "model file: " + modelFile + "\n" +
                     "score file: " + scorePath + "\n" +
                     "number of threads: " + numOfThreads + "\n";
-            return builder;
         } else if (parseTaggedFile) {
-            String builder = ("parse  tag file" + "\n") +
+            return ("parse  tag file" + "\n") +
                     "input file: " + inputFile + "\n" +
                     "output file: " + outputFile + "\n" +
                     "model file: " + modelFile + "\n" +
                     "score file: " + scorePath + "\n" +
                     "number of threads: " + numOfThreads + "\n";
-            return builder;
         } else if (parsePartialConll) {
-            String builder = ("parse partial conll" + "\n") +
+            return ("parse partial conll" + "\n") +
                     "input file: " + inputFile + "\n" +
                     "output file: " + outputFile + "\n" +
                     "score file: " + scorePath + "\n" +
                     "model file: " + modelFile + "\n" +
                     "labeled: " + labeled + "\n" +
                     "number of threads: " + numOfThreads + "\n";
-            return builder;
         } else if (evaluate) {
-            String builder = ("Evaluate" + "\n") +
+            return ("Evaluate" + "\n") +
                     "gold file: " + goldFile + "\n" +
                     "parsed file: " + predFile + "\n";
-            return builder;
         }
         return "";
     }

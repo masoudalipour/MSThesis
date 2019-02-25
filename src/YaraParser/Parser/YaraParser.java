@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.Parser;
 
 import YaraParser.Accessories.CoNLLReader;
@@ -17,7 +12,6 @@ import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class YaraParser {
     public static void main(String[] args) throws Exception {
@@ -88,19 +82,21 @@ public class YaraParser {
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled,
                     options.rootFirst, options.lowercase, maps);
-            System.out.println("CoNLL data reading done!");
 
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab : maps.getLabels().keySet())
-                dependencyLabels.add(lab);
+            System.out.println("CoNLL data reading is done.");
 
-            int featureLength = options.useExtendedFeatures ? 72 : 26;
-            if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
+            ArrayList<Integer> dependencyLabels = new ArrayList<>(maps.getLabels().keySet());
+
+            int featureLength;
+            if(options.useExtendedFeatures)
+                featureLength = 72;
+            else if(options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
                 featureLength = 153;
+            else
+                featureLength = 26;
+            System.out.println("# of sentences in training data set: " + dataSet.size());
 
-            System.out.println("size of training data (#sens): " + dataSet.size());
-
-            HashMap<String, Integer> labels = new HashMap<>();
+            /*HashMap<String, Integer> labels = new HashMap<>();
             int labIndex = 0;
             labels.put("sh", labIndex++);
             labels.put("rd", labIndex++);
@@ -113,7 +109,7 @@ public class YaraParser {
                     labels.put("ra_" + label, 3);
                     labels.put("la_" + label, 4);
                 }
-            }
+            }*/
 
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     new AveragedPerceptron(featureLength, dependencyLabels.size()),

@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.Accessories;
 
 import YaraParser.Structures.IndexMaps;
@@ -19,7 +14,7 @@ public class CoNLLReader {
     /**
      * An object for reading the CoNLL file
      */
-    BufferedReader fileReader;
+    private BufferedReader fileReader;
 
     /**
      * Initializes the file reader
@@ -134,7 +129,7 @@ public class CoNLLReader {
 
     /**
      * @param limit it is used if we want to read part of the data
-     * @return
+     * @return an array of configurations
      */
     public ArrayList<GoldConfiguration> readData(int limit, boolean keepNonProjective, boolean labeled, boolean rootFirst, boolean lowerCased, IndexMaps maps) throws Exception {
         HashMap<String, Integer> wordMap = maps.getWordMap();
@@ -255,7 +250,7 @@ public class CoNLLReader {
         return configurationSet;
     }
 
-    public ArrayList<CompactTree> readStringData() throws Exception {
+    ArrayList<CompactTree> readStringData() throws Exception {
         ArrayList<CompactTree> treeSet = new ArrayList<>();
 
         String line;

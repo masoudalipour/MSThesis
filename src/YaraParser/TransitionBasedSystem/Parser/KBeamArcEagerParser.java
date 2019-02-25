@@ -92,8 +92,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     && !canReduce
                     && !canRightArc
                     && !canLeftArc) {
-                float addedScore = prevScore;
-                beamPreserver.add(new BeamElement(addedScore, b, 4, -1));
+                beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
 
                 if (beamPreserver.size() > beamWidth)
                     beamPreserver.pollFirst();
