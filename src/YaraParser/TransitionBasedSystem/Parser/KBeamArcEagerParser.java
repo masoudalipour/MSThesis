@@ -432,11 +432,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     /**
      * Needs CoNLL 2006 format
      *
-     * @param inputFile
-     * @param outputFile
-     * @param rootFirst
-     * @param beamWidth
-     * @throws Exception
      */
     public void parseConllFileNoParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numOfThreads, boolean partial, String scorePath) throws Exception {
         CoNLLReader reader = new CoNLLReader(inputFile);
