@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.Learning;
 
 import YaraParser.Structures.CompactArray;
@@ -10,6 +5,7 @@ import YaraParser.Structures.InfStruct;
 import YaraParser.TransitionBasedSystem.Parser.Actions;
 
 import java.util.HashMap;
+
 /**
  * This class tries to implement averaged Perceptron algorithm
  * Collins, Michael. "Discriminative training methods for hidden Markov models: Theory and experiments with Perceptron algorithms."
@@ -82,9 +78,9 @@ public class AveragedPerceptron {
         this(infStruct.shiftFeatureAveragedWeights, infStruct.reduceFeatureAveragedWeights, infStruct.leftArcFeatureAveragedWeights, infStruct.rightArcFeatureAveragedWeights, infStruct.dependencySize);
     }
 
-    public float changeWeight(Actions actionType, int slotNum, Object featureName, int labelIndex, float change) {
+    public void changeWeight(Actions actionType, int slotNum, Object featureName, int labelIndex, float change) {
         if (featureName == null)
-            return 0;
+            return;
         if (actionType == Actions.Shift) {
             if (!shiftFeatureWeights[slotNum].containsKey(featureName))
                 shiftFeatureWeights[slotNum].put(featureName, change);
@@ -106,15 +102,13 @@ public class AveragedPerceptron {
             else
                 reduceFeatureAveragedWeights[slotNum].put(featureName, reduceFeatureAveragedWeights[slotNum].get(featureName) + iteration * change);
         } else if (actionType == Actions.RightArc) {
-            changeFeatureWeight(rightArcFeatureWeights[slotNum], rightArcFeatureAveragedWeights[slotNum], featureName, labelIndex, change, dependencySize);
+            changeFeatureWeight(rightArcFeatureWeights[slotNum], rightArcFeatureAveragedWeights[slotNum], featureName, labelIndex, change);
         } else if (actionType == Actions.LeftArc) {
-            changeFeatureWeight(leftArcFeatureWeights[slotNum], leftArcFeatureAveragedWeights[slotNum], featureName, labelIndex, change, dependencySize);
+            changeFeatureWeight(leftArcFeatureWeights[slotNum], leftArcFeatureAveragedWeights[slotNum], featureName, labelIndex, change);
         }
-
-        return change;
     }
 
-    public void changeFeatureWeight(HashMap<Object, CompactArray> map, HashMap<Object, CompactArray> aMap, Object featureName, int labelIndex, float change, int size) {
+    private void changeFeatureWeight(HashMap<Object, CompactArray> map, HashMap<Object, CompactArray> aMap, Object featureName, int labelIndex, float change) {
         CompactArray values = map.get(featureName);
         CompactArray aValues;
         if (values != null) {
@@ -175,7 +169,7 @@ public class AveragedPerceptron {
     }
 
     public float[] leftArcScores(final Object[] features, boolean decode) {
-        float scores[] = new float[dependencySize];
+        float[] scores = new float[dependencySize];
 
         HashMap<Object, CompactArray>[] map = decode ? leftArcFeatureAveragedWeights : leftArcFeatureWeights;
 
@@ -197,7 +191,7 @@ public class AveragedPerceptron {
     }
 
     public float[] rightArcScores(final Object[] features, boolean decode) {
-        float scores[] = new float[dependencySize];
+        float[] scores = new float[dependencySize];
 
         HashMap<Object, CompactArray>[] map = decode ? rightArcFeatureAveragedWeights : rightArcFeatureWeights;
 
@@ -247,9 +241,9 @@ public class AveragedPerceptron {
 
     public int laSize() {
         int size = 0;
-        for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
-            for (Object feat : leftArcFeatureAveragedWeights[i].keySet()) {
-                size += leftArcFeatureAveragedWeights[i].get(feat).length();
+        for (HashMap<Object, CompactArray> leftArcFeatureAveragedWeight : leftArcFeatureAveragedWeights) {
+            for (Object feat : leftArcFeatureAveragedWeight.keySet()) {
+                size += leftArcFeatureAveragedWeight.get(feat).length();
             }
         }
         return size;
@@ -257,9 +251,9 @@ public class AveragedPerceptron {
 
     public int effectiveLaSize() {
         int size = 0;
-        for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
-            for (Object feat : leftArcFeatureAveragedWeights[i].keySet()) {
-                for (float f : leftArcFeatureAveragedWeights[i].get(feat).getArray())
+        for (HashMap<Object, CompactArray> leftArcFeatureAveragedWeight : leftArcFeatureAveragedWeights) {
+            for (Object feat : leftArcFeatureAveragedWeight.keySet()) {
+                for (float f : leftArcFeatureAveragedWeight.get(feat).getArray())
                     if (f != 0f)
                         size++;
             }

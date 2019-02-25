@@ -70,8 +70,8 @@ public class BinaryPerceptron {
     }
 
     private BinaryPerceptron(HashMap<Object, Float>[] shiftFeatureAveragedWeights, HashMap<Object, Float>[] reduceFeatureAveragedWeights,
-                               HashMap<Object, CompactArray>[] leftArcFeatureAveragedWeights, HashMap<Object, CompactArray>[] rightArcFeatureAveragedWeights,
-                               int dependencySize) {
+                             HashMap<Object, CompactArray>[] leftArcFeatureAveragedWeights, HashMap<Object, CompactArray>[] rightArcFeatureAveragedWeights,
+                             int dependencySize) {
         this.shiftFeatureAveragedWeights = shiftFeatureAveragedWeights;
         this.reduceFeatureAveragedWeights = reduceFeatureAveragedWeights;
         this.leftArcFeatureAveragedWeights = leftArcFeatureAveragedWeights;
@@ -176,7 +176,7 @@ public class BinaryPerceptron {
     }
 
     public float[] leftArcScores(final Object[] features, boolean decode) {
-        float scores[] = new float[dependencySize];
+        float[] scores = new float[dependencySize];
 
         HashMap<Object, CompactArray>[] map = decode ? leftArcFeatureAveragedWeights : leftArcFeatureWeights;
 
@@ -198,7 +198,7 @@ public class BinaryPerceptron {
     }
 
     public float[] rightArcScores(final Object[] features, boolean decode) {
-        float scores[] = new float[dependencySize];
+        float[] scores = new float[dependencySize];
 
         HashMap<Object, CompactArray>[] map = decode ? rightArcFeatureAveragedWeights : rightArcFeatureWeights;
 
@@ -248,9 +248,9 @@ public class BinaryPerceptron {
 
     public int laSize() {
         int size = 0;
-        for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
-            for (Object feat : leftArcFeatureAveragedWeights[i].keySet()) {
-                size += leftArcFeatureAveragedWeights[i].get(feat).length();
+        for (HashMap<Object, CompactArray> leftArcFeatureAveragedWeight : leftArcFeatureAveragedWeights) {
+            for (Object feat : leftArcFeatureAveragedWeight.keySet()) {
+                size += leftArcFeatureAveragedWeight.get(feat).length();
             }
         }
         return size;
@@ -258,9 +258,9 @@ public class BinaryPerceptron {
 
     public int effectiveLaSize() {
         int size = 0;
-        for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
-            for (Object feat : leftArcFeatureAveragedWeights[i].keySet()) {
-                for (float f : leftArcFeatureAveragedWeights[i].get(feat).getArray())
+        for (HashMap<Object, CompactArray> leftArcFeatureAveragedWeight : leftArcFeatureAveragedWeights) {
+            for (Object feat : leftArcFeatureAveragedWeight.keySet()) {
+                for (float f : leftArcFeatureAveragedWeight.get(feat).getArray())
                     if (f != 0f)
                         size++;
             }

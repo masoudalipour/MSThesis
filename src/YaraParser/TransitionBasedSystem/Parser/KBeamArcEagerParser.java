@@ -46,18 +46,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     ExecutorService executor;
     CompletionService<ArrayList<BeamElement>> pool;
 
-    public static KBeamArcEagerParser createParser(String modelPath,int numOfThreads) throws Exception{
-        InfStruct infStruct = new InfStruct(modelPath);
-
-        ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
-        IndexMaps maps = infStruct.maps;
-        AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
-
-        int featureSize = averagedPerceptron.featureSize();
-        return new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, numOfThreads);
-        
-    }
-    
     public KBeamArcEagerParser(AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations,
                                int featureLength, IndexMaps maps, int numOfThreads) {
         this.classifier = classifier;
@@ -67,7 +55,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         executor = Executors.newFixedThreadPool(numOfThreads);
         pool = new ExecutorCompletionService<>(executor);
     }
-    
+
     public KBeamArcEagerParser(BinaryPerceptron classifier, ArrayList<Integer> dependencyRelations,
                                int featureLength, IndexMaps maps, int numOfThreads) {
         this.bClassifier = classifier;
@@ -78,7 +66,19 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         pool = new ExecutorCompletionService<>(executor);
     }
 
-    private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence, boolean rootFirst, int beamWidth) throws Exception {
+    public static KBeamArcEagerParser createParser(String modelPath, int numOfThreads) throws Exception {
+        InfStruct infStruct = new InfStruct(modelPath);
+
+        ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
+        IndexMaps maps = infStruct.maps;
+        AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
+
+        int featureSize = averagedPerceptron.featureSize();
+        return new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, numOfThreads);
+
+    }
+
+    private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence, boolean rootFirst, int beamWidth) {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
@@ -92,8 +92,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     && !canReduce
                     && !canRightArc
                     && !canLeftArc) {
-                float addedScore = prevScore;
-                beamPreserver.add(new BeamElement(addedScore, b, 4, -1));
+                beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
 
                 if (beamPreserver.size() > beamWidth)
                     beamPreserver.pollFirst();
@@ -149,7 +148,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
-        while (!ArcEager.isTerminal(beam)) {
+        while (ArcEager.isNotTerminal(beam)) {
             TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             if (numOfThreads == 1) {
@@ -213,7 +212,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         return bestConfiguration;
     }
 
-    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth, boolean rootFirst) throws Exception {
+    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth, boolean rootFirst) {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
@@ -360,7 +359,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
-        while (!ArcEager.isTerminal(beam)) {
+        while (ArcEager.isNotTerminal(beam)) {
             TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             if (numOfThreads == 1) {
@@ -431,7 +430,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     }
 
     /**
-     * Needs Conll 2006 format
+     * Needs CoNLL 2006 format
      *
      * @param inputFile
      * @param outputFile
@@ -522,8 +521,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 gs[6] = ps[0];
                 gs[7] = ps[1];
                 StringBuilder output = new StringBuilder();
-                for (int i = 0; i < gs.length; i++) {
-                    output.append(gs[i]).append("\t");
+                for (String g : gs) {
+                    output.append(g).append("\t");
                 }
                 pwriter.write(output.toString().trim() + "\n");
             } else {
@@ -536,8 +535,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         if (addScore) {
             BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));
 
-            for (int i = 0; i < scoreList.size(); i++)
-                scoreWriter.write(scoreList.get(i) + "\n");
+            for (Float aFloat : scoreList) scoreWriter.write(aFloat + "\n");
             scoreWriter.flush();
             scoreWriter.close();
         }
@@ -706,8 +704,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 gs[6] = ps[0];
                 gs[7] = ps[1];
                 StringBuilder output = new StringBuilder();
-                for (int i = 0; i < gs.length; i++) {
-                    output.append(gs[i]).append("\t");
+                for (String g : gs) {
+                    output.append(g).append("\t");
                 }
                 pwriter.write(output.toString().trim() + "\n");
             } else {
@@ -720,8 +718,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         if (addScore) {
             BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));
 
-            for (int i = 0; i < scoreList.size(); i++)
-                scoreWriter.write(scoreList.get(i) + "\n");
+            for (Float aFloat : scoreList) scoreWriter.write(aFloat + "\n");
             scoreWriter.flush();
             scoreWriter.close();
         }

@@ -103,7 +103,7 @@ public class InfStruct {
         this.dependencyLabels = dependencyLabels;
         this.options = options;
     }
-    
+
     public InfStruct(BinaryPerceptron perceptron, IndexMaps maps, ArrayList<Integer> dependencyLabels, Options options) {
         shiftFeatureAveragedWeights = new HashMap[perceptron.shiftFeatureAveragedWeights.length];
         reduceFeatureAveragedWeights = new HashMap[perceptron.reduceFeatureAveragedWeights.length];

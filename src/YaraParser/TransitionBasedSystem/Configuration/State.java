@@ -11,7 +11,7 @@ import java.util.ArrayDeque;
 
 public class State implements Cloneable {
     public int rootIndex;
-    public int maxSentenceSize;
+    int maxSentenceSize;
 
     /**
      * This is the additional information for the case of parsing with tree constraint
@@ -19,20 +19,20 @@ public class State implements Cloneable {
      * Joakim Nivre and Daniel FernÃ¡ndez-GonzÃ¡lez. "Arc-Eager Parsing with the Tree Constraint."
      * Computational Linguistics(2014).
      */
-    protected boolean emptyFlag;
+    private boolean emptyFlag;
 
     /**
      * Keeps dependent->head information
      */
-    protected Pair<Integer, Integer>[] arcs;
-    protected int[] leftMostArcs;
-    protected int[] rightMostArcs;
-    protected int[] leftValency;
-    protected int[] rightValency;
-    protected long[] rightDepLabels;
-    protected long[] leftDepLabels;
-    protected ArrayDeque<Integer> stack;
-    int bufferH;
+    private Pair<Integer, Integer>[] arcs;
+    private int[] leftMostArcs;
+    private int[] rightMostArcs;
+    private int[] leftValency;
+    private int[] rightValency;
+    private long[] rightDepLabels;
+    private long[] leftDepLabels;
+    private ArrayDeque<Integer> stack;
+    private int bufferH;
 
     public State(int size) {
         emptyFlag = false;
@@ -67,23 +67,31 @@ public class State implements Cloneable {
         }
     }
 
-    public ArrayDeque<Integer> getStack() {
+    ArrayDeque<Integer> getStack() {
         return stack;
     }
 
-    public int pop() throws Exception {
+    public int popStack() {
         return stack.pop();
     }
 
-    public void push(int index) {
-        stack.push(index);
+    private void incrementBufferHead() {
+        if (bufferH == maxSentenceSize)
+            bufferH = -1;
+        else
+            bufferH++;
+    }
+
+    public void pushStack() {
+        stack.push(bufferH);
+        incrementBufferHead();
     }
 
     public void addArc(int dependent, int head, int dependency) {
         arcs[dependent] = new Pair<>(head, dependency);
         long value = 1L << (dependency);
-        
-        assert dependency<64;
+
+        assert dependency < 64;
 
         if (dependent > head) { //right dep
             if (rightMostArcs[head] == 0 || dependent > rightMostArcs[head])
@@ -129,8 +137,8 @@ public class State implements Cloneable {
         return bufferH + position;
     }
 
-    public boolean isTerminalState() {
-        return bufferEmpty() && stackEmpty() || stack.size() == 0 && bufferH == rootIndex;
+    public boolean isNotTerminalState() {
+        return (!bufferEmpty() || !stackEmpty()) && (stack.size() != 0 || bufferH != rootIndex);
     }
 
     public boolean hasHead(int dependent) {
@@ -201,13 +209,6 @@ public class State implements Cloneable {
 
     public void setMaxSentenceSize(int maxSentenceSize) {
         this.maxSentenceSize = maxSentenceSize;
-    }
-
-    public void incrementBufferHead() {
-        if (bufferH == maxSentenceSize)
-            bufferH = -1;
-        else
-            bufferH++;
     }
 
     public void setBufferH(int bufferH) {
