@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project 0 for terms.
- */
-
 package YaraParser.TransitionBasedSystem.Features;
 
 import YaraParser.Structures.Sentence;
@@ -13,9 +8,7 @@ public class FeatureExtractor {
     /**
      * Given a list of templates, extracts all features for the given state
      *
-     * @param configuration
-     * @return
-     * @throws Exception
+     * @return Object[]
      */
     public static Object[] extractAllParseFeatures(Configuration configuration, int length) {
         if (length == 26)
@@ -30,9 +23,7 @@ public class FeatureExtractor {
     /**
      * Given a list of templates, extracts all features for the given state
      *
-     * @param configuration
-     * @return
-     * @throws Exception
+     * @return Object[]
      */
     private static Object[] extractExtendedFeatures(Configuration configuration, int length) {
         Object[] featureMap = new Object[length];
@@ -41,8 +32,8 @@ public class FeatureExtractor {
         Sentence sentence = configuration.sentence;
 
         int b0Position = 0;
-        int b1Position = 0;
-        int b2Position = 0;
+        int b1Position;
+        int b2Position;
         int s0Position = 0;
 
         long svr = 0; // stack right valency
@@ -231,8 +222,8 @@ public class FeatureExtractor {
         long b2wp = b2p;
         b2wp |= (b2w << 8);
 
-        /**
-         * From single words
+        /*
+          From single words
          */
         if (s0w != 1) {
             featureMap[index++] = s0wp;
@@ -270,8 +261,8 @@ public class FeatureExtractor {
         }
         featureMap[index++] = b2p;
 
-        /**
-         * from word pairs
+        /*
+          from word pairs
          */
         if (s0w != 1 && b0w != 1) {
             featureMap[index++] = (s0wp << 28) | b0wp;
@@ -303,8 +294,8 @@ public class FeatureExtractor {
         featureMap[index++] = (s0p << 8) | b0p;
         featureMap[index++] = (b0p << 8) | b1p;
 
-        /**
-         * from three words
+        /*
+          from three words
          */
         featureMap[index++] = (b0p << 16) | (b1p << 8) | b2p;
         featureMap[index++] = (s0p << 16) | (b0p << 8) | b1p;
@@ -313,8 +304,8 @@ public class FeatureExtractor {
         featureMap[index++] = (s0p << 16) | (sr0p << 8) | b0p;
         featureMap[index++] = (s0p << 16) | (b0p << 8) | bl0p;
 
-        /**
-         * distance
+        /*
+          distance
          */
         long distance = 0;
         if (s0Position > 0 && b0Position > 0)
@@ -338,8 +329,8 @@ public class FeatureExtractor {
         }
         featureMap[index++] = s0p | (b0p << 8) | (distance << 28);
 
-        /**
-         * Valency information
+        /*
+          Valency information
          */
         if (s0w != 1) {
             featureMap[index++] = s0w | (svr << 20);
@@ -360,8 +351,8 @@ public class FeatureExtractor {
         }
         featureMap[index++] = b0p | (bvl << 8);
 
-        /**
-         * Unigrams
+        /*
+          Unigrams
          */
         if (sh0w != 1) {
             featureMap[index++] = sh0w;
@@ -392,8 +383,8 @@ public class FeatureExtractor {
         featureMap[index++] = bl0p;
         featureMap[index++] = bl0l;
 
-        /**
-         * From third order features
+        /*
+          From third order features
          */
         if (sh1w != 1) {
             featureMap[index++] = sh1w;
@@ -428,8 +419,8 @@ public class FeatureExtractor {
         featureMap[index++] = s0p | (sh0p << 8) | (sh1p << 16);
         featureMap[index++] = b0p | (bl0p << 8) | (bl1p << 16);
 
-        /**
-         * label set
+        /*
+          label set
          */
         if (s0Position >= 0) {
             sdl = state.leftDependentLabels(s0Position);
@@ -457,16 +448,14 @@ public class FeatureExtractor {
         } else {
             featureMap[index++] = null;
         }
-        featureMap[index++] = (b0p + "|" + bdl);
+        featureMap[index] = (b0p + "|" + bdl);
         return featureMap;
     }
 
     /**
      * Given a list of templates, extracts all features for the given state
      *
-     * @param configuration
-     * @return
-     * @throws Exception
+     * @return Long[]
      */
     private static Long[] extractBasicFeatures(Configuration configuration, int length) {
         Long[] featureMap = new Long[length];

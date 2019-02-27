@@ -569,9 +569,7 @@ public class ArcEagerBeamTrainer {
             finalOracle = bestScoringOracle;
             predicted = beam.get(0);
         } else {
-            float violation = beam.get(0).getScore(true) - bestScoringOracle.getScore(true); // Math.abs(beam.get(0).getScore(true)
-            // -
-            // bestScoringOracle.getScore(true));
+            float violation = beam.get(0).getScore(true) - bestScoringOracle.getScore(true);
             if (violation > maxViol) {
                 maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
             }
@@ -603,7 +601,7 @@ public class ArcEagerBeamTrainer {
                     isTrueFeature = false;
             }
 
-            if (isTrueFeature) { // if the made dependency is truely for the word
+            if (isTrueFeature) { // if the made dependency is truly for the word
                 Object[] feats = FeatureExtractor.extractAllParseFeatures(oracleConfiguration, featureLength);
                 for (int f = 0; f < feats.length; f++) {
                     Pair<Integer, Object> featName = new Pair<>(action, feats[f]);

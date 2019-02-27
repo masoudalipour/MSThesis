@@ -138,11 +138,11 @@ public class BinaryModelEvaluator {
          * Association for Computational Linguistics: Human Language Technologies, pp.
          * 142-151. Association for Computational Linguistics, 2012.
          */
-        Configuration bestScoringOracle = null;
+        Configuration bestScoringOracle;
 
         while (ArcEager.isNotTerminal(beam) && beam.size() > 0) {
-            /**
-             * generating new oracles it keeps the oracles which are in the terminal state
+            /*
+              generating new oracles it keeps the oracles which are in the terminal state
              */
             HashMap<Configuration, Float> newOracles = new HashMap<>();
 
@@ -233,14 +233,10 @@ public class BinaryModelEvaluator {
                         if (options.useRandomOracleSelection) { // choosing randomly, otherwise using latent structured
                             // Perceptron
                             List<Configuration> keys = new ArrayList<>(oracles.keySet());
-                            Configuration randomKey = keys.get(randGen.nextInt(keys.size()));
-                            oracles = new HashMap<>();
-                            oracles.put(randomKey, 0.0f);
-                            bestScoringOracle = randomKey;
-                        } else {
-                            oracles = new HashMap<>();
-                            oracles.put(bestScoringOracle, 0.0f);
+                            bestScoringOracle = keys.get(randGen.nextInt(keys.size()));
                         }
+                        oracles = new HashMap<>();
+                        oracles.put(bestScoringOracle, 0.0f);
                     }
                 } else
                     break;
