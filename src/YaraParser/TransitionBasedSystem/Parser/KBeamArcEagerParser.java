@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.TransitionBasedSystem.Parser;
 
 import YaraParser.Accessories.CoNLLReader;
@@ -34,17 +29,17 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     /**
      * Any kind of classifier that can give us scores
      */
-    AveragedPerceptron classifier;
-    BinaryPerceptron bClassifier;
+    private AveragedPerceptron classifier;
+    private BinaryPerceptron bClassifier;
 
-    ArrayList<Integer> dependencyRelations;
+    private ArrayList<Integer> dependencyRelations;
 
-    int featureLength;
+    private int featureLength;
 
-    IndexMaps maps;
+    private IndexMaps maps;
 
-    ExecutorService executor;
-    CompletionService<ArrayList<BeamElement>> pool;
+    private ExecutorService executor;
+    private CompletionService<ArrayList<BeamElement>> pool;
 
     public KBeamArcEagerParser(AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations,
                                int featureLength, IndexMaps maps, int numOfThreads) {
@@ -349,7 +344,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         }
     }
 
-    public Configuration parsePartial(GoldConfiguration goldConfiguration, Sentence sentence, boolean rootFirst, int beamWidth, int numOfThreads) throws Exception {
+    private Configuration parsePartial(GoldConfiguration goldConfiguration, Sentence sentence, boolean rootFirst, int beamWidth, int numOfThreads) throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
         boolean isNonProjective = false;
         if (goldConfiguration.isNonprojective()) {
@@ -433,7 +428,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
      * Needs CoNLL 2006 format
      *
      */
-    public void parseConllFileNoParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numOfThreads, boolean partial, String scorePath) throws Exception {
+    private void parseConllFileNoParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numOfThreads, boolean partial, String scorePath) throws Exception {
         CoNLLReader reader = new CoNLLReader(inputFile);
         boolean addScore = false;
         if (scorePath.trim().length() > 0)
@@ -597,7 +592,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         System.out.println("done!");
     }
 
-    public void parseConllFileParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
+    private void parseConllFileParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
         CoNLLReader reader = new CoNLLReader(inputFile);
 
         boolean addScore = false;
