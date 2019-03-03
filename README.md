@@ -152,6 +152,9 @@ There is small portion from Google Universal Treebank for the German language in
 
      java -jar jar/YaraParser.jar train  -train-file sample_data/train.conll  -dev sample_data/dev.conll -model /tmp/model iter:10  -punc punc_files/google_universal.puncs
 
+	 java -jar out/artifacts/MSThesis_jar/MSThesis.jar train -train-file sample_data/train.conll -dev sample_data/dev.conll -model out/model/model iter:10 -punc punc_files/google_universal.puncs
+
+
 You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __87.52__ and labeled accuracy __81.15__ on the dev set in the 7th iteration. 
 
 Performance numbers are produced after each iteration. The following is the performance on the dev after the 10th iteration:
