@@ -1,9 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
-
 package YaraParser.TransitionBasedSystem.Parser;
 
 import YaraParser.Accessories.Pair;
@@ -20,23 +14,23 @@ import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
 public class ParseThread implements Callable<Pair<Configuration, Integer>> {
-    AveragedPerceptron classifier;
+    private AveragedPerceptron classifier;
 
-    ArrayList<Integer> dependencyRelations;
+    private ArrayList<Integer> dependencyRelations;
 
-    int featureLength;
+    private int featureLength;
 
-    Sentence sentence;
-    boolean rootFirst;
-    int beamWidth;
-    GoldConfiguration goldConfiguration;
-    boolean partial;
+    private Sentence sentence;
+    private boolean rootFirst;
+    private int beamWidth;
+    private GoldConfiguration goldConfiguration;
+    private boolean partial;
 
-    int id;
+    private int id;
 
-    public ParseThread(int id, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength,
-                       Sentence sentence,
-                       boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
+    ParseThread(int id, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength,
+                Sentence sentence,
+                boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
         this.id = id;
         this.classifier = classifier;
         this.dependencyRelations = dependencyRelations;
@@ -55,7 +49,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         else return new Pair<>(parsePartial(), id);
     }
 
-    Pair<Configuration, Integer> parse() throws Exception {
+    private Pair<Configuration, Integer> parse() throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
 
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
@@ -253,7 +247,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         return new Pair<>(bestConfiguration, id);
     }
 
-    public Configuration parsePartial() throws Exception {
+    private Configuration parsePartial() throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
         boolean isNonProjective = false;
         if (goldConfiguration.isNonprojective()) {

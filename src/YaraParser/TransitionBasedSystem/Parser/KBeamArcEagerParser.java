@@ -27,17 +27,17 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     /**
      * Any kind of classifier that can give us scores
      */
-    AveragedPerceptron classifier;
-    BinaryPerceptron bClassifier;
+    private AveragedPerceptron classifier;
+    private BinaryPerceptron bClassifier;
 
-    ArrayList<Integer> dependencyRelations;
+    private ArrayList<Integer> dependencyRelations;
 
-    int featureLength;
+    private int featureLength;
 
-    IndexMaps maps;
+    private IndexMaps maps;
 
-    ExecutorService executor;
-    CompletionService<ArrayList<BeamElement>> pool;
+    private ExecutorService executor;
+    private CompletionService<ArrayList<BeamElement>> pool;
 
     public KBeamArcEagerParser(AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations,
                                int featureLength, IndexMaps maps, int numOfThreads) {
@@ -342,7 +342,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         }
     }
 
-    public Configuration parsePartial(GoldConfiguration goldConfiguration, Sentence sentence, boolean rootFirst, int beamWidth, int numOfThreads) throws Exception {
+    private Configuration parsePartial(GoldConfiguration goldConfiguration, Sentence sentence, boolean rootFirst, int beamWidth, int numOfThreads) throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
         boolean isNonProjective = false;
         if (goldConfiguration.isNonprojective()) {
