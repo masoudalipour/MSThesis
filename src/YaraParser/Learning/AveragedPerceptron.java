@@ -78,6 +78,14 @@ public class AveragedPerceptron {
         this(infStruct.shiftFeatureAveragedWeights, infStruct.reduceFeatureAveragedWeights, infStruct.leftArcFeatureAveragedWeights, infStruct.rightArcFeatureAveragedWeights, infStruct.dependencySize);
     }
 
+    /**
+     *
+     * @param actionType
+     * @param slotNum
+     * @param featureName
+     * @param labelIndex It is for right arc and left arc. It is the offset of their range in action array
+     * @param change
+     */
     public void changeWeight(Actions actionType, int slotNum, Object featureName, int labelIndex, float change) {
         if (featureName == null)
             return;
@@ -116,8 +124,7 @@ public class AveragedPerceptron {
             aValues = aMap.get(featureName);
             aValues.expandArray(labelIndex, iteration * change);
         } else {
-            float[] val = new float[]{change};
-            values = new CompactArray(labelIndex, val);
+            values = new CompactArray(labelIndex, new float[]{change});
             map.put(featureName, values);
 
             float[] aVal = new float[]{iteration * change};

@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.TransitionBasedSystem.Configuration;
 
 import YaraParser.Structures.Sentence;
@@ -14,7 +9,9 @@ public class Configuration implements Comparable, Cloneable, Serializable {
     public Sentence sentence;
 
     public State state;
-
+    /**
+     * 0 = shift, 1 = reduce, 2 = unshift, 3 - dependencyLabels.size() = right arc and the rest of it is left arc
+     */
     public ArrayList<Integer> actionHistory;
 
     public float score;
@@ -36,12 +33,9 @@ public class Configuration implements Comparable, Cloneable, Serializable {
     /**
      * Returns the current score of the configuration
      *
-     * @param normalized if true, the score will be normalized by the number of done actions
-     * @return
+     * @return float
      */
-    public float getScore(boolean normalized) {
-        // if (normalized && actionHistory.size() > 0)
-        //     return score / actionHistory.size();
+    public float getScore() {
         return score;
     }
 
@@ -64,7 +58,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
 
         // may be unsafe
         Configuration configuration = (Configuration) o;
-        float diff = getScore(true) - configuration.getScore(true);
+        float diff = getScore() - configuration.getScore();
 
         if (diff > 0)
             return (int) Math.ceil(diff);
@@ -95,7 +89,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
         Configuration configuration = new Configuration(sentence);
 
         ArrayList<Integer> history = new ArrayList<>(actionHistory.size());
-        for (Integer integer : actionHistory) history.add(integer);
+        history.addAll(actionHistory);
 
         configuration.actionHistory = history;
 

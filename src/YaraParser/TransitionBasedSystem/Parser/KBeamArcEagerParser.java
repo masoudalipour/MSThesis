@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.TransitionBasedSystem.Parser;
 
 import YaraParser.Accessories.CoNLLReader;
@@ -18,10 +13,9 @@ import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Configuration.State;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -29,7 +23,6 @@ import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 public class KBeamArcEagerParser extends TransitionBasedParser {
     /**
      * Any kind of classifier that can give us scores
@@ -204,8 +197,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
         for (Configuration configuration : beam) {
-            if (configuration.getScore(true) > bestScore) {
-                bestScore = configuration.getScore(true);
+            if (configuration.getScore() > bestScore) {
+                bestScore = configuration.getScore();
                 bestConfiguration = configuration;
             }
         }
@@ -414,26 +407,25 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
         for (Configuration configuration : beam) {
-            if (configuration.getScore(true) > bestScore) {
-                bestScore = configuration.getScore(true);
+            if (configuration.getScore() > bestScore) {
+                bestScore = configuration.getScore();
                 bestConfiguration = configuration;
             }
         }
         return bestConfiguration;
     }
 
-    public void parseConllFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
-        if (numThreads == 1)
-            parseConllFileNoParallel(inputFile, outputFile, rootFirst, beamWidth, labeled, lowerCased, numThreads, partial, scorePath);
-        else
-            parseConllFileParallel(inputFile, outputFile, rootFirst, beamWidth, lowerCased, numThreads, partial, scorePath);
-    }
-
     /**
      * Needs CoNLL 2006 format
-     *
      */
-    public void parseConllFileNoParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numOfThreads, boolean partial, String scorePath) throws Exception {
+    public void parseCoNLLFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
+        if (numThreads == 1)
+            parseCoNLLFileNoParallel(inputFile, outputFile, rootFirst, beamWidth, labeled, lowerCased, numThreads, partial, scorePath);
+        else
+            parseCoNLLFileParallel(inputFile, outputFile, rootFirst, beamWidth, lowerCased, numThreads, partial, scorePath);
+    }
+
+    private void parseCoNLLFileNoParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numOfThreads, boolean partial, String scorePath) throws Exception {
         CoNLLReader reader = new CoNLLReader(inputFile);
         boolean addScore = false;
         if (scorePath.trim().length() > 0)
@@ -597,12 +589,11 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         System.out.println("done!");
     }
 
-    public void parseConllFileParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
-        CoNLLReader reader = new CoNLLReader(inputFile);
-
+    private void parseCoNLLFileParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
         boolean addScore = false;
-        if (scorePath.trim().length() > 0)
+        if (scorePath.trim().length() > 0) {
             addScore = true;
+        }
         ArrayList<Float> scoreList = new ArrayList<>();
 
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
@@ -614,12 +605,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile + ".tmp"));
         int dataCount = 0;
 
-        while (true) {
-            ArrayList<GoldConfiguration> data = reader.readData(15000, true, true, rootFirst, lowerCased, maps);
+        CoNLLReader reader = new CoNLLReader(inputFile);
+        ArrayList<GoldConfiguration> data = reader.readData(15000, true, true, rootFirst, lowerCased, maps);
+        while (data.size() != 0) {
             size += data.size();
-            if (data.size() == 0)
-                break;
-
             int index = 0;
             Configuration[] confs = new Configuration[data.size()];
 
@@ -631,8 +620,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             for (int i = 0; i < confs.length; i++) {
                 dataCount++;
-                if (dataCount % 100 == 0)
+                if (dataCount % 100 == 0) {
                     System.err.print(dataCount + " ... ");
+                }
 
                 Pair<Configuration, Integer> configurationIntegerPair = pool.take().get();
                 confs[configurationIntegerPair.second] = configurationIntegerPair.first;
@@ -653,11 +643,13 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     int head = bestParse.state.getHead(w);
                     int dep = bestParse.state.getDependency(w);
 
-                    if (w == bestParse.state.rootIndex && !rootFirst)
+                    if (w == bestParse.state.rootIndex && !rootFirst) {
                         continue;
+                    }
 
-                    if (head == bestParse.state.rootIndex)
+                    if (head == bestParse.state.rootIndex) {
                         head = 0;
+                    }
 
                     String label = head == 0 ? maps.rootString : maps.revWords[dep];
                     String output = head + "\t" + label + "\n";
@@ -666,8 +658,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 finalOutput.append("\n");
                 writer.write(finalOutput.toString());
             }
+            data = reader.readData(15000, true, true, rootFirst, lowerCased, maps);
         }
-
         System.err.print("\n");
         long end = System.currentTimeMillis();
         float each = (1.0f * (end - start)) / size;
@@ -675,7 +667,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
         writer.flush();
         writer.close();
-
         DecimalFormat format = new DecimalFormat("##.00");
 
         System.out.println(format.format(eacharc) + " ms for each arc!");
@@ -709,6 +700,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         }
         pwriter.flush();
         pwriter.close();
+        Files.deleteIfExists(Path.of(outputFile + ".tmp"));
 
         if (addScore) {
             BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));

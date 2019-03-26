@@ -245,8 +245,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
         for (Configuration configuration : beam) {
-            if (configuration.getScore(true) > bestScore) {
-                bestScore = configuration.getScore(true);
+            if (configuration.getScore() > bestScore) {
+                bestScore = configuration.getScore();
                 bestConfiguration = configuration;
             }
         }
@@ -304,8 +304,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
         for (Configuration configuration : beam) {
-            if (configuration.getScore(true) > bestScore) {
-                bestScore = configuration.getScore(true);
+            if (configuration.getScore() > bestScore) {
+                bestScore = configuration.getScore();
                 bestConfiguration = configuration;
             }
         }

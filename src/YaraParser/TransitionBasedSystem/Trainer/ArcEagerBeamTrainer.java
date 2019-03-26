@@ -148,7 +148,7 @@ public class ArcEagerBeamTrainer {
                 KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations,
                         featureLength, maps, options.numOfThreads);
 
-                parser.parseConllFile(devPath, modelPath + ".__tmp__", options.rootFirst, options.beamWidth, true,
+                parser.parseCoNLLFile(devPath, modelPath + ".__tmp__", options.rootFirst, options.beamWidth, true,
                         lowerCased, options.numOfThreads, false, "");
                 Evaluator.evaluate(devPath, modelPath + ".__tmp__", punctuations);
                 parser.shutDownLiveThreads();
@@ -333,7 +333,7 @@ public class ArcEagerBeamTrainer {
                         break;
 
                     if (beam.size() > 0 && !oracleInBeam && updateMode.equals("max_violation")) {
-                        float violation = beam.get(0).getScore(true) - bestScoringOracle.getScore(true);
+                        float violation = beam.get(0).getScore() - bestScoringOracle.getScore();
                         if (violation > maxViol) {
                             maxViol = violation;
                             maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
@@ -448,8 +448,8 @@ public class ArcEagerBeamTrainer {
                     newConfig.addScore(score);
                     newOracles.put(newConfig, (float) 0);
 
-                    if (newConfig.getScore(true) > bestScore) {
-                        bestScore = newConfig.getScore(true);
+                    if (newConfig.getScore() > bestScore) {
+                        bestScore = newConfig.getScore();
                         bestScoringOracle = newConfig;
                     }
                 }
@@ -464,8 +464,8 @@ public class ArcEagerBeamTrainer {
                             newConfig.addScore(score);
                             newOracles.put(newConfig, (float) 0);
 
-                            if (newConfig.getScore(true) > bestScore) {
-                                bestScore = newConfig.getScore(true);
+                            if (newConfig.getScore() > bestScore) {
+                                bestScore = newConfig.getScore();
                                 bestScoringOracle = newConfig;
                             }
                         }
@@ -483,8 +483,8 @@ public class ArcEagerBeamTrainer {
                             newConfig.addScore(score);
                             newOracles.put(newConfig, (float) 0);
 
-                            if (newConfig.getScore(true) > bestScore) {
-                                bestScore = newConfig.getScore(true);
+                            if (newConfig.getScore() > bestScore) {
+                                bestScore = newConfig.getScore();
                                 bestScoringOracle = newConfig;
                             }
                         }
@@ -498,8 +498,8 @@ public class ArcEagerBeamTrainer {
                     newConfig.addScore(score);
                     newOracles.put(newConfig, (float) 0);
 
-                    if (newConfig.getScore(true) > bestScore) {
-                        bestScore = newConfig.getScore(true);
+                    if (newConfig.getScore() > bestScore) {
+                        bestScore = newConfig.getScore();
                         bestScoringOracle = newConfig;
                     }
                 }
@@ -569,7 +569,7 @@ public class ArcEagerBeamTrainer {
             finalOracle = bestScoringOracle;
             predicted = beam.get(0);
         } else {
-            float violation = beam.get(0).getScore(true) - bestScoringOracle.getScore(true);
+            float violation = beam.get(0).getScore() - bestScoringOracle.getScore();
             if (violation > maxViol) {
                 maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
             }

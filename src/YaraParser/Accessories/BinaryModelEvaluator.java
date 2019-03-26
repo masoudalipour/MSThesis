@@ -337,8 +337,8 @@ public class BinaryModelEvaluator {
                     newConfig.addScore(score);
                     newOracles.put(newConfig, (float) 0);
 
-                    if (newConfig.getScore(true) > bestScore) {
-                        bestScore = newConfig.getScore(true);
+                    if (newConfig.getScore() > bestScore) {
+                        bestScore = newConfig.getScore();
                         bestScoringOracle = newConfig;
                     }
                 }
@@ -353,8 +353,8 @@ public class BinaryModelEvaluator {
                             newConfig.addScore(score);
                             newOracles.put(newConfig, (float) 0);
 
-                            if (newConfig.getScore(true) > bestScore) {
-                                bestScore = newConfig.getScore(true);
+                            if (newConfig.getScore() > bestScore) {
+                                bestScore = newConfig.getScore();
                                 bestScoringOracle = newConfig;
                             }
                         }
@@ -372,8 +372,8 @@ public class BinaryModelEvaluator {
                             newConfig.addScore(score);
                             newOracles.put(newConfig, (float) 0);
 
-                            if (newConfig.getScore(true) > bestScore) {
-                                bestScore = newConfig.getScore(true);
+                            if (newConfig.getScore() > bestScore) {
+                                bestScore = newConfig.getScore();
                                 bestScoringOracle = newConfig;
                             }
                         }
@@ -387,8 +387,8 @@ public class BinaryModelEvaluator {
                     newConfig.addScore(score);
                     newOracles.put(newConfig, (float) 0);
 
-                    if (newConfig.getScore(true) > bestScore) {
-                        bestScore = newConfig.getScore(true);
+                    if (newConfig.getScore() > bestScore) {
+                        bestScore = newConfig.getScore();
                         bestScoringOracle = newConfig;
                     }
                 }

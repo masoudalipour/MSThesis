@@ -45,7 +45,6 @@ public class YaraParser {
     private static void parse(Options options) throws Exception {
         if (options.outputFile.equals("") || options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
-
         } else {
             InfStruct infStruct = new InfStruct(options.modelFile);
             ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
@@ -62,11 +61,11 @@ public class YaraParser {
                 parser.parseTaggedFile(options.inputFile, options.outputFile, inf_options.rootFirst,
                         inf_options.beamWidth, inf_options.lowercase, options.separator, options.numOfThreads);
             else if (options.parseConllFile)
-                parser.parseConllFile(options.inputFile, options.outputFile, inf_options.rootFirst,
+                parser.parseCoNLLFile(options.inputFile, options.outputFile, inf_options.rootFirst,
                         inf_options.beamWidth, true, inf_options.lowercase, options.numOfThreads, false,
                         options.scorePath);
             else if (options.parsePartialConll)
-                parser.parseConllFile(options.inputFile, options.outputFile, inf_options.rootFirst,
+                parser.parseCoNLLFile(options.inputFile, options.outputFile, inf_options.rootFirst,
                         inf_options.beamWidth, options.labeled, inf_options.lowercase, options.numOfThreads, true,
                         options.scorePath);
             parser.shutDownLiveThreads();
