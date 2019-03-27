@@ -242,7 +242,6 @@ public class CoNLLReader {
                 cluster6Ids.add(0);
                 clusterIds.add(0);
             }
-            sentenceCounter++;
             Sentence currentSentence = new Sentence(tokens, tags, cluster4Ids, cluster6Ids, clusterIds);
             configurationSet.add(new GoldConfiguration(currentSentence, goldDependencies));
         }

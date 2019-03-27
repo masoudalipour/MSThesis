@@ -72,7 +72,7 @@ public class YaraParser {
         }
     }
 
-    public static void train(Options options) throws Exception {
+    private static void train(Options options) throws Exception {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {

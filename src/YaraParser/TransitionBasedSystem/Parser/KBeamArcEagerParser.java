@@ -617,17 +617,17 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 pool.submit(thread);
                 index++;
             }
-
+            System.out.println("# of sentences:");
             for (int i = 0; i < confs.length; i++) {
                 dataCount++;
                 if (dataCount % 100 == 0) {
-                    System.err.print(dataCount + " ... ");
+                    System.out.print(dataCount + " ... ");
                 }
 
                 Pair<Configuration, Integer> configurationIntegerPair = pool.take().get();
                 confs[configurationIntegerPair.second] = configurationIntegerPair.first;
             }
-
+            System.out.println();
             for (int j = 0; j < confs.length; j++) {
                 Configuration bestParse = confs[j];
                 if (addScore) {
@@ -660,17 +660,16 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
             data = reader.readData(15000, true, true, rootFirst, lowerCased, maps);
         }
-        System.err.print("\n");
         long end = System.currentTimeMillis();
-        float each = (1.0f * (end - start)) / size;
-        float eacharc = (1.0f * (end - start)) / allArcs;
+        float eachSent = (1.0f * (end - start)) / size;
+        float eachArc = (1.0f * (end - start)) / allArcs;
 
         writer.flush();
         writer.close();
         DecimalFormat format = new DecimalFormat("##.00");
 
-        System.out.println(format.format(eacharc) + " ms for each arc!");
-        System.out.println(format.format(each) + " ms for each sentence!");
+        System.out.println(format.format(eachArc) + " ms for each arc!");
+        System.out.println(format.format(eachSent) + " ms for each sentence!");
         System.out.println();
         BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
         BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));

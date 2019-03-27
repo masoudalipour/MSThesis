@@ -114,7 +114,7 @@ public class ArcEagerBeamTrainer {
             long timeMiliSec = (end - start) % 1000;
             System.out.println("iteration " + i + " took " + timeSec + "." + timeMiliSec + " seconds\n");
 
-            System.out.println("saving the model");
+            System.out.println("Saving the model");
             if (modelPath.lastIndexOf("/") > 0) {
                 String modelFolder = modelPath.substring(0, modelPath.lastIndexOf("/"));
                 File modelDirectory = new File(modelFolder);
@@ -126,10 +126,9 @@ public class ArcEagerBeamTrainer {
             InfStruct bInfStruct = new InfStruct(bClassifier, maps, dependencyRelations, options);
             infStruct.saveModel(modelPath + "_iter" + i);
             bInfStruct.saveModel(modelPath + "_Binary_iter" + i);
-            System.out.println("done");
-
+            System.out.println("The model saved");
             if (!devPath.equals("")) {
-                System.out.println("AveragedPerceptron:");
+                System.out.println("Validating AveragedPerceptron model:");
                 AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
 
                 int raSize = averagedPerceptron.raSize();
@@ -155,7 +154,7 @@ public class ArcEagerBeamTrainer {
             }
 
             if (!devPath.equals("")) {
-                System.out.println("BinaryPerceptron:");
+                System.out.println("Validating BinaryPerceptron model:");
                 BinaryPerceptron binaryPerceptron = new BinaryPerceptron(bInfStruct);
 
                 int raSize = binaryPerceptron.raSize();
