@@ -320,7 +320,8 @@ public class BinaryModelEvaluator {
     }
 
     private Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration,
-                                                HashMap<Configuration, Float> oracles, HashMap<Configuration, Float> newOracles) throws Exception {
+                                                HashMap<Configuration, Float> oracles,
+                                                HashMap<Configuration, Float> newOracles) throws Exception {
         float bestScore = Float.NEGATIVE_INFINITY;
         Configuration bestScoringOracle = null;
 
@@ -400,7 +401,8 @@ public class BinaryModelEvaluator {
         return bestScoringOracle;
     }
 
-    private void beamSortOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence) {
+    private void beamSortOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver,
+                                   Sentence sentence) {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;

@@ -25,12 +25,14 @@ public class API_UsageExample {
         AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
 
         int featureSize = averagedPerceptron.featureSize();
-        KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, numOfThreads);
+        KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps,
+                numOfThreads);
 
         String[] words = {"I", "am", "here", "."};
         String[] tags = {"PRP", "VBP", "RB", "."};
 
-        Configuration bestParse = parser.parse(maps.makeSentence(words, tags, infStruct.options.rootFirst, infStruct.options.lowercase), infStruct.options.rootFirst, infStruct.options.beamWidth, numOfThreads);
+        Configuration bestParse = parser.parse(maps.makeSentence(words, tags, infStruct.options.rootFirst,
+                infStruct.options.lowercase), infStruct.options.rootFirst, infStruct.options.beamWidth, numOfThreads);
         if (infStruct.options.rootFirst) {
             for (int i = 0; i < words.length; i++) {
                 System.out.println(words[i] + "\t" + tags[i] + "\t" + bestParse.state.getHead(i + 1) + "\t" + maps.revWords[bestParse.state.getDependency(i + 1)]);

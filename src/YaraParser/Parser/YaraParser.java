@@ -87,9 +87,9 @@ public class YaraParser {
             ArrayList<Integer> dependencyLabels = new ArrayList<>(maps.getLabels().keySet());
 
             int featureLength;
-            if(options.useExtendedFeatures)
+            if (options.useExtendedFeatures)
                 featureLength = 72;
-            else if(options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
+            else if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
                 featureLength = 153;
             else
                 featureLength = 26;

@@ -29,7 +29,10 @@ public class InfStruct {
     public ArrayList<Integer> dependencyLabels;
     public Options options;
 
-    public InfStruct(HashMap<Object, Float>[] shiftFeatureAveragedWeights, HashMap<Object, Float>[] reduceFeatureAveragedWeights, HashMap<Object, CompactArray>[] leftArcFeatureAveragedWeights, HashMap<Object, CompactArray>[] rightArcFeatureAveragedWeights,
+    public InfStruct(HashMap<Object, Float>[] shiftFeatureAveragedWeights,
+                     HashMap<Object, Float>[] reduceFeatureAveragedWeights,
+                     HashMap<Object, CompactArray>[] leftArcFeatureAveragedWeights,
+                     HashMap<Object, CompactArray>[] rightArcFeatureAveragedWeights,
                      IndexMaps maps, ArrayList<Integer> dependencyLabels, Options options, int dependencySize) {
         this.shiftFeatureAveragedWeights = shiftFeatureAveragedWeights;
         this.reduceFeatureAveragedWeights = reduceFeatureAveragedWeights;
@@ -41,7 +44,8 @@ public class InfStruct {
         this.dependencySize = dependencySize;
     }
 
-    public InfStruct(AveragedPerceptron perceptron, IndexMaps maps, ArrayList<Integer> dependencyLabels, Options options) {
+    public InfStruct(AveragedPerceptron perceptron, IndexMaps maps, ArrayList<Integer> dependencyLabels,
+                     Options options) {
         shiftFeatureAveragedWeights = new HashMap[perceptron.shiftFeatureAveragedWeights.length];
         reduceFeatureAveragedWeights = new HashMap[perceptron.reduceFeatureAveragedWeights.length];
 
@@ -82,7 +86,8 @@ public class InfStruct {
             for (Object feat : map2[i].keySet()) {
                 CompactArray vals = map2[i].get(feat);
                 CompactArray avgVals = avgMap2[i].get(feat);
-                leftArcFeatureAveragedWeights[i].put(feat, getAveragedCompactArray(vals, avgVals, perceptron.iteration));
+                leftArcFeatureAveragedWeights[i].put(feat, getAveragedCompactArray(vals, avgVals,
+                        perceptron.iteration));
             }
         }
 
@@ -95,7 +100,8 @@ public class InfStruct {
             for (Object feat : map3[i].keySet()) {
                 CompactArray vals = map3[i].get(feat);
                 CompactArray avgVals = avgMap3[i].get(feat);
-                rightArcFeatureAveragedWeights[i].put(feat, getAveragedCompactArray(vals, avgVals, perceptron.iteration));
+                rightArcFeatureAveragedWeights[i].put(feat, getAveragedCompactArray(vals, avgVals,
+                        perceptron.iteration));
             }
         }
 
@@ -104,7 +110,8 @@ public class InfStruct {
         this.options = options;
     }
 
-    public InfStruct(BinaryPerceptron perceptron, IndexMaps maps, ArrayList<Integer> dependencyLabels, Options options) {
+    public InfStruct(BinaryPerceptron perceptron, IndexMaps maps, ArrayList<Integer> dependencyLabels,
+                     Options options) {
         shiftFeatureAveragedWeights = new HashMap[perceptron.shiftFeatureAveragedWeights.length];
         reduceFeatureAveragedWeights = new HashMap[perceptron.reduceFeatureAveragedWeights.length];
 
@@ -145,7 +152,8 @@ public class InfStruct {
             for (Object feat : map2[i].keySet()) {
                 CompactArray vals = map2[i].get(feat);
                 CompactArray avgVals = avgMap2[i].get(feat);
-                leftArcFeatureAveragedWeights[i].put(feat, getAveragedCompactArray(vals, avgVals, perceptron.iteration));
+                leftArcFeatureAveragedWeights[i].put(feat, getAveragedCompactArray(vals, avgVals,
+                        perceptron.iteration));
             }
         }
 
@@ -158,7 +166,8 @@ public class InfStruct {
             for (Object feat : map3[i].keySet()) {
                 CompactArray vals = map3[i].get(feat);
                 CompactArray avgVals = avgMap3[i].get(feat);
-                rightArcFeatureAveragedWeights[i].put(feat, getAveragedCompactArray(vals, avgVals, perceptron.iteration));
+                rightArcFeatureAveragedWeights[i].put(feat, getAveragedCompactArray(vals, avgVals,
+                        perceptron.iteration));
             }
         }
 

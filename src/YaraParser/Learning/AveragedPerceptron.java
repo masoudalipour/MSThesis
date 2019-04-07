@@ -8,13 +8,15 @@ import java.util.HashMap;
 
 /**
  * This class tries to implement averaged Perceptron algorithm
- * Collins, Michael. "Discriminative training methods for hidden Markov models: Theory and experiments with Perceptron algorithms."
+ * Collins, Michael. "Discriminative training methods for hidden Markov models: Theory and experiments with
+ * Perceptron algorithms."
  * In Proceedings of the ACL-02 conference on Empirical methods in natural language processing-Volume 10, pp. 1-8.
  * Association for Computational Linguistics, 2002.
  * <p/>
  * The averaging update is also optimized by using the trick introduced in Hal Daume's dissertation.
  * For more information see the second chapter of his thesis:
- * Harold Charles Daume' III. "Practical Structured YaraParser.Learning Techniques for Natural Language Processing", PhD thesis, ISI USC, 2006.
+ * Harold Charles Daume' III. "Practical Structured YaraParser.Learning Techniques for Natural Language Processing",
+ * PhD thesis, ISI USC, 2006.
  * http://www.umiacs.umd.edu/~hal/docs/daume06thesis.pdf
  */
 public class AveragedPerceptron {
@@ -29,7 +31,8 @@ public class AveragedPerceptron {
     public int iteration;
     public int dependencySize;
     /**
-     * This is the main part of the extension to the original perceptron algorithm which the averaging over all the history
+     * This is the main part of the extension to the original perceptron algorithm which the averaging over all the
+     * history
      */
     public HashMap<Object, Float>[] shiftFeatureAveragedWeights;
     public HashMap<Object, Float>[] reduceFeatureAveragedWeights;
@@ -64,8 +67,10 @@ public class AveragedPerceptron {
         this.dependencySize = dependencySize;
     }
 
-    private AveragedPerceptron(HashMap<Object, Float>[] shiftFeatureAveragedWeights, HashMap<Object, Float>[] reduceFeatureAveragedWeights,
-                               HashMap<Object, CompactArray>[] leftArcFeatureAveragedWeights, HashMap<Object, CompactArray>[] rightArcFeatureAveragedWeights,
+    private AveragedPerceptron(HashMap<Object, Float>[] shiftFeatureAveragedWeights,
+                               HashMap<Object, Float>[] reduceFeatureAveragedWeights,
+                               HashMap<Object, CompactArray>[] leftArcFeatureAveragedWeights, HashMap<Object,
+            CompactArray>[] rightArcFeatureAveragedWeights,
                                int dependencySize) {
         this.shiftFeatureAveragedWeights = shiftFeatureAveragedWeights;
         this.reduceFeatureAveragedWeights = reduceFeatureAveragedWeights;
@@ -75,15 +80,16 @@ public class AveragedPerceptron {
     }
 
     public AveragedPerceptron(InfStruct infStruct) {
-        this(infStruct.shiftFeatureAveragedWeights, infStruct.reduceFeatureAveragedWeights, infStruct.leftArcFeatureAveragedWeights, infStruct.rightArcFeatureAveragedWeights, infStruct.dependencySize);
+        this(infStruct.shiftFeatureAveragedWeights, infStruct.reduceFeatureAveragedWeights,
+                infStruct.leftArcFeatureAveragedWeights, infStruct.rightArcFeatureAveragedWeights,
+                infStruct.dependencySize);
     }
 
     /**
-     *
      * @param actionType
      * @param slotNum
      * @param featureName
-     * @param labelIndex It is for right arc and left arc. It is the offset of their range in action array
+     * @param labelIndex  It is for right arc and left arc. It is the offset of their range in action array
      * @param change
      */
     public void changeWeight(Actions actionType, int slotNum, Object featureName, int labelIndex, float change) {
@@ -98,7 +104,8 @@ public class AveragedPerceptron {
             if (!shiftFeatureAveragedWeights[slotNum].containsKey(featureName))
                 shiftFeatureAveragedWeights[slotNum].put(featureName, iteration * change);
             else
-                shiftFeatureAveragedWeights[slotNum].put(featureName, shiftFeatureAveragedWeights[slotNum].get(featureName) + iteration * change);
+                shiftFeatureAveragedWeights[slotNum].put(featureName,
+                        shiftFeatureAveragedWeights[slotNum].get(featureName) + iteration * change);
         } else if (actionType == Actions.Reduce) {
             if (!reduceFeatureWeights[slotNum].containsKey(featureName))
                 reduceFeatureWeights[slotNum].put(featureName, change);
@@ -108,15 +115,19 @@ public class AveragedPerceptron {
             if (!reduceFeatureAveragedWeights[slotNum].containsKey(featureName))
                 reduceFeatureAveragedWeights[slotNum].put(featureName, iteration * change);
             else
-                reduceFeatureAveragedWeights[slotNum].put(featureName, reduceFeatureAveragedWeights[slotNum].get(featureName) + iteration * change);
+                reduceFeatureAveragedWeights[slotNum].put(featureName,
+                        reduceFeatureAveragedWeights[slotNum].get(featureName) + iteration * change);
         } else if (actionType == Actions.RightArc) {
-            changeFeatureWeight(rightArcFeatureWeights[slotNum], rightArcFeatureAveragedWeights[slotNum], featureName, labelIndex, change);
+            changeFeatureWeight(rightArcFeatureWeights[slotNum], rightArcFeatureAveragedWeights[slotNum], featureName
+                    , labelIndex, change);
         } else if (actionType == Actions.LeftArc) {
-            changeFeatureWeight(leftArcFeatureWeights[slotNum], leftArcFeatureAveragedWeights[slotNum], featureName, labelIndex, change);
+            changeFeatureWeight(leftArcFeatureWeights[slotNum], leftArcFeatureAveragedWeights[slotNum], featureName,
+                    labelIndex, change);
         }
     }
 
-    private void changeFeatureWeight(HashMap<Object, CompactArray> map, HashMap<Object, CompactArray> aMap, Object featureName, int labelIndex, float change) {
+    private void changeFeatureWeight(HashMap<Object, CompactArray> map, HashMap<Object, CompactArray> aMap,
+                                     Object featureName, int labelIndex, float change) {
         CompactArray values = map.get(featureName);
         CompactArray aValues;
         if (values != null) {

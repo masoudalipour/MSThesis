@@ -39,12 +39,12 @@ public class Configuration implements Comparable, Cloneable, Serializable {
         return score;
     }
 
-    public void addScore(float score) {
-        this.score += score;
-    }
-
     public void setScore(float score) {
         this.score = score;
+    }
+
+    public void addScore(float score) {
+        this.score += score;
     }
 
     public void addAction(int action) {

@@ -51,9 +51,11 @@ public class UnitTest {
         System.out.println("**********************************************");
         System.out.print(options);
         System.out.println("**********************************************");
-        IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile);
+        IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase,
+                options.clusterFile);
         CoNLLReader reader = new CoNLLReader(options.inputFile);
-        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled,
+                options.rootFirst, options.lowercase, maps);
         System.out.println("CoNLL data reading done!");
 
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -111,9 +113,11 @@ public class UnitTest {
         writer.close();
         System.out.println("done!");
 
-        ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, dependencyLabels.size()),
+        ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                new AveragedPerceptron(featureLength, dependencyLabels.size()),
                 options, dependencyLabels, featureLength, maps);
-        trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase, options.punctuations, options.partialTrainingStartingIteration);
+        trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase,
+                options.punctuations, options.partialTrainingStartingIteration);
         trainer = null;
     }
 }

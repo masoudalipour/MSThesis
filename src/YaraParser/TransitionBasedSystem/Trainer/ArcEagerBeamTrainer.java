@@ -19,6 +19,8 @@ import YaraParser.TransitionBasedSystem.Parser.BeamScorerThread;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.util.*;
@@ -28,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ArcEagerBeamTrainer {
+    private final int featureLength;
     private Options options;
     /**
      * Can be either "early" or "max_violation" For more information read: Liang
@@ -39,10 +42,7 @@ public class ArcEagerBeamTrainer {
     private String updateMode;
     private AveragedPerceptron classifier;
     private BinaryPerceptron bClassifier;
-
     private ArrayList<Integer> dependencyRelations;
-    private int featureLength;
-
     private Random randGen;
     private IndexMaps maps;
 
@@ -58,7 +58,8 @@ public class ArcEagerBeamTrainer {
     }
 
     public ArcEagerBeamTrainer(String updateMode, AveragedPerceptron classifier, BinaryPerceptron bClassifier,
-                               Options options, ArrayList<Integer> dependencyRelations, int featureLength, IndexMaps maps) {
+                               Options options, ArrayList<Integer> dependencyRelations, int featureLength,
+                               IndexMaps maps) {
         this.updateMode = updateMode;
         this.classifier = classifier;
         this.bClassifier = bClassifier;
@@ -119,7 +120,10 @@ public class ArcEagerBeamTrainer {
                 String modelFolder = modelPath.substring(0, modelPath.lastIndexOf("/"));
                 File modelDirectory = new File(modelFolder);
                 if (!modelDirectory.exists()) {
-                    modelDirectory.mkdirs();
+                    if (!modelDirectory.mkdirs()) {
+                        throw new Exception("Creating model's directory failed");
+                    }
+
                 }
             }
             InfStruct infStruct = new InfStruct(classifier, maps, dependencyRelations, options);
@@ -134,7 +138,6 @@ public class ArcEagerBeamTrainer {
                 int raSize = averagedPerceptron.raSize();
                 int effectiveRaSize = averagedPerceptron.effectiveRaSize();
                 float raRatio = 100.0f * effectiveRaSize / raSize;
-
                 int laSize = averagedPerceptron.laSize();
                 int effectiveLaSize = averagedPerceptron.effectiveLaSize();
                 float laRatio = 100.0f * effectiveLaSize / laSize;
@@ -150,22 +153,20 @@ public class ArcEagerBeamTrainer {
                 parser.parseCoNLLFile(devPath, modelPath + ".__tmp__", options.rootFirst, options.beamWidth, true,
                         lowerCased, options.numOfThreads, false, "");
                 Evaluator.evaluate(devPath, modelPath + ".__tmp__", punctuations);
-                parser.shutDownLiveThreads();
-            }
+                Files.deleteIfExists(Path.of(modelPath + ".__tmp__"));
 
-            if (!devPath.equals("")) {
+                parser.shutDownLiveThreads();
                 System.out.println("Validating BinaryPerceptron model:");
                 BinaryPerceptron binaryPerceptron = new BinaryPerceptron(bInfStruct);
 
-                int raSize = binaryPerceptron.raSize();
-                int effectiveRaSize = binaryPerceptron.effectiveRaSize();
-                float raRatio = 100.0f * effectiveRaSize / raSize;
+                raSize = binaryPerceptron.raSize();
+                effectiveRaSize = binaryPerceptron.effectiveRaSize();
+                raRatio = 100.0f * effectiveRaSize / raSize;
+                laSize = binaryPerceptron.laSize();
+                effectiveLaSize = binaryPerceptron.effectiveLaSize();
+                laRatio = 100.0f * effectiveLaSize / laSize;
 
-                int laSize = binaryPerceptron.laSize();
-                int effectiveLaSize = binaryPerceptron.effectiveLaSize();
-                float laRatio = 100.0f * effectiveLaSize / laSize;
-
-                DecimalFormat format = new DecimalFormat("##.00");
+                format = new DecimalFormat("##.00");
                 System.out.println("size of RA features in memory:" + effectiveRaSize + "/" + raSize + "->"
                         + format.format(raRatio) + "%");
                 System.out.println("size of LA features in memory:" + effectiveLaSize + "/" + laSize + "->"
@@ -300,7 +301,7 @@ public class ArcEagerBeamTrainer {
                       Binary classifier update
                      */
                     if (oracles.containsKey(newConfig) != isBestOracle(newConfig, label))
-                        updateWeightsBinary(initialConfiguration, bestScoringOracle, newConfig);
+                        updateWeights(true, initialConfiguration, isPartial, bestScoringOracle, newConfig);
 
                     if (oracles.containsKey(newConfig))
                         oracleInBeam = true;
@@ -349,7 +350,20 @@ public class ArcEagerBeamTrainer {
         if (oracleInBeam && bestScoringOracle.equals(beam.get(0))) {
             return;
         }
-        updateWeights(initialConfiguration, maxViol, isPartial, bestScoringOracle, maxViolPair, beam);
+        Configuration predicted;
+        Configuration finalOracle;
+        if (!updateMode.equals("max_violation")) {
+            finalOracle = bestScoringOracle;
+            predicted = beam.get(0);
+        } else {
+            float violation = beam.get(0).getScore() - bestScoringOracle.getScore();
+            if (violation > maxViol) {
+                maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
+            }
+            predicted = maxViolPair.first;
+            finalOracle = maxViolPair.second;
+        }
+        updateWeights(false, initialConfiguration, isPartial, finalOracle, predicted);
     }
 
     private Configuration staticOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Float> oracles,
@@ -428,7 +442,8 @@ public class ArcEagerBeamTrainer {
     }
 
     private Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration,
-                                                HashMap<Configuration, Float> oracles, HashMap<Configuration, Float> newOracles) {
+                                                HashMap<Configuration, Float> oracles,
+                                                HashMap<Configuration, Float> newOracles) {
         float bestScore = Float.NEGATIVE_INFINITY;
         Configuration bestScoringOracle = null;
 
@@ -559,164 +574,135 @@ public class ArcEagerBeamTrainer {
         }
     }
 
-    private void updateWeights(Configuration initialConfiguration, float maxViol, boolean isPartial,
-                               Configuration bestScoringOracle, Pair<Configuration, Configuration> maxViolPair,
-                               ArrayList<Configuration> beam) {
-        Configuration predicted;
-        Configuration finalOracle;
-        if (!updateMode.equals("max_violation")) {
-            finalOracle = bestScoringOracle;
-            predicted = beam.get(0);
-        } else {
-            float violation = beam.get(0).getScore() - bestScoringOracle.getScore();
-            if (violation > maxViol) {
-                maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
+    private boolean checkIfTrueFeature(Configuration conf, boolean isPartial, int action) {
+        if (isPartial) {
+            if (action >= 3) {
+                return conf.state.hasHead(conf.state.peek())
+                        && conf.state.hasHead(conf.state.bufferHead());
+            } else if (action == 0) {
+                return conf.state.hasHead(conf.state.bufferHead());
+            } else if (action == 1) {
+                return conf.state.hasHead(conf.state.peek());
             }
-            predicted = maxViolPair.first;
-            finalOracle = maxViolPair.second;
         }
+        return true;
+    }
 
-        Object[] predictedFeatures = new Object[featureLength];
-        Object[] oracleFeatures = new Object[featureLength];
-        for (int f = 0; f < predictedFeatures.length; f++) {
-            oracleFeatures[f] = new HashMap<Pair<Integer, Long>, Float>();
-            predictedFeatures[f] = new HashMap<Pair<Integer, Long>, Float>();
-        }
-
-        Configuration predictedConfiguration = initialConfiguration.clone();
-        Configuration oracleConfiguration = initialConfiguration.clone();
-
-        for (int action : finalOracle.actionHistory) {
-            boolean isTrueFeature = true;
-            if (isPartial && action >= 3) {
-                if (!oracleConfiguration.state.hasHead(oracleConfiguration.state.peek())
-                        || !oracleConfiguration.state.hasHead(oracleConfiguration.state.bufferHead()))
-                    isTrueFeature = false;
-            } else if (isPartial && action == 0) {
-                if (!oracleConfiguration.state.hasHead(oracleConfiguration.state.bufferHead()))
-                    isTrueFeature = false;
-            } else if (isPartial && action == 1) {
-                if (!oracleConfiguration.state.hasHead(oracleConfiguration.state.peek()))
-                    isTrueFeature = false;
-            }
-
+    /**
+     * As it parses the initial configuration, it weights the list of features
+     *
+     * @param initialConfiguration The initial configuration that the parsing starts with
+     * @param featuresValue        The list of hash-maps that contains features and their weight
+     * @param actionHistory        The list of actions that leads the initial configuration to a parse tree
+     * @param isPartial            Determines if the input is partial
+     */
+    private void weightFeatures(Configuration initialConfiguration,
+                                List<HashMap<Pair<Integer, Object>, Float>> featuresValue,
+                                ArrayList<Integer> actionHistory, boolean isPartial) {
+        for (int action : actionHistory) {
+            boolean isTrueFeature = checkIfTrueFeature(initialConfiguration, isPartial, action);
             if (isTrueFeature) { // if the made dependency is truly for the word
-                Object[] feats = FeatureExtractor.extractAllParseFeatures(oracleConfiguration, featureLength);
+                Object[] feats = FeatureExtractor.extractAllParseFeatures(initialConfiguration, featureLength);
                 for (int f = 0; f < feats.length; f++) {
                     Pair<Integer, Object> featName = new Pair<>(action, feats[f]);
-                    HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) oracleFeatures[f];
-                    Float value = map.get(featName);
-                    if (value == null)
-                        map.put(featName, 1.0f);
-                    else
+                    HashMap<Pair<Integer, Object>, Float> map = featuresValue.get(f);
+                    if (map.containsKey(featName)) {
+                        Float value = map.get(featName);
                         map.put(featName, value + 1);
+                    } else {
+                        map.put(featName, 1.0f);
+                    }
                 }
             }
-
-            if (action == 0) {
-                ArcEager.shift(oracleConfiguration.state);
-            } else if (action == 1) {
-                ArcEager.reduce(oracleConfiguration.state);
-            } else if (action >= (3 + dependencyRelations.size())) {
-                int dependency = action - (3 + dependencyRelations.size());
-                ArcEager.leftArc(oracleConfiguration.state, dependency);
-            } else if (action >= 3) {
-                int dependency = action - 3;
-                ArcEager.rightArc(oracleConfiguration.state, dependency);
-            }
-        }
-
-        for (int action : predicted.actionHistory) {
-            boolean isTrueFeature = true;
-            if (isPartial && action >= 3) {
-                if (!predictedConfiguration.state.hasHead(predictedConfiguration.state.peek())
-                        || !predictedConfiguration.state.hasHead(predictedConfiguration.state.bufferHead()))
-                    isTrueFeature = false;
-            } else if (isPartial && action == 0) {
-                if (!predictedConfiguration.state.hasHead(predictedConfiguration.state.bufferHead()))
-                    isTrueFeature = false;
-            } else if (isPartial && action == 1) {
-                if (!predictedConfiguration.state.hasHead(predictedConfiguration.state.peek()))
-                    isTrueFeature = false;
-            }
-
-            if (isTrueFeature) { // if the made dependency is truely for the word
-                Object[] feats = FeatureExtractor.extractAllParseFeatures(predictedConfiguration, featureLength);
-                if (action != 2) // do not take into account for unshift
-                    for (int f = 0; f < feats.length; f++) {
-                        Pair<Integer, Object> featName = new Pair<>(action, feats[f]);
-                        HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) predictedFeatures[f];
-                        Float value = map.get(featName);
-                        if (value == null)
-                            map.put(featName, 1.f);
-                        else
-                            map.put(featName, map.get(featName) + 1);
-                    }
-            }
-
-            State state = predictedConfiguration.state;
+            State state = initialConfiguration.state;
             if (action == 0) {
                 ArcEager.shift(state);
             } else if (action == 1) {
                 ArcEager.reduce(state);
+            } else if (action == 2) {
+                ArcEager.unShift(state);
             } else if (action >= 3 + dependencyRelations.size()) {
                 int dependency = action - (3 + dependencyRelations.size());
                 ArcEager.leftArc(state, dependency);
             } else if (action >= 3) {
                 int dependency = action - 3;
                 ArcEager.rightArc(state, dependency);
-            } else if (action == 2) {
-                ArcEager.unShift(state);
             }
         }
+    }
 
-        for (int f = 0; f < predictedFeatures.length; f++) {
-            HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) predictedFeatures[f];
-            HashMap<Pair<Integer, Object>, Float> map2 = (HashMap<Pair<Integer, Object>, Float>) oracleFeatures[f];
-            for (Pair<Integer, Object> feat : map.keySet()) {
-                int action = feat.first;
-                int dependency = 0;
-                /*
-                  if (action == 0)
-                 */
-                Actions actionType = Actions.Shift;
-                if (action == 1) {
-                    actionType = Actions.Reduce;
-                } else if (action >= 3 + dependencyRelations.size()) {
-                    dependency = action - (3 + dependencyRelations.size());
-                    actionType = Actions.LeftArc;
-                } else if (action >= 3) {
-                    dependency = action - 3;
-                    actionType = Actions.RightArc;
-                } else if (action == 2) {
-                    actionType = Actions.Unshift;
-                }
+    /**
+     * Determines the location of the action in
+     *
+     * @param index                     The index of dependency in the array of dependencies
+     * @param action                    The action's type
+     * @param dependencyRelationsLength The length of the array of dependencies
+     * @return The index of dependency in its own category
+     */
+    private int getDependencyInsideIndex(int index, Actions action, int dependencyRelationsLength) {
+        int dependencyIndex;
+        switch (action) {
+            case LeftArc:
+                dependencyIndex = index - (3 + dependencyRelationsLength);
+                break;
+            case RightArc:
+                dependencyIndex = index - 3;
+                break;
+            default:
+                dependencyIndex = 0;
+        }
+        return dependencyIndex;
+    }
+
+    /**
+     * Implements averaged structured perceptron
+     *
+     * @param isBinary             Determines if it's the binary classifier that is getting updated or the yara
+     *                             parser classifier
+     * @param initialConfiguration The initial configuration that the parsing starts with
+     * @param isPartial            Determines if the input is partial
+     * @param finalOracle          The oracle configuration
+     * @param predicted            The predicted configuration
+     */
+    private void updateWeights(boolean isBinary, Configuration initialConfiguration, boolean isPartial,
+                               Configuration finalOracle, Configuration predicted) {
+        List<HashMap<Pair<Integer, Object>, Float>> oracleFeatures = new ArrayList<>();
+        List<HashMap<Pair<Integer, Object>, Float>> predictedFeatures = new ArrayList<>();
+        for (int f = 0; f < featureLength; f++) {
+            oracleFeatures.add(new HashMap<>());
+            predictedFeatures.add(new HashMap<>());
+        }
+        weightFeatures(initialConfiguration.clone(), oracleFeatures, finalOracle.actionHistory, isPartial);
+        weightFeatures(initialConfiguration.clone(), predictedFeatures, predicted.actionHistory, isPartial);
+        for (int f = 0; f < featureLength; f++) {
+            HashMap<Pair<Integer, Object>, Float> predictedMap = predictedFeatures.get(f);
+            HashMap<Pair<Integer, Object>, Float> oracleMap = oracleFeatures.get(f);
+            for (Pair<Integer, Object> feat : predictedMap.keySet()) {
                 if (feat.second != null) {
+                    int action = feat.first;
                     Object feature = feat.second;
-                    if (!(map2.containsKey(feat) && map2.get(feat).equals(map.get(feat))))
-                        classifier.changeWeight(actionType, f, feature, dependency, -map.get(feat));
+                    Actions actionType = Actions.intToAction(action, dependencyRelations.size());
+                    int dependency = getDependencyInsideIndex(action, actionType, dependencyRelations.size());
+                    if (!(oracleMap.containsKey(feat) && oracleMap.get(feat).equals(predictedMap.get(feat))))
+                        if (isBinary) {
+                            bClassifier.changeWeight(actionType, f, feature, dependency, -predictedMap.get(feat));
+                        } else {
+                            classifier.changeWeight(actionType, f, feature, dependency, -predictedMap.get(feat));
+                        }
                 }
             }
-
-            for (Pair<Integer, Object> feat : map2.keySet()) {
-                int action = feat.first;
-                Actions actionType = Actions.Shift;
-                int dependency = 0;
-                if (action == 1) {
-                    actionType = Actions.Reduce;
-                } else if (action >= 3 + dependencyRelations.size()) {
-                    dependency = action - (3 + dependencyRelations.size());
-                    actionType = Actions.LeftArc;
-                } else if (action >= 3) {
-                    dependency = action - 3;
-                    actionType = Actions.RightArc;
-                } else if (action == 2) {
-                    actionType = Actions.Unshift;
-                }
+            for (Pair<Integer, Object> feat : oracleMap.keySet()) {
                 if (feat.second != null) {
+                    int action = feat.first;
                     Object feature = feat.second;
-                    if (!(map.containsKey(feat) && map.get(feat).equals(map2.get(feat))))
-                        classifier.changeWeight(actionType, f, feature, dependency, map2.get(feat));
+                    Actions actionType = Actions.intToAction(action, dependencyRelations.size());
+                    int dependency = getDependencyInsideIndex(action, actionType, dependencyRelations.size());
+                    if (!(predictedMap.containsKey(feat) && predictedMap.get(feat).equals(oracleMap.get(feat))))
+                        if (isBinary) {
+                            bClassifier.changeWeight(actionType, f, feature, dependency, oracleMap.get(feat));
+                        } else {
+                            classifier.changeWeight(actionType, f, feature, dependency, oracleMap.get(feat));
+                        }
                 }
             }
         }
@@ -738,122 +724,5 @@ public class ArcEagerBeamTrainer {
             score = leftArcScores[label];
         }
         return (score >= 0);
-    }
-
-    private void updateWeightsBinary(Configuration initialConfiguration, Configuration finalOracle, Configuration predicted) {
-
-        Object[] predictedFeatures = new Object[featureLength];
-        Object[] oracleFeatures = new Object[featureLength];
-        for (int f = 0; f < predictedFeatures.length; f++) {
-            oracleFeatures[f] = new HashMap<Pair<Integer, Long>, Float>();
-            predictedFeatures[f] = new HashMap<Pair<Integer, Long>, Float>();
-        }
-
-        Configuration predictedConfiguration = initialConfiguration.clone();
-        Configuration oracleConfiguration = initialConfiguration.clone();
-
-        for (int action : finalOracle.actionHistory) {
-
-            Object[] feats = FeatureExtractor.extractAllParseFeatures(oracleConfiguration, featureLength);
-            for (int f = 0; f < feats.length; f++) {
-                Pair<Integer, Object> featName = new Pair<>(action, feats[f]);
-                HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) oracleFeatures[f];
-                Float value = map.get(featName);
-                if (value == null)
-                    map.put(featName, 1.0f);
-                else
-                    map.put(featName, value + 1);
-            }
-
-            if (action == 0) {
-                ArcEager.shift(oracleConfiguration.state);
-            } else if (action == 1) {
-                ArcEager.reduce(oracleConfiguration.state);
-            } else if (action >= (3 + dependencyRelations.size())) {
-                int dependency = action - (3 + dependencyRelations.size());
-                ArcEager.leftArc(oracleConfiguration.state, dependency);
-            } else if (action >= 3) {
-                int dependency = action - 3;
-                ArcEager.rightArc(oracleConfiguration.state, dependency);
-            }
-        }
-
-        for (int action : predicted.actionHistory) {
-
-            Object[] feats = FeatureExtractor.extractAllParseFeatures(predictedConfiguration, featureLength);
-            if (action != 2) // do not take into account for unshift
-                for (int f = 0; f < feats.length; f++) {
-                    Pair<Integer, Object> featName = new Pair<>(action, feats[f]);
-                    HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) predictedFeatures[f];
-                    Float value = map.get(featName);
-                    if (value == null)
-                        map.put(featName, 1.f);
-                    else
-                        map.put(featName, map.get(featName) + 1);
-                }
-
-            State state = predictedConfiguration.state;
-            if (action == 0) {
-                ArcEager.shift(state);
-            } else if (action == 1) {
-                ArcEager.reduce(state);
-            } else if (action >= 3 + dependencyRelations.size()) {
-                int dependency = action - (3 + dependencyRelations.size());
-                ArcEager.leftArc(state, dependency);
-            } else if (action >= 3) {
-                int dependency = action - 3;
-                ArcEager.rightArc(state, dependency);
-            } else if (action == 2) {
-                ArcEager.unShift(state);
-            }
-        }
-
-        for (int f = 0; f < predictedFeatures.length; f++) {
-            HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) predictedFeatures[f];
-            HashMap<Pair<Integer, Object>, Float> map2 = (HashMap<Pair<Integer, Object>, Float>) oracleFeatures[f];
-            for (Pair<Integer, Object> feat : map.keySet()) {
-                int action = feat.first;
-                Actions actionType = Actions.Shift;
-                int dependency = 0;
-                if (action == 1) {
-                    actionType = Actions.Reduce;
-                } else if (action >= 3 + dependencyRelations.size()) {
-                    dependency = action - (3 + dependencyRelations.size());
-                    actionType = Actions.LeftArc;
-                } else if (action >= 3) {
-                    dependency = action - 3;
-                    actionType = Actions.RightArc;
-                } else if (action == 2) {
-                    actionType = Actions.Unshift;
-                }
-                if (feat.second != null) {
-                    Object feature = feat.second;
-                    if (!(map2.containsKey(feat) && map2.get(feat).equals(map.get(feat))))
-                        bClassifier.changeWeight(actionType, f, feature, dependency, -map.get(feat));
-                }
-            }
-
-            for (Pair<Integer, Object> feat : map2.keySet()) {
-                int action = feat.first;
-                Actions actionType = Actions.Shift;
-                int dependency = 0;
-                if (action == 1) {
-                    actionType = Actions.Reduce;
-                } else if (action >= 3 + dependencyRelations.size()) {
-                    dependency = action - (3 + dependencyRelations.size());
-                    actionType = Actions.LeftArc;
-                } else if (action >= 3) {
-                    dependency = action - 3;
-                    actionType = Actions.RightArc;
-                } else if (action == 2) {
-                    actionType = Actions.Unshift;
-                }
-                if (feat.second != null) {
-                    Object feature = feat.second;
-                    if (!(map.containsKey(feat) && map.get(feat).equals(map2.get(feat))))
-                        bClassifier.changeWeight(actionType, f, feature, dependency, map2.get(feat));
-                }
-            }
-        }
     }
 }

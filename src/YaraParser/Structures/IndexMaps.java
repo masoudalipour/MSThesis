@@ -14,7 +14,8 @@ public class IndexMaps implements Serializable {
     private HashMap<String, Integer> brownFullClusters;
 
     public IndexMaps(HashMap<String, Integer> wordMap, HashMap<Integer, Integer> labels, String rootString,
-                     HashMap<Integer, Integer> brown4Clusters, HashMap<Integer, Integer> brown6Clusters, HashMap<String, Integer> brownFullClusters) {
+                     HashMap<Integer, Integer> brown4Clusters, HashMap<Integer, Integer> brown6Clusters,
+                     HashMap<String, Integer> brownFullClusters) {
         this.wordMap = wordMap;
         this.labels = labels;
 

@@ -131,7 +131,8 @@ public class CoNLLReader {
      * @param limit it is used if we want to read part of the data
      * @return an array of configurations
      */
-    public ArrayList<GoldConfiguration> readData(int limit, boolean keepNonProjective, boolean labeled, boolean rootFirst, boolean lowerCased, IndexMaps maps) throws Exception {
+    public ArrayList<GoldConfiguration> readData(int limit, boolean keepNonProjective, boolean labeled,
+                                                 boolean rootFirst, boolean lowerCased, IndexMaps maps) throws Exception {
         HashMap<String, Integer> wordMap = maps.getWordMap();
         ArrayList<GoldConfiguration> configurationSet = new ArrayList<>();
 
@@ -183,8 +184,6 @@ public class CoNLLReader {
                     break;
                 }
             } else {
-                if (line.startsWith("#"))
-                    continue;
                 String[] splitLine = line.split("\t");
                 if (splitLine.length < 8)
                     throw new Exception("wrong file format");
@@ -258,8 +257,6 @@ public class CoNLLReader {
         HashMap<Integer, Pair<Integer, String>> goldDependencies = new HashMap<>();
         while ((line = fileReader.readLine()) != null) {
             line = line.trim();
-            if (line.startsWith("#"))
-                continue;
             if (line.length() == 0) {
                 if (tags.size() >= 1) {
                     CompactTree goldConfiguration = new CompactTree(goldDependencies, tags);
