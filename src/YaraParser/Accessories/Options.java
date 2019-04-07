@@ -24,6 +24,7 @@ public class Options implements Serializable {
     public String clusterFile;
 
     public String modelFile;
+    public String binaryModelFile;
     public boolean lowercase;
     public boolean useExtendedFeatures;
     public boolean useExtendedWithBrownClusterFeatures;
@@ -48,6 +49,7 @@ public class Options implements Serializable {
         beamWidth = 64;
         rootFirst = false;
         modelFile = "";
+        binaryModelFile = "";
         outputFile = "";
         inputFile = "";
         devPath = "";
@@ -172,6 +174,8 @@ public class Options implements Serializable {
                 options.changePunc(args[i + 1]);
             else if (args[i].equals("-model"))
                 options.modelFile = args[i + 1];
+            else if (args[i].equals("-b-model"))
+                options.binaryModelFile = args[i + 1];
             else if (args[i].startsWith("-dev"))
                 options.devPath = args[i + 1];
             else if (args[i].equals("-gold"))
@@ -357,6 +361,7 @@ public class Options implements Serializable {
                     "input file: " + inputFile + "\n" +
                     "output file: " + outputFile + "\n" +
                     "model file: " + modelFile + "\n" +
+                    "binary model file: " + binaryModelFile + "\n" +
                     "score file: " + scorePath + "\n" +
                     "number of threads: " + numOfThreads + "\n";
         } else if (parseTaggedFile) {
@@ -364,6 +369,7 @@ public class Options implements Serializable {
                     "input file: " + inputFile + "\n" +
                     "output file: " + outputFile + "\n" +
                     "model file: " + modelFile + "\n" +
+                    "binary model file: " + binaryModelFile + "\n" +
                     "score file: " + scorePath + "\n" +
                     "number of threads: " + numOfThreads + "\n";
         } else if (parsePartialConll) {
@@ -372,6 +378,7 @@ public class Options implements Serializable {
                     "output file: " + outputFile + "\n" +
                     "score file: " + scorePath + "\n" +
                     "model file: " + modelFile + "\n" +
+                    "binary model file: " + binaryModelFile + "\n" +
                     "labeled: " + labeled + "\n" +
                     "number of threads: " + numOfThreads + "\n";
         } else if (evaluate) {
@@ -398,6 +405,7 @@ public class Options implements Serializable {
         options.outputFile = outputFile;
         options.useDynamicOracle = useDynamicOracle;
         options.modelFile = modelFile;
+        options.binaryModelFile = binaryModelFile;
         options.rootFirst = rootFirst;
         options.parseConllFile = parseConllFile;
         options.parseTaggedFile = parseTaggedFile;

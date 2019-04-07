@@ -53,9 +53,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         pool = new ExecutorCompletionService<>(executor);
     }
 
-    public KBeamArcEagerParser(BinaryPerceptron classifier, ArrayList<Integer> dependencyRelations,
+    public KBeamArcEagerParser(BinaryPerceptron bClassifier, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations,
                                int featureLength, IndexMaps maps, int numOfThreads) {
-        this.bClassifier = classifier;
+        this.classifier = classifier;
+        this.bClassifier = bClassifier;
         this.dependencyRelations = dependencyRelations;
         this.featureLength = featureLength;
         this.maps = maps;
@@ -719,6 +720,24 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             scoreWriter.flush();
             scoreWriter.close();
         }
+    }
+
+    private boolean isBestOracle(Configuration bestConfiguration, int label) {
+        int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
+        Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
+        float score;
+        if (lastAction == 0) {
+            score = bClassifier.shiftScore(features, false);
+        } else if (lastAction == 1) {
+            score = bClassifier.reduceScore(features, false);
+        } else if ((lastAction - 3 - label) == 0) {
+            float[] rightArcScores = bClassifier.rightArcScores(features, false);
+            score = rightArcScores[label];
+        } else {
+            float[] leftArcScores = bClassifier.leftArcScores(features, false);
+            score = leftArcScores[label];
+        }
+        return (score >= 0);
     }
 
     public void shutDownLiveThreads() {

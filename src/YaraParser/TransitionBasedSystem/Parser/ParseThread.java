@@ -2,6 +2,7 @@ package YaraParser.TransitionBasedSystem.Parser;
 
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.AveragedPerceptron;
+import YaraParser.Learning.BinaryPerceptron;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -15,17 +16,14 @@ import java.util.concurrent.Callable;
 
 public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     private AveragedPerceptron classifier;
-
+    private BinaryPerceptron bClassifier;
     private ArrayList<Integer> dependencyRelations;
-
     private int featureLength;
-
     private Sentence sentence;
     private boolean rootFirst;
     private int beamWidth;
     private GoldConfiguration goldConfiguration;
     private boolean partial;
-
     private int id;
 
     ParseThread(int id, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength,
@@ -33,6 +31,21 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
         this.id = id;
         this.classifier = classifier;
+        this.dependencyRelations = dependencyRelations;
+        this.featureLength = featureLength;
+        this.sentence = sentence;
+        this.rootFirst = rootFirst;
+        this.beamWidth = beamWidth;
+        this.goldConfiguration = goldConfiguration;
+        this.partial = partial;
+    }
+
+    ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength,
+                Sentence sentence,
+                boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
+        this.id = id;
+        this.classifier = classifier;
+        this.bClassifier = bClassifier;
         this.dependencyRelations = dependencyRelations;
         this.featureLength = featureLength;
         this.sentence = sentence;
@@ -442,5 +455,23 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
             }
         }
+    }
+
+    private boolean isOracle(Configuration bestConfiguration, int label) {
+        int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
+        Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
+        float score;
+        if (lastAction == 0) {
+            score = bClassifier.shiftScore(features, false);
+        } else if (lastAction == 1) {
+            score = bClassifier.reduceScore(features, false);
+        } else if ((lastAction - 3 - label) == 0) {
+            float[] rightArcScores = bClassifier.rightArcScores(features, false);
+            score = rightArcScores[label];
+        } else {
+            float[] leftArcScores = bClassifier.leftArcScores(features, false);
+            score = leftArcScores[label];
+        }
+        return (score >= 0);
     }
 }
