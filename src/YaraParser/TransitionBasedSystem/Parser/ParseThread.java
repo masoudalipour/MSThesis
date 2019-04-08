@@ -67,7 +67,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
 
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
-
+        int wrongParse = 0;
+        int rightParse = 0;
         while (ArcEager.isNotTerminal(beam)) {
             if (beamWidth != 1) {
                 TreeSet<BeamElement> beamPreserver = new TreeSet<>();
@@ -226,29 +227,28 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (bestAction != -1) {
+                    int label = 0;
                     if (bestAction == 0) {
                         ArcEager.shift(configuration.state);
                     } else if (bestAction == (1)) {
                         ArcEager.reduce(configuration.state);
+                    } else if (bestAction >= 3 + dependencyRelations.size()) {
+                        label = bestAction - (3 + dependencyRelations.size());
+                        ArcEager.leftArc(configuration.state, label);
                     } else {
-
-                        if (bestAction >= 3 + dependencyRelations.size()) {
-                            int label = bestAction - (3 + dependencyRelations.size());
-                            ArcEager.leftArc(configuration.state, label);
-                        } else {
-                            int label = bestAction - 3;
-                            ArcEager.rightArc(configuration.state, label);
-                        }
+                        label = bestAction - 3;
+                        ArcEager.rightArc(configuration.state, label);
                     }
                     configuration.addScore(bestScore);
                     configuration.addAction(bestAction);
-                }
-                if (beam.size() == 0) {
-                    System.out.println("WHY BEAM SIZE ZERO?");
+                    if (isOracle(configuration, label)) {
+                        rightParse++;
+                    } else {
+                        wrongParse++;
+                    }
                 }
             }
         }
-
         Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
         for (Configuration configuration : beam) {
@@ -257,6 +257,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 bestConfiguration = configuration;
             }
         }
+        System.out.println("right parse: " + rightParse);
+        System.out.println("wrong parse: " + wrongParse);
         return new Pair<>(bestConfiguration, id);
     }
 
