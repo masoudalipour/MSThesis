@@ -33,13 +33,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
      */
     private AveragedPerceptron classifier;
     private BinaryPerceptron bClassifier;
-
     private ArrayList<Integer> dependencyRelations;
-
     private int featureLength;
-
     private IndexMaps maps;
-
     private ExecutorService executor;
     private CompletionService<ArrayList<BeamElement>> pool;
 
@@ -66,11 +62,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
     public static KBeamArcEagerParser createParser(String modelPath, int numOfThreads) throws Exception {
         InfStruct infStruct = new InfStruct(modelPath);
-
         ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
         IndexMaps maps = infStruct.maps;
         AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
-
         int featureSize = averagedPerceptron.featureSize();
         return new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, numOfThreads);
 
@@ -92,48 +86,39 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     && !canRightArc
                     && !canLeftArc) {
                 beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
-
                 if (beamPreserver.size() > beamWidth)
                     beamPreserver.pollFirst();
             }
-
             if (canShift) {
                 float score = classifier.shiftScore(features, true);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-
                 if (beamPreserver.size() > beamWidth)
                     beamPreserver.pollFirst();
             }
-
             if (canReduce) {
                 float score = classifier.reduceScore(features, true);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-
                 if (beamPreserver.size() > beamWidth)
                     beamPreserver.pollFirst();
             }
-
             if (canRightArc) {
                 float[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
                     float score = rightArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-
                     if (beamPreserver.size() > beamWidth)
                         beamPreserver.pollFirst();
                 }
             }
-
             if (canLeftArc) {
                 float[] leftArcScores = classifier.leftArcScores(features, true);
                 for (int dependency : dependencyRelations) {
                     float score = leftArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-
                     if (beamPreserver.size() > beamWidth)
                         beamPreserver.pollFirst();
                 }
@@ -143,13 +128,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
     public Configuration parse(Sentence sentence, boolean rootFirst, int beamWidth, int numOfThreads) throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
-
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
-
         while (ArcEager.isNotTerminal(beam)) {
             TreeSet<BeamElement> beamPreserver = new TreeSet<>();
-
             if (numOfThreads == 1) {
                 parseWithOneThread(beam, beamPreserver, sentence, rootFirst, beamWidth);
             } else {
@@ -165,8 +147,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     }
                 }
             }
-
-
             ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
             for (BeamElement beamElement : beamPreserver.descendingSet()) {
                 if (repBeam.size() >= beamWidth)
@@ -175,9 +155,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 int action = beamElement.action;
                 int label = beamElement.label;
                 float score = beamElement.score;
-
                 Configuration newConfig = beam.get(b).clone();
-
                 if (action == 0) {
                     ArcEager.shift(newConfig.state);
                     newConfig.addAction(0);
@@ -199,7 +177,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
             beam = repBeam;
         }
-
         Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
         for (Configuration configuration : beam) {
@@ -228,33 +205,27 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     && !canRightArc
                     && !canLeftArc && rootFirst) {
                 beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
-
                 if (beamPreserver.size() > beamWidth)
                     beamPreserver.pollFirst();
             }
-
             if (canShift) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
                     float score = classifier.shiftScore(features, true);
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-
                     if (beamPreserver.size() > beamWidth)
                         beamPreserver.pollFirst();
                 }
             }
-
             if (canReduce) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
                     float score = classifier.reduceScore(features, true);
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-
                     if (beamPreserver.size() > beamWidth)
                         beamPreserver.pollFirst();
                 }
             }
-
             if (canRightArc) {
                 float[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
@@ -262,13 +233,11 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                         float score = rightArcScores[dependency];
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-
                         if (beamPreserver.size() > beamWidth)
                             beamPreserver.pollFirst();
                     }
                 }
             }
-
             if (canLeftArc) {
                 float[] leftArcScores = classifier.leftArcScores(features, true);
                 for (int dependency : dependencyRelations) {
@@ -276,15 +245,12 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                         float score = leftArcScores[dependency];
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-
                         if (beamPreserver.size() > beamWidth)
                             beamPreserver.pollFirst();
                     }
                 }
             }
         }
-
-        //todo
         if (beamPreserver.size() == 0) {
             for (int b = 0; b < beam.size(); b++) {
                 Configuration configuration = beam.get(b);
@@ -300,48 +266,39 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                         && !canRightArc
                         && !canLeftArc) {
                     beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
-
                     if (beamPreserver.size() > beamWidth)
                         beamPreserver.pollFirst();
                 }
-
                 if (canShift) {
                     float score = classifier.shiftScore(features, true);
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-
                     if (beamPreserver.size() > beamWidth)
                         beamPreserver.pollFirst();
                 }
-
                 if (canReduce) {
                     float score = classifier.reduceScore(features, true);
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-
                     if (beamPreserver.size() > beamWidth)
                         beamPreserver.pollFirst();
                 }
-
                 if (canRightArc) {
                     float[] rightArcScores = classifier.rightArcScores(features, true);
                     for (int dependency : dependencyRelations) {
                         float score = rightArcScores[dependency];
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-
                         if (beamPreserver.size() > beamWidth)
                             beamPreserver.pollFirst();
                     }
                 }
-
                 if (canLeftArc) {
                     float[] leftArcScores = classifier.leftArcScores(features, true);
                     for (int dependency : dependencyRelations) {
                         float score = leftArcScores[dependency];
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-
                         if (beamPreserver.size() > beamWidth)
                             beamPreserver.pollFirst();
                     }
@@ -357,13 +314,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         if (goldConfiguration.isNonprojective()) {
             isNonProjective = true;
         }
-
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
-
         while (ArcEager.isNotTerminal(beam)) {
             TreeSet<BeamElement> beamPreserver = new TreeSet<>();
-
             if (numOfThreads == 1) {
                 parsePartialWithOneThread(beam, beamPreserver, isNonProjective, goldConfiguration, beamWidth,
                         rootFirst);
@@ -380,7 +334,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     }
                 }
             }
-
             ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
             for (BeamElement beamElement : beamPreserver.descendingSet()) {
                 if (repBeam.size() >= beamWidth)
@@ -389,9 +342,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 int action = beamElement.action;
                 int label = beamElement.label;
                 float score = beamElement.score;
-
                 Configuration newConfig = beam.get(b).clone();
-
                 if (action == 0) {
                     ArcEager.shift(newConfig.state);
                     newConfig.addAction(0);
@@ -405,7 +356,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     ArcEager.leftArc(newConfig.state, label);
                     newConfig.addAction(3 + dependencyRelations.size() + label);
                 } else if (action == 4) {
-
                     ArcEager.unShift(newConfig.state);
                     newConfig.addAction(2);
                 }
@@ -414,7 +364,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
             beam = repBeam;
         }
-
         Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
         for (Configuration configuration : beam) {
@@ -447,19 +396,16 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         if (scorePath.trim().length() > 0)
             addScore = true;
         ArrayList<Float> scoreList = new ArrayList<>();
-
         long start = System.currentTimeMillis();
         int allArcs = 0;
         int size = 0;
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile + ".tmp"));
         int dataCount = 0;
-
         while (true) {
             ArrayList<GoldConfiguration> data = reader.readData(15000, true, labeled, rootFirst, lowerCased, maps);
             size += data.size();
             if (data.size() == 0)
                 break;
-
             for (GoldConfiguration goldConfiguration : data) {
                 dataCount++;
                 if (dataCount % 100 == 0)
@@ -469,24 +415,19 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst, beamWidth
                             , numOfThreads);
                 else bestParse = parse(goldConfiguration.getSentence(), rootFirst, beamWidth, numOfThreads);
-
                 int[] words = goldConfiguration.getSentence().getWords();
                 allArcs += words.length - 1;
                 if (addScore)
                     scoreList.add(bestParse.score / bestParse.sentence.size());
-
                 StringBuilder finalOutput = new StringBuilder();
                 for (int i = 0; i < words.length; i++) {
                     int w = i + 1;
                     int head = bestParse.state.getHead(w);
                     int dep = bestParse.state.getDependency(w);
-
                     if (w == bestParse.state.rootIndex && !rootFirst)
                         continue;
-
                     if (head == bestParse.state.rootIndex)
                         head = 0;
-
                     String label = head == 0 ? maps.rootString : maps.revWords[dep];
                     String output = head + "\t" + label + "\n";
                     finalOutput.append(output);
@@ -495,26 +436,19 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 writer.write(finalOutput.toString());
             }
         }
-
         System.err.print("\n");
         long end = System.currentTimeMillis();
         float each = (1.0f * (end - start)) / size;
         float eacharc = (1.0f * (end - start)) / allArcs;
-
-        writer.flush();
         writer.close();
-
         DecimalFormat format = new DecimalFormat("##.00");
-
         System.out.println(format.format(eacharc) + " ms for each arc!");
         System.out.println(format.format(each) + " ms for each sentence!");
         System.out.println();
         BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
         BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));
-        BufferedWriter pwriter = new BufferedWriter(new FileWriter(outputFile));
-
+        BufferedWriter pWriter = new BufferedWriter(new FileWriter(outputFile));
         String line;
-
         while ((line = pReader.readLine()) != null) {
             String gLine = gReader.readLine();
             if (line.trim().length() > 0) {
@@ -528,17 +462,16 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 for (String g : gs) {
                     output.append(g).append("\t");
                 }
-                pwriter.write(output.toString().trim() + "\n");
+                pWriter.write(output.toString().trim() + "\n");
             } else {
-                pwriter.write("\n");
+                pWriter.write("\n");
             }
         }
-        pwriter.flush();
-        pwriter.close();
-
+        gReader.close();
+        pReader.close();
+        pWriter.close();
         if (addScore) {
             BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));
-
             for (Float aFloat : scoreList) scoreWriter.write(aFloat + "\n");
             scoreWriter.flush();
             scoreWriter.close();
@@ -550,18 +483,14 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
         long start = System.currentTimeMillis();
-
         ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
         CompletionService<Pair<String, Integer>> pool = new ExecutorCompletionService<>(executor);
-
-
         String line;
         int count = 0;
         int lineNum = 0;
         while ((line = reader.readLine()) != null) {
             pool.submit(new ParseTaggedThread(lineNum++, line, separator, rootFirst, lowerCased, maps, beamWidth,
                     this));
-
             if (lineNum % 1000 == 0) {
                 String[] outs = new String[lineNum];
                 for (int i = 0; i < lineNum; i++) {
@@ -571,17 +500,14 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     Pair<String, Integer> result = pool.take().get();
                     outs[result.second] = result.first;
                 }
-
                 for (int i = 0; i < lineNum; i++) {
                     if (outs[i].length() > 0) {
                         writer.write(outs[i]);
                     }
                 }
-
                 lineNum = 0;
             }
         }
-
         if (lineNum > 0) {
             String[] outs = new String[lineNum];
             for (int i = 0; i < lineNum; i++) {
@@ -591,7 +517,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 Pair<String, Integer> result = pool.take().get();
                 outs[result.second] = result.first;
             }
-
             for (int i = 0; i < lineNum; i++) {
 
                 if (outs[i].length() > 0) {
@@ -599,12 +524,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 }
             }
         }
-
         long end = System.currentTimeMillis();
         System.out.println("\n" + (end - start) + " ms");
-        writer.flush();
+        reader.close();
         writer.close();
-
         System.out.println("done!");
     }
 
@@ -615,23 +538,19 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             addScore = true;
         }
         ArrayList<Float> scoreList = new ArrayList<>();
-
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         CompletionService<Pair<Configuration, Integer>> pool = new ExecutorCompletionService<>(executor);
-
         long start = System.currentTimeMillis();
         int allArcs = 0;
         int size = 0;
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile + ".tmp"));
         int dataCount = 0;
-
         CoNLLReader reader = new CoNLLReader(inputFile);
         ArrayList<GoldConfiguration> data = reader.readData(15000, true, true, rootFirst, lowerCased, maps);
         while (data.size() != 0) {
             size += data.size();
             int index = 0;
             Configuration[] confs = new Configuration[data.size()];
-
             for (GoldConfiguration goldConfiguration : data) {
                 ParseThread thread = new ParseThread(index, classifier, dependencyRelations, featureLength,
                         goldConfiguration.getSentence(), rootFirst, beamWidth, goldConfiguration, partial);
@@ -677,20 +596,15 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         long end = System.currentTimeMillis();
         float eachSent = (1.0f * (end - start)) / size;
         float eachArc = (1.0f * (end - start)) / allArcs;
-
-        writer.flush();
         writer.close();
         DecimalFormat format = new DecimalFormat("##.00");
-
         System.out.println(format.format(eachArc) + " ms for each arc!");
         System.out.println(format.format(eachSent) + " ms for each sentence!");
         System.out.println();
         BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
         BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));
         BufferedWriter pwriter = new BufferedWriter(new FileWriter(outputFile));
-
         String line;
-
         while ((line = pReader.readLine()) != null) {
             String gLine = gReader.readLine();
             if (line.trim().length() > 0) {
@@ -709,13 +623,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 pwriter.write("\n");
             }
         }
-        pwriter.flush();
         pwriter.close();
         Files.deleteIfExists(Path.of(outputFile + ".tmp"));
-
         if (addScore) {
             BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));
-
             for (Float aFloat : scoreList) scoreWriter.write(aFloat + "\n");
             scoreWriter.flush();
             scoreWriter.close();
