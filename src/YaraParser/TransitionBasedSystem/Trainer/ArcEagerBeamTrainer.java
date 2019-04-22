@@ -709,7 +709,7 @@ public class ArcEagerBeamTrainer {
     }
 
     private boolean isBestOracle(Configuration bestConfiguration, int label) {
-        int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
+        /*int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
         float score;
         if (lastAction == 0) {
@@ -722,6 +722,22 @@ public class ArcEagerBeamTrainer {
         } else {
             float[] leftArcScores = bClassifier.leftArcScores(features, false);
             score = leftArcScores[label];
+        }*/
+        ArrayList<Integer> actions = bestConfiguration.actionHistory;
+        Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
+        float score = 0f;
+        for (int action:actions) {
+            if (action == 0) {
+                score += bClassifier.shiftScore(features, false);
+            } else if (action == 1) {
+                score += bClassifier.reduceScore(features, false);
+            } else if ((action - 3 - label) == 0) {
+                float[] rightArcScores = bClassifier.rightArcScores(features, false);
+                score += rightArcScores[label];
+            } else {
+                float[] leftArcScores = bClassifier.leftArcScores(features, false);
+                score += leftArcScores[label];
+            }
         }
         return (score >= 0);
     }
