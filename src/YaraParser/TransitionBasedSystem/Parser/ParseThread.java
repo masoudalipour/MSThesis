@@ -49,12 +49,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         else return new Pair<>(parsePartial(), id);
     }
 
-    private Pair<Configuration, Integer> parse() throws Exception {
+    private Pair<Configuration, Integer> parse() {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
-
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
-
         while (ArcEager.isNotTerminal(beam)) {
             if (beamWidth != 1) {
                 TreeSet<BeamElement> beamPreserver = new TreeSet<>();
@@ -72,41 +70,33 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                             && !canRightArc
                             && !canLeftArc) {
                         beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
-
                         if (beamPreserver.size() > beamWidth)
                             beamPreserver.pollFirst();
                     }
-
                     if (canShift) {
                         float score = classifier.shiftScore(features, true);
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-
                         if (beamPreserver.size() > beamWidth)
                             beamPreserver.pollFirst();
                     }
-
                     if (canReduce) {
                         float score = classifier.reduceScore(features, true);
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-
                         if (beamPreserver.size() > beamWidth)
                             beamPreserver.pollFirst();
                     }
-
                     if (canRightArc) {
                         float[] rightArcScores = classifier.rightArcScores(features, true);
                         for (int dependency : dependencyRelations) {
                             float score = rightArcScores[dependency];
                             float addedScore = score + prevScore;
                             beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-
                             if (beamPreserver.size() > beamWidth)
                                 beamPreserver.pollFirst();
                         }
                     }
-
                     if (canLeftArc) {
                         float[] leftArcScores = classifier.leftArcScores(features, true);
                         for (int dependency : dependencyRelations) {
@@ -157,12 +147,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                 float bestScore = Float.NEGATIVE_INFINITY;
                 int bestAction = -1;
-
                 boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
                 boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
                 boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
                 boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-
                 if (!canShift
                         && !canReduce
                         && !canRightArc
@@ -176,7 +164,6 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         configuration.addAction(0);
                     }
                 }
-
                 if (canShift) {
                     float score = classifier.shiftScore(features, true);
                     if (score > bestScore) {
@@ -247,7 +234,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         return new Pair<>(bestConfiguration, id);
     }
 
-    private Configuration parsePartial() throws Exception {
+    private Configuration parsePartial() {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
         boolean isNonProjective = false;
         if (goldConfiguration.isNonprojective()) {

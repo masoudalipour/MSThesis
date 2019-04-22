@@ -245,7 +245,7 @@ public class BinaryModelEvaluator {
     }
 
     private Configuration staticOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Float> oracles,
-                                       HashMap<Configuration, Float> newOracles) throws Exception {
+                                       HashMap<Configuration, Float> newOracles) {
         Configuration bestScoringOracle = null;
         int top = -1;
         int first = -1;
@@ -321,7 +321,7 @@ public class BinaryModelEvaluator {
 
     private Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration,
                                                 HashMap<Configuration, Float> oracles,
-                                                HashMap<Configuration, Float> newOracles) throws Exception {
+                                                HashMap<Configuration, Float> newOracles) {
         float bestScore = Float.NEGATIVE_INFINITY;
         Configuration bestScoringOracle = null;
 
