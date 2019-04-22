@@ -49,12 +49,12 @@ public class YaraParser {
             InfStruct infStruct = new InfStruct(options.modelFile);
             ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
             IndexMaps maps = infStruct.maps;
-
+            InfStruct bInfStruct = new InfStruct(options.binaryModelFile);
             Options inf_options = infStruct.options;
             AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
-
+            BinaryPerceptron bPerceptron = new BinaryPerceptron(bInfStruct);
             int featureSize = averagedPerceptron.featureSize();
-            KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize,
+            KBeamArcEagerParser parser = new KBeamArcEagerParser(bPerceptron, averagedPerceptron, dependencyLabels, featureSize,
                     maps, options.numOfThreads);
 
             if (options.parseTaggedFile)

@@ -552,7 +552,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             int index = 0;
             Configuration[] confs = new Configuration[data.size()];
             for (GoldConfiguration goldConfiguration : data) {
-                ParseThread thread = new ParseThread(index, classifier, dependencyRelations, featureLength,
+                ParseThread thread = new ParseThread(index, bClassifier, classifier, dependencyRelations, featureLength,
                         goldConfiguration.getSentence(), rootFirst, beamWidth, goldConfiguration, partial);
                 pool.submit(thread);
                 index++;

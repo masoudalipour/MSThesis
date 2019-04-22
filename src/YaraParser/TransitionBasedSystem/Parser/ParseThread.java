@@ -124,7 +124,6 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         }
                     }
                 }
-
                 ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
                     if (repBeam.size() >= beamWidth)
@@ -213,9 +212,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         }
                     }
                 }
-
                 if (bestAction != -1) {
-                    int label = 0;
+                    int label;
                     if (bestAction == 0) {
                         ArcEager.shift(configuration.state);
                     } else if (bestAction == (1)) {
@@ -229,11 +227,6 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
                     configuration.addScore(bestScore);
                     configuration.addAction(bestAction);
-                    if (isOracle(configuration, label)) {
-                        rightParse++;
-                    } else {
-                        wrongParse++;
-                    }
                 }
             }
         }
@@ -243,6 +236,11 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             if (configuration.getScore() > bestScore) {
                 bestScore = configuration.getScore();
                 bestConfiguration = configuration;
+            }
+            if (isOracle(configuration)) {
+                rightParse++;
+            } else {
+                wrongParse++;
             }
         }
         System.out.println("right parse: " + rightParse);
@@ -447,20 +445,23 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         }
     }
 
-    private boolean isOracle(Configuration bestConfiguration, int label) {
+    private boolean isOracle(Configuration bestConfiguration) {
         int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
         float score;
+        int label;
         if (lastAction == 0) {
             score = bClassifier.shiftScore(features, false);
         } else if (lastAction == 1) {
             score = bClassifier.reduceScore(features, false);
-        } else if ((lastAction - 3 - label) == 0) {
-            float[] rightArcScores = bClassifier.rightArcScores(features, false);
-            score = rightArcScores[label];
-        } else {
+        } else if (lastAction >= 3 + dependencyRelations.size()) {
+            label = lastAction - (3 + dependencyRelations.size());
             float[] leftArcScores = bClassifier.leftArcScores(features, false);
             score = leftArcScores[label];
+        } else {
+            label = lastAction - 3;
+            float[] rightArcScores = bClassifier.rightArcScores(features, false);
+            score = rightArcScores[label];
         }
         return (score >= 0);
     }
