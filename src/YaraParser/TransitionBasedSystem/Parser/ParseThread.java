@@ -2,6 +2,7 @@ package YaraParser.TransitionBasedSystem.Parser;
 
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.AveragedPerceptron;
+import YaraParser.Learning.BinaryPerceptron;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -15,17 +16,14 @@ import java.util.concurrent.Callable;
 
 public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     private AveragedPerceptron classifier;
-
+    private BinaryPerceptron bClassifier;
     private ArrayList<Integer> dependencyRelations;
-
     private int featureLength;
-
     private Sentence sentence;
     private boolean rootFirst;
     private int beamWidth;
     private GoldConfiguration goldConfiguration;
     private boolean partial;
-
     private int id;
 
     ParseThread(int id, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength,
@@ -33,6 +31,21 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
         this.id = id;
         this.classifier = classifier;
+        this.dependencyRelations = dependencyRelations;
+        this.featureLength = featureLength;
+        this.sentence = sentence;
+        this.rootFirst = rootFirst;
+        this.beamWidth = beamWidth;
+        this.goldConfiguration = goldConfiguration;
+        this.partial = partial;
+    }
+
+    ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength,
+                Sentence sentence,
+                boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
+        this.id = id;
+        this.classifier = classifier;
+        this.bClassifier = bClassifier;
         this.dependencyRelations = dependencyRelations;
         this.featureLength = featureLength;
         this.sentence = sentence;
@@ -53,6 +66,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
+        int wrongParse = 0;
+        int rightParse = 0;
         while (ArcEager.isNotTerminal(beam)) {
             if (beamWidth != 1) {
                 TreeSet<BeamElement> beamPreserver = new TreeSet<>();
@@ -200,29 +215,28 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (bestAction != -1) {
+                    int label = 0;
                     if (bestAction == 0) {
                         ArcEager.shift(configuration.state);
                     } else if (bestAction == (1)) {
                         ArcEager.reduce(configuration.state);
+                    } else if (bestAction >= 3 + dependencyRelations.size()) {
+                        label = bestAction - (3 + dependencyRelations.size());
+                        ArcEager.leftArc(configuration.state, label);
                     } else {
-
-                        if (bestAction >= 3 + dependencyRelations.size()) {
-                            int label = bestAction - (3 + dependencyRelations.size());
-                            ArcEager.leftArc(configuration.state, label);
-                        } else {
-                            int label = bestAction - 3;
-                            ArcEager.rightArc(configuration.state, label);
-                        }
+                        label = bestAction - 3;
+                        ArcEager.rightArc(configuration.state, label);
                     }
                     configuration.addScore(bestScore);
                     configuration.addAction(bestAction);
-                }
-                if (beam.size() == 0) {
-                    System.out.println("WHY BEAM SIZE ZERO?");
+                    if (isOracle(configuration, label)) {
+                        rightParse++;
+                    } else {
+                        wrongParse++;
+                    }
                 }
             }
         }
-
         Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
         for (Configuration configuration : beam) {
@@ -231,6 +245,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 bestConfiguration = configuration;
             }
         }
+        System.out.println("right parse: " + rightParse);
+        System.out.println("wrong parse: " + wrongParse);
         return new Pair<>(bestConfiguration, id);
     }
 
@@ -429,5 +445,23 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
             }
         }
+    }
+
+    private boolean isOracle(Configuration bestConfiguration, int label) {
+        int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
+        Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
+        float score;
+        if (lastAction == 0) {
+            score = bClassifier.shiftScore(features, false);
+        } else if (lastAction == 1) {
+            score = bClassifier.reduceScore(features, false);
+        } else if ((lastAction - 3 - label) == 0) {
+            float[] rightArcScores = bClassifier.rightArcScores(features, false);
+            score = rightArcScores[label];
+        } else {
+            float[] leftArcScores = bClassifier.leftArcScores(features, false);
+            score = leftArcScores[label];
+        }
+        return (score >= 0);
     }
 }
