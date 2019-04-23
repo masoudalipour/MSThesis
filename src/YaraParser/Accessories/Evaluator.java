@@ -11,10 +11,8 @@ public class Evaluator {
     public static void evaluate(String testPath, String predictedPath, HashSet<String> puncTags) throws Exception {
         CoNLLReader goldReader = new CoNLLReader(testPath);
         CoNLLReader predictedReader = new CoNLLReader(predictedPath);
-
         ArrayList<CompactTree> goldConfiguration = goldReader.readStringData();
         ArrayList<CompactTree> predConfiguration = predictedReader.readStringData();
-
         double unlabMatch = 0;
         double labMatch = 0;
         int all = 0;

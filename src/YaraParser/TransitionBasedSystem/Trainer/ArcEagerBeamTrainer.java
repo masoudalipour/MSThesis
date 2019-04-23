@@ -153,7 +153,7 @@ public class ArcEagerBeamTrainer {
                 parser.parseCoNLLFile(devPath, modelPath + ".__tmp__", options.rootFirst, options.beamWidth, true,
                         lowerCased, options.numOfThreads, false, "");
                 Evaluator.evaluate(devPath, modelPath + ".__tmp__", punctuations);
-                Files.deleteIfExists(Path.of(modelPath + ".__tmp__"));
+//                Files.deleteIfExists(Path.of(modelPath + ".__tmp__"));
 
                 parser.shutDownLiveThreads();
                 System.out.println("Validating BinaryPerceptron model:");
