@@ -623,6 +623,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 pwriter.write("\n");
             }
         }
+        gReader.close();
+        pReader.close();
         pwriter.close();
         Files.deleteIfExists(Path.of(outputFile + ".tmp"));
         if (addScore) {
@@ -631,24 +633,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             scoreWriter.flush();
             scoreWriter.close();
         }
-    }
-
-    private boolean isBestOracle(Configuration bestConfiguration, int label) {
-        int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
-        Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
-        float score;
-        if (lastAction == 0) {
-            score = bClassifier.shiftScore(features, false);
-        } else if (lastAction == 1) {
-            score = bClassifier.reduceScore(features, false);
-        } else if ((lastAction - 3 - label) == 0) {
-            float[] rightArcScores = bClassifier.rightArcScores(features, false);
-            score = rightArcScores[label];
-        } else {
-            float[] leftArcScores = bClassifier.leftArcScores(features, false);
-            score = leftArcScores[label];
-        }
-        return (score >= 0);
     }
 
     public void shutDownLiveThreads() {

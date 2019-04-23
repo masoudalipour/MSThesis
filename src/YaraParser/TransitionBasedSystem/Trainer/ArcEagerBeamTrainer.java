@@ -300,7 +300,7 @@ public class ArcEagerBeamTrainer {
                     /*
                       Binary classifier update
                      */
-                    if (oracles.containsKey(newConfig) != isBestOracle(newConfig, label))
+                    if (oracles.containsKey(newConfig) != isOracle(newConfig, label))
                         updateWeights(true, initialConfiguration, isPartial, bestScoringOracle, newConfig);
 
                     if (oracles.containsKey(newConfig))
@@ -708,7 +708,7 @@ public class ArcEagerBeamTrainer {
         }
     }
 
-    private boolean isBestOracle(Configuration bestConfiguration, int label) {
+    private boolean isOracle(Configuration bestConfiguration, int label) {
         /*int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
         float score;

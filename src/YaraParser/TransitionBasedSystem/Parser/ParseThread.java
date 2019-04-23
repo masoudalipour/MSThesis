@@ -66,8 +66,6 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
-        int wrongParse = 0;
-        int rightParse = 0;
         while (ArcEager.isNotTerminal(beam)) {
             if (beamWidth != 1) {
                 TreeSet<BeamElement> beamPreserver = new TreeSet<>();
@@ -232,6 +230,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         }
         Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
+        int wrongParse = 0;
+        int rightParse = 0;
         for (Configuration configuration : beam) {
             if (configuration.getScore() > bestScore) {
                 bestScore = configuration.getScore();
