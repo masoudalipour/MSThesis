@@ -134,7 +134,7 @@ public class ArcEagerBeamTrainer {
             if (!devPath.equals("")) {
                 System.out.println("Validating AveragedPerceptron model:");
                 AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
-
+                BinaryPerceptron binaryPerceptron = new BinaryPerceptron(bInfStruct);
                 int raSize = averagedPerceptron.raSize();
                 int effectiveRaSize = averagedPerceptron.effectiveRaSize();
                 float raRatio = 100.0f * effectiveRaSize / raSize;
@@ -147,7 +147,7 @@ public class ArcEagerBeamTrainer {
                         + format.format(raRatio) + "%");
                 System.out.println("size of LA features in memory:" + effectiveLaSize + "/" + laSize + "->"
                         + format.format(laRatio) + "%");
-                KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations,
+                KBeamArcEagerParser parser = new KBeamArcEagerParser(binaryPerceptron, averagedPerceptron, dependencyRelations,
                         featureLength, maps, options.numOfThreads);
 
                 parser.parseCoNLLFile(devPath, modelPath + ".__tmp__", options.rootFirst, options.beamWidth, true,
@@ -157,8 +157,6 @@ public class ArcEagerBeamTrainer {
 
                 parser.shutDownLiveThreads();
                 System.out.println("Validating BinaryPerceptron model:");
-                BinaryPerceptron binaryPerceptron = new BinaryPerceptron(bInfStruct);
-
                 raSize = binaryPerceptron.raSize();
                 effectiveRaSize = binaryPerceptron.effectiveRaSize();
                 raRatio = 100.0f * effectiveRaSize / raSize;
