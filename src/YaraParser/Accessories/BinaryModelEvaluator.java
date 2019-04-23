@@ -266,14 +266,14 @@ public class BinaryModelEvaluator {
 
                 if (first > 0 && goldDependencies.containsKey(first) && goldDependencies.get(first).first == top) {
                     int dependency = goldDependencies.get(first).second;
-                    float[] scores = classifier.rightArcScores(features, false);
+                    float[] scores = classifier.rightArcScores(features, true);
                     float score = scores[dependency];
                     ArcEager.rightArc(newConfig.state, dependency);
                     newConfig.addAction(3 + dependency);
                     newConfig.addScore(score);
                 } else if (top > 0 && goldDependencies.containsKey(top) && goldDependencies.get(top).first == first) {
                     int dependency = goldDependencies.get(top).second;
-                    float[] scores = classifier.leftArcScores(features, false);
+                    float[] scores = classifier.leftArcScores(features, true);
                     float score = scores[dependency];
                     ArcEager.leftArc(newConfig.state, dependency);
                     newConfig.addAction(3 + dependencyRelations.size() + dependency);
@@ -282,25 +282,25 @@ public class BinaryModelEvaluator {
 
                     if (reversedDependencies.containsKey(top)) {
                         if (reversedDependencies.get(top).size() == state.valence(top)) {
-                            float score = classifier.reduceScore(features, false);
+                            float score = classifier.reduceScore(features, true);
                             ArcEager.reduce(newConfig.state);
                             newConfig.addAction(1);
                             newConfig.addScore(score);
                         } else {
-                            float score = classifier.shiftScore(features, false);
+                            float score = classifier.shiftScore(features, true);
                             ArcEager.shift(newConfig.state);
                             newConfig.addAction(0);
                             newConfig.addScore(score);
                         }
                     } else {
-                        float score = classifier.reduceScore(features, false);
+                        float score = classifier.reduceScore(features, true);
                         ArcEager.reduce(newConfig.state);
                         newConfig.addAction(1);
                         newConfig.addScore(score);
                     }
 
                 } else if (state.bufferEmpty() && state.stackSize() == 1 && state.peek() == state.rootIndex) {
-                    float score = classifier.reduceScore(features, false);
+                    float score = classifier.reduceScore(features, true);
                     ArcEager.reduce(newConfig.state);
                     newConfig.addAction(1);
                     newConfig.addScore(score);
@@ -332,7 +332,7 @@ public class BinaryModelEvaluator {
                 // I only assumed that we need zero cost ones
                 if (goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
                     Configuration newConfig = configuration.clone();
-                    float score = classifier.shiftScore(features, false);
+                    float score = classifier.shiftScore(features, true);
                     ArcEager.shift(newConfig.state);
                     newConfig.addAction(0);
                     newConfig.addScore(score);
@@ -344,7 +344,7 @@ public class BinaryModelEvaluator {
                     }
                 }
                 if (ArcEager.canDo(Actions.RightArc, currentState)) {
-                    float[] rightArcScores = classifier.rightArcScores(features, false);
+                    float[] rightArcScores = classifier.rightArcScores(features, true);
                     for (int dependency : dependencyRelations) {
                         if (goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
                             Configuration newConfig = configuration.clone();
@@ -362,7 +362,7 @@ public class BinaryModelEvaluator {
                     }
                 }
                 if (ArcEager.canDo(Actions.LeftArc, currentState)) {
-                    float[] leftArcScores = classifier.leftArcScores(features, false);
+                    float[] leftArcScores = classifier.leftArcScores(features, true);
 
                     for (int dependency : dependencyRelations) {
                         if (goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
@@ -382,7 +382,7 @@ public class BinaryModelEvaluator {
                 }
                 if (goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
                     Configuration newConfig = configuration.clone();
-                    float score = classifier.reduceScore(features, false);
+                    float score = classifier.reduceScore(features, true);
                     ArcEager.reduce(newConfig.state);
                     newConfig.addAction(1);
                     newConfig.addScore(score);
@@ -414,7 +414,7 @@ public class BinaryModelEvaluator {
             Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
 
             if (canShift) {
-                float score = classifier.shiftScore(features, false);
+                float score = classifier.shiftScore(features, true);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -422,7 +422,7 @@ public class BinaryModelEvaluator {
                     beamPreserver.pollFirst();
             }
             if (canReduce) {
-                float score = classifier.reduceScore(features, false);
+                float score = classifier.reduceScore(features, true);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -431,7 +431,7 @@ public class BinaryModelEvaluator {
             }
 
             if (canRightArc) {
-                float[] rightArcScores = classifier.rightArcScores(features, false);
+                float[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
                     float score = rightArcScores[dependency];
                     float addedScore = score + prevScore;
@@ -442,7 +442,7 @@ public class BinaryModelEvaluator {
                 }
             }
             if (canLeftArc) {
-                float[] leftArcScores = classifier.leftArcScores(features, false);
+                float[] leftArcScores = classifier.leftArcScores(features, true);
                 for (int dependency : dependencyRelations) {
                     float score = leftArcScores[dependency];
                     float addedScore = score + prevScore;

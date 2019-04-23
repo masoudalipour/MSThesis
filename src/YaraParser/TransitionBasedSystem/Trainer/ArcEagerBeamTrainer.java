@@ -300,7 +300,7 @@ public class ArcEagerBeamTrainer {
                     /*
                       Binary classifier update
                      */
-                    if (oracles.containsKey(newConfig) != isOracle(newConfig, label))
+                    if (oracles.containsKey(newConfig) != isOracle(newConfig))
                         updateWeights(true, initialConfiguration, isPartial, bestScoringOracle, newConfig);
 
                     if (oracles.containsKey(newConfig))
@@ -708,7 +708,7 @@ public class ArcEagerBeamTrainer {
         }
     }
 
-    private boolean isOracle(Configuration bestConfiguration, int label) {
+    private boolean isOracle(Configuration bestConfiguration) {
         /*int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
         float score;
@@ -726,17 +726,20 @@ public class ArcEagerBeamTrainer {
         ArrayList<Integer> actions = bestConfiguration.actionHistory;
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
         float score = 0f;
+        int label;
         for (int action:actions) {
             if (action == 0) {
-                score += bClassifier.shiftScore(features, false);
+                score += bClassifier.shiftScore(features, true);
             } else if (action == 1) {
-                score += bClassifier.reduceScore(features, false);
-            } else if ((action - 3 - label) == 0) {
-                float[] rightArcScores = bClassifier.rightArcScores(features, false);
-                score += rightArcScores[label];
-            } else {
-                float[] leftArcScores = bClassifier.leftArcScores(features, false);
+                score += bClassifier.reduceScore(features, true);
+            } else if (action >= 3 + dependencyRelations.size()) {
+                label = action - (3 + dependencyRelations.size());
+                float[] leftArcScores = bClassifier.leftArcScores(features, true);
                 score += leftArcScores[label];
+            } else {
+                label = action - 3;
+                float[] rightArcScores = bClassifier.rightArcScores(features, true);
+                score += rightArcScores[label];
             }
         }
         return (score >= 0);

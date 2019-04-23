@@ -446,22 +446,41 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     }
 
     private boolean isOracle(Configuration bestConfiguration) {
-        int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
+        // int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
+        // Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
+        // float score;
+        // int label;
+        // if (lastAction == 0) {
+        //     score = bClassifier.shiftScore(features, true);
+        // } else if (lastAction == 1) {
+        //     score = bClassifier.reduceScore(features, true);
+        // } else if (lastAction >= 3 + dependencyRelations.size()) {
+        //     label = lastAction - (3 + dependencyRelations.size());
+        //     float[] leftArcScores = bClassifier.leftArcScores(features, true);
+        //     score = leftArcScores[label];
+        // } else {
+        //     label = lastAction - 3;
+        //     float[] rightArcScores = bClassifier.rightArcScores(features, true);
+        //     score = rightArcScores[label];
+        // }
+        ArrayList<Integer> actions = bestConfiguration.actionHistory;
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
-        float score;
+        float score = 0f;
         int label;
-        if (lastAction == 0) {
-            score = bClassifier.shiftScore(features, false);
-        } else if (lastAction == 1) {
-            score = bClassifier.reduceScore(features, false);
-        } else if (lastAction >= 3 + dependencyRelations.size()) {
-            label = lastAction - (3 + dependencyRelations.size());
-            float[] leftArcScores = bClassifier.leftArcScores(features, false);
-            score = leftArcScores[label];
-        } else {
-            label = lastAction - 3;
-            float[] rightArcScores = bClassifier.rightArcScores(features, false);
-            score = rightArcScores[label];
+        for (int action:actions) {
+            if (action == 0) {
+                score += bClassifier.shiftScore(features, true);
+            } else if (action == 1) {
+                score += bClassifier.reduceScore(features, true);
+            } else if (action >= 3 + dependencyRelations.size()) {
+                label = action - (3 + dependencyRelations.size());
+                float[] leftArcScores = bClassifier.leftArcScores(features, true);
+                score += leftArcScores[label];
+            } else {
+                label = action - 3;
+                float[] rightArcScores = bClassifier.rightArcScores(features, true);
+                score += rightArcScores[label];
+            }
         }
         return (score >= 0);
     }
