@@ -67,9 +67,7 @@ public class Options implements Serializable {
         numOfThreads = 8;
         useExtendedWithBrownClusterFeatures = false;
         parsePartialConll = false;
-
         partialTrainingStartingIteration = 3;
-
         punctuations = new HashSet<>();
         punctuations.add("#");
         punctuations.add("''");
@@ -96,7 +94,6 @@ public class Options implements Serializable {
     }
 
     public static void showHelp() {
-
         String output = "© Yara YaraParser.Parser \n" +
                 "\u00a9 Copyright 2014, Yahoo! Inc.\n" +
                 "\u00a9 Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for " +
@@ -154,7 +151,6 @@ public class Options implements Serializable {
 
     public static Options processArgs(String[] args) throws Exception {
         Options options = new Options();
-
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--help") || args[i].equals("-h") || args[i].equals("-help"))
                 options.showHelp = true;
@@ -215,116 +211,89 @@ public class Options implements Serializable {
             else if (args[i].startsWith("iter:"))
                 options.trainingIter = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
         }
-
         if (options.train || options.parseTaggedFile || options.parseConllFile)
             options.showHelp = false;
-
         return options;
     }
 
     public static ArrayList<Options> getAllPossibleOptions(Options option) {
         ArrayList<Options> options = new ArrayList<>();
         options.add(option);
-
         ArrayList<Options> tmp = new ArrayList<>();
-
         for (Options opt : options) {
             Options o1 = opt.clone();
             o1.labeled = true;
-
             Options o2 = opt.clone();
             o2.labeled = false;
             tmp.add(o1);
             tmp.add(o2);
         }
-
         options = tmp;
         tmp = new ArrayList<>();
-
-
         for (Options opt : options) {
             Options o1 = opt.clone();
             o1.lowercase = true;
-
             Options o2 = opt.clone();
             o2.lowercase = false;
             tmp.add(o1);
             tmp.add(o2);
         }
-
         options = tmp;
         tmp = new ArrayList<>();
-
         for (Options opt : options) {
             Options o1 = opt.clone();
             o1.useExtendedFeatures = true;
-
             Options o2 = opt.clone();
             o2.useExtendedFeatures = false;
             tmp.add(o1);
             tmp.add(o2);
         }
-
         options = tmp;
         tmp = new ArrayList<>();
-
         for (Options opt : options) {
             Options o1 = opt.clone();
             o1.useDynamicOracle = true;
-
             Options o2 = opt.clone();
             o2.useDynamicOracle = false;
             tmp.add(o1);
             tmp.add(o2);
         }
-
         options = tmp;
         tmp = new ArrayList<>();
-
         for (Options opt : options) {
             Options o1 = opt.clone();
             o1.useMaxViol = true;
-
             Options o2 = opt.clone();
             o2.useMaxViol = false;
             tmp.add(o1);
             tmp.add(o2);
         }
-
         options = tmp;
         tmp = new ArrayList<>();
-
         for (Options opt : options) {
             Options o1 = opt.clone();
             o1.useRandomOracleSelection = true;
-
             Options o2 = opt.clone();
             o2.useRandomOracleSelection = false;
             tmp.add(o1);
             tmp.add(o2);
         }
-
         options = tmp;
         tmp = new ArrayList<>();
-
-
         for (Options opt : options) {
             Options o1 = opt.clone();
             o1.rootFirst = true;
-
             Options o2 = opt.clone();
             o2.rootFirst = false;
             tmp.add(o1);
             tmp.add(o2);
         }
-
         options = tmp;
         return options;
     }
 
     public void changePunc(String puncPath) throws Exception {
         BufferedReader reader = new BufferedReader(new FileReader(puncPath));
-
         punctuations = new HashSet<>();
         String line;
         while ((line = reader.readLine()) != null) {
@@ -350,7 +319,6 @@ public class Options implements Serializable {
             builder.append("oracle: ").append(useDynamicOracle ? "dynamic" : "static").append("\n");
             if (useDynamicOracle)
                 builder.append("oracle selection: ").append(!useRandomOracleSelection ? "latent max" : "random").append("\n");
-
             builder.append("training-iterations: ").append(trainingIter).append("\n");
             builder.append("number of threads: ").append(numOfThreads).append("\n");
             builder.append("partial training starting iteration: ").append(partialTrainingStartingIteration).append(

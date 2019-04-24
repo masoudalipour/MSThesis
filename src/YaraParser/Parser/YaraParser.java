@@ -16,7 +16,6 @@ import java.util.ArrayList;
 public class YaraParser {
     public static void main(String[] args) throws Exception {
         Options options = Options.processArgs(args);
-
         if (options.showHelp) {
             Options.showHelp();
         } else {
@@ -56,7 +55,6 @@ public class YaraParser {
             int featureSize = averagedPerceptron.featureSize();
             KBeamArcEagerParser parser = new KBeamArcEagerParser(bPerceptron, averagedPerceptron, dependencyLabels, featureSize,
                     maps, options.numOfThreads);
-
             if (options.parseTaggedFile)
                 parser.parseTaggedFile(options.inputFile, options.outputFile, inf_options.rootFirst,
                         inf_options.beamWidth, inf_options.lowercase, options.separator, options.numOfThreads);
@@ -81,11 +79,8 @@ public class YaraParser {
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled,
                     options.rootFirst, options.lowercase, maps);
-
             System.out.println("CoNLL data reading is done.");
-
             ArrayList<Integer> dependencyLabels = new ArrayList<>(maps.getLabels().keySet());
-
             int featureLength;
             if (options.useExtendedFeatures)
                 featureLength = 72;
@@ -109,7 +104,6 @@ public class YaraParser {
                     labels.put("la_" + label, 4);
                 }
             }*/
-
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     new AveragedPerceptron(featureLength, dependencyLabels.size()),
                     new BinaryPerceptron(featureLength, dependencyLabels.size()), options, dependencyLabels,

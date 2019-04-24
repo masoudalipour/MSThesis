@@ -98,7 +98,6 @@ public class ArcEagerBeamTrainer {
                 if ((int) (dataCount % progress) == 0)
                     System.out.print("progress: " + (dataCount * 100) / trainSize + "%\r");
                 trainOnOneSample(goldConfiguration, partialTreeIter, i, dataCount, pool);
-
                 classifier.incrementIteration();
                 bClassifier.incrementIteration();
             }
@@ -114,7 +113,6 @@ public class ArcEagerBeamTrainer {
             long timeSec = (end - start) / 1000;
             long timeMiliSec = (end - start) % 1000;
             System.out.println("iteration " + i + " took " + timeSec + "." + timeMiliSec + " seconds\n");
-
             System.out.println("Saving the model");
             if (modelPath.lastIndexOf("/") > 0) {
                 String modelFolder = modelPath.substring(0, modelPath.lastIndexOf("/"));
@@ -123,7 +121,6 @@ public class ArcEagerBeamTrainer {
                     if (!modelDirectory.mkdirs()) {
                         throw new Exception("Creating model's directory failed");
                     }
-
                 }
             }
             InfStruct infStruct = new InfStruct(classifier, maps, dependencyRelations, options);
@@ -141,7 +138,6 @@ public class ArcEagerBeamTrainer {
                 int laSize = averagedPerceptron.laSize();
                 int effectiveLaSize = averagedPerceptron.effectiveLaSize();
                 float laRatio = 100.0f * effectiveLaSize / laSize;
-
                 DecimalFormat format = new DecimalFormat("##.00");
                 System.out.println("size of RA features in memory:" + effectiveRaSize + "/" + raSize + "->"
                         + format.format(raRatio) + "%");
@@ -149,12 +145,10 @@ public class ArcEagerBeamTrainer {
                         + format.format(laRatio) + "%");
                 KBeamArcEagerParser parser = new KBeamArcEagerParser(binaryPerceptron, averagedPerceptron, dependencyRelations,
                         featureLength, maps, options.numOfThreads);
-
                 parser.parseCoNLLFile(devPath, modelPath + ".__tmp__", options.rootFirst, options.beamWidth, true,
                         lowerCased, options.numOfThreads, false, "");
                 Evaluator.evaluate(devPath, modelPath + ".__tmp__", punctuations);
-//                Files.deleteIfExists(Path.of(modelPath + ".__tmp__"));
-
+                Files.deleteIfExists(Path.of(modelPath + ".__tmp__"));
                 parser.shutDownLiveThreads();
                 System.out.println("Validating BinaryPerceptron model:");
                 raSize = binaryPerceptron.raSize();
@@ -163,13 +157,11 @@ public class ArcEagerBeamTrainer {
                 laSize = binaryPerceptron.laSize();
                 effectiveLaSize = binaryPerceptron.effectiveLaSize();
                 laRatio = 100.0f * effectiveLaSize / laSize;
-
                 format = new DecimalFormat("##.00");
                 System.out.println("size of RA features in memory:" + effectiveRaSize + "/" + raSize + "->"
                         + format.format(raRatio) + "%");
                 System.out.println("size of LA features in memory:" + effectiveLaSize + "/" + laSize + "->"
                         + format.format(laRatio) + "%");
-
                 BinaryModelEvaluator bEval = new BinaryModelEvaluator(modelPath + "_Binary_iter" + i, classifier,
                         bClassifier, options, dependencyRelations, featureLength);
                 bEval.evaluate();
@@ -185,15 +177,12 @@ public class ArcEagerBeamTrainer {
     private void trainOnOneSample(GoldConfiguration goldConfiguration, int partialTreeIter, int i, int dataCount,
                                   CompletionService<ArrayList<BeamElement>> pool) throws Exception {
         boolean isPartial = goldConfiguration.isPartial(options.rootFirst);
-
         if (isPartial && partialTreeIter > i)
             return;
-
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
         ArrayList<Configuration> beam = new ArrayList<>(options.beamWidth);
         beam.add(initialConfiguration);
-
         /*
           The float is the oracle's cost For more information see: Yoav Goldberg and
           Joakim Nivre. "Training Deterministic Parsers with Non-Deterministic
@@ -201,9 +190,7 @@ public class ArcEagerBeamTrainer {
           oracles
          */
         HashMap<Configuration, Float> oracles = new HashMap<>();
-
         oracles.put(firstOracle, 0.0f);
-
         /*
           For keeping track of the violations For more information see: Liang Huang,
           Suphan Fayong and Yang Guo. "Structured perceptron with inexact search." In
@@ -212,36 +199,30 @@ public class ArcEagerBeamTrainer {
           142-151. Association for Computational Linguistics, 2012.
          */
         float maxViol = Float.NEGATIVE_INFINITY;
-
         Configuration bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, new HashMap<>());
         Pair<Configuration, Configuration> maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
         boolean oracleInBeam = false;
-
         while (ArcEager.isNotTerminal(beam) && beam.size() > 0) {
             /*
               generating new oracles it keeps the oracles which are in the terminal state
              */
             HashMap<Configuration, Float> newOracles = new HashMap<>();
-
             if (options.useDynamicOracle || isPartial) {
                 bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, newOracles);
             } else {
                 bestScoringOracle = staticOracle(goldConfiguration, oracles, newOracles);
             }
-
             if (newOracles.size() == 0) {
                 System.err.print("...no oracle(" + dataCount + ")...");
             }
             oracles = newOracles;
-
             TreeSet<BeamElement> beamPreserver = new TreeSet<>();
-
             if (options.numOfThreads == 1 || beam.size() == 1) {
                 beamSortOneThread(beam, beamPreserver);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new BeamScorerThread(false, classifier, beam.get(b), dependencyRelations, featureLength,
-                            b, options.rootFirst));
+                            b));
                 }
                 /*
                   store top configurations as much as beam width in beamPreserver
@@ -254,7 +235,6 @@ public class ArcEagerBeamTrainer {
                     }
                 }
             }
-
             if (beamPreserver.size() == 0 || beam.size() == 0) {
                 break;
             } else {
@@ -263,13 +243,11 @@ public class ArcEagerBeamTrainer {
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
                     if (repBeam.size() >= options.beamWidth)
                         break;
-
                     int b = beamElement.number;
                     int action = beamElement.action;
                     int label = beamElement.label;
                     float sc = beamElement.score;
                     Configuration newConfig = beam.get(b).clone();
-
                     switch (action) {
                         case 0:
                             ArcEager.shift(newConfig.state);
@@ -294,18 +272,15 @@ public class ArcEagerBeamTrainer {
                     }
                     newConfig.setScore(sc);
                     repBeam.add(newConfig);
-
                     /*
                       Binary classifier update
                      */
                     if (oracles.containsKey(newConfig) != isOracle(newConfig))
                         updateWeights(true, initialConfiguration, isPartial, bestScoringOracle, newConfig);
-
                     if (oracles.containsKey(newConfig))
                         oracleInBeam = true;
                 }
                 beam = repBeam;
-
                 if (beam.size() > 0 && oracles.size() > 0) {
                     Configuration bestConfig = beam.get(0);
                     if (oracles.containsKey(bestConfig)) {
@@ -326,10 +301,8 @@ public class ArcEagerBeamTrainer {
                             oracles.put(bestScoringOracle, 0.0f);
                         }
                     }
-
                     if (!oracleInBeam && updateMode.equals("early"))
                         break;
-
                     if (beam.size() > 0 && !oracleInBeam && updateMode.equals("max_violation")) {
                         float violation = beam.get(0).getScore() - bestScoringOracle.getScore();
                         if (violation > maxViol) {
@@ -341,7 +314,6 @@ public class ArcEagerBeamTrainer {
                     break;
             }
         }
-
         /*
           updating weights
          */
@@ -371,19 +343,15 @@ public class ArcEagerBeamTrainer {
         int first = -1;
         HashMap<Integer, Pair<Integer, Integer>> goldDependencies = goldConfiguration.getGoldDependencies();
         HashMap<Integer, HashSet<Integer>> reversedDependencies = goldConfiguration.getReversedDependencies();
-
         for (Configuration configuration : oracles.keySet()) {
             State state = configuration.state;
             Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-
             if (!state.stackEmpty())
                 top = state.peek();
             if (!state.bufferEmpty())
                 first = state.bufferHead();
-
             if (configuration.state.isNotTerminalState()) {
                 Configuration newConfig = configuration.clone();
-
                 if (first > 0 && goldDependencies.containsKey(first) && goldDependencies.get(first).first == top) {
                     int dependency = goldDependencies.get(first).second;
                     float[] scores = classifier.rightArcScores(features, false);
@@ -399,7 +367,6 @@ public class ArcEagerBeamTrainer {
                     newConfig.addAction(3 + dependencyRelations.size() + dependency);
                     newConfig.addScore(score);
                 } else if (top >= 0 && state.hasHead(top)) {
-
                     if (reversedDependencies.containsKey(top)) {
                         if (reversedDependencies.get(top).size() == state.valence(top)) {
                             float score = classifier.reduceScore(features, false);
@@ -418,7 +385,6 @@ public class ArcEagerBeamTrainer {
                         newConfig.addAction(1);
                         newConfig.addScore(score);
                     }
-
                 } else if (state.bufferEmpty() && state.stackSize() == 1 && state.peek() == state.rootIndex) {
                     float score = classifier.reduceScore(features, false);
                     ArcEager.reduce(newConfig.state);
@@ -444,7 +410,6 @@ public class ArcEagerBeamTrainer {
                                                 HashMap<Configuration, Float> newOracles) {
         float bestScore = Float.NEGATIVE_INFINITY;
         Configuration bestScoringOracle = null;
-
         for (Configuration configuration : oracles.keySet()) {
             if (configuration.state.isNotTerminalState()) {
                 State currentState = configuration.state;
@@ -459,7 +424,6 @@ public class ArcEagerBeamTrainer {
                     newConfig.addAction(0);
                     newConfig.addScore(score);
                     newOracles.put(newConfig, (float) 0);
-
                     if (newConfig.getScore() > bestScore) {
                         bestScore = newConfig.getScore();
                         bestScoringOracle = newConfig;
@@ -475,7 +439,6 @@ public class ArcEagerBeamTrainer {
                             newConfig.addAction(3 + dependency);
                             newConfig.addScore(score);
                             newOracles.put(newConfig, (float) 0);
-
                             if (newConfig.getScore() > bestScore) {
                                 bestScore = newConfig.getScore();
                                 bestScoringOracle = newConfig;
@@ -485,7 +448,6 @@ public class ArcEagerBeamTrainer {
                 }
                 if (ArcEager.canDo(Actions.LeftArc, currentState)) {
                     float[] leftArcScores = classifier.leftArcScores(features, false);
-
                     for (int dependency : dependencyRelations) {
                         if (goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
                             Configuration newConfig = configuration.clone();
@@ -494,7 +456,6 @@ public class ArcEagerBeamTrainer {
                             newConfig.addAction(3 + dependencyRelations.size() + dependency);
                             newConfig.addScore(score);
                             newOracles.put(newConfig, (float) 0);
-
                             if (newConfig.getScore() > bestScore) {
                                 bestScore = newConfig.getScore();
                                 bestScoringOracle = newConfig;
@@ -509,7 +470,6 @@ public class ArcEagerBeamTrainer {
                     newConfig.addAction(1);
                     newConfig.addScore(score);
                     newOracles.put(newConfig, (float) 0);
-
                     if (newConfig.getScore() > bestScore) {
                         bestScore = newConfig.getScore();
                         bestScoringOracle = newConfig;
@@ -519,7 +479,6 @@ public class ArcEagerBeamTrainer {
                 newOracles.put(configuration, oracles.get(configuration));
             }
         }
-
         return bestScoringOracle;
     }
 
@@ -529,12 +488,10 @@ public class ArcEagerBeamTrainer {
             State currentState = configuration.state;
             float prevScore = configuration.score;
             Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-
             if (ArcEager.canDo(Actions.Shift, currentState)) {
                 float score = classifier.shiftScore(features, false);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-
                 if (beamPreserver.size() > options.beamWidth)
                     beamPreserver.pollFirst();
             }
@@ -542,18 +499,15 @@ public class ArcEagerBeamTrainer {
                 float score = classifier.reduceScore(features, false);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-
                 if (beamPreserver.size() > options.beamWidth)
                     beamPreserver.pollFirst();
             }
-
             if (ArcEager.canDo(Actions.RightArc, currentState)) {
                 float[] rightArcScores = classifier.rightArcScores(features, false);
                 for (int dependency : dependencyRelations) {
                     float score = rightArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-
                     if (beamPreserver.size() > options.beamWidth)
                         beamPreserver.pollFirst();
                 }
@@ -564,7 +518,6 @@ public class ArcEagerBeamTrainer {
                     float score = leftArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-
                     if (beamPreserver.size() > options.beamWidth)
                         beamPreserver.pollFirst();
                 }
@@ -725,7 +678,7 @@ public class ArcEagerBeamTrainer {
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
         float score = 0f;
         int label;
-        for (int action:actions) {
+        for (int action : actions) {
             if (action == 0) {
                 score += bClassifier.shiftScore(features, true);
             } else if (action == 1) {

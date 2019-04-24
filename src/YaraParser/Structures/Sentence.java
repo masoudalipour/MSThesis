@@ -5,7 +5,6 @@
 
 package YaraParser.Structures;
 
-
 import java.util.ArrayList;
 
 public class Sentence implements Comparable {
@@ -18,7 +17,6 @@ public class Sentence implements Comparable {
     private int[] brownCluster4thPrefix;
     private int[] brownCluster6thPrefix;
     private int[] brownClusterFullString;
-
 
     public Sentence(ArrayList<Integer> tokens, ArrayList<Integer> pos, ArrayList<Integer> brownCluster4thPrefix,
                     ArrayList<Integer> brownCluster6thPrefix, ArrayList<Integer> brownClusterFullString) {
@@ -43,7 +41,6 @@ public class Sentence implements Comparable {
     public int posAt(int position) {
         if (position == 0)
             return 0;
-
         return tags[position - 1];
     }
 
@@ -55,11 +52,9 @@ public class Sentence implements Comparable {
         return tags;
     }
 
-
     public int[] getBrownCluster4thPrefix() {
         return brownCluster4thPrefix;
     }
-
 
     public int[] getBrownCluster6thPrefix() {
         return brownCluster6thPrefix;
@@ -101,5 +96,4 @@ public class Sentence implements Comparable {
         }
         return hash;
     }
-
 }

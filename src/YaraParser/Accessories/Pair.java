@@ -31,7 +31,6 @@ public class Pair<T1, T2> implements Comparable, Cloneable, Serializable {
         if (!(o instanceof Pair))
             return false;
         Pair pair = (Pair) o;
-
         if (pair.second == null)
             if (second == null)
                 return pair.first.equals(first);

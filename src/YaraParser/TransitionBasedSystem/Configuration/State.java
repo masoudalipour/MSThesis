@@ -38,14 +38,12 @@ public class State implements Cloneable {
         emptyFlag = false;
         stack = new ArrayDeque<>();
         arcs = new Pair[size + 1];
-
         leftMostArcs = new int[size + 1];
         rightMostArcs = new int[size + 1];
         leftValency = new int[size + 1];
         rightValency = new int[size + 1];
         rightDepLabels = new long[size + 1];
         leftDepLabels = new long[size + 1];
-
         rootIndex = 0;
         bufferH = 1;
         maxSentenceSize = 0;
@@ -90,15 +88,12 @@ public class State implements Cloneable {
     public void addArc(int dependent, int head, int dependency) {
         arcs[dependent] = new Pair<>(head, dependency);
         long value = 1L << (dependency);
-
         assert dependency < 64;
-
         if (dependent > head) { //right dep
             if (rightMostArcs[head] == 0 || dependent > rightMostArcs[head])
                 rightMostArcs[head] = dependent;
             rightValency[head] += 1;
             rightDepLabels[head] = rightDepLabels[head] | value;
-
         } else { //left dependency
             if (leftMostArcs[head] == 0 || dependent < leftMostArcs[head])
                 leftMostArcs[head] = dependent;
@@ -219,19 +214,16 @@ public class State implements Cloneable {
     public State clone() {
         State state = new State(arcs.length - 1);
         state.stack = new ArrayDeque<>(stack);
-
         for (int dependent = 0; dependent < arcs.length; dependent++) {
             if (arcs[dependent] != null) {
                 Pair<Integer, Integer> head = arcs[dependent];
                 state.arcs[dependent] = head;
                 int h = head.first;
-
                 if (rightMostArcs[h] != 0) {
                     state.rightMostArcs[h] = rightMostArcs[h];
                     state.rightValency[h] = rightValency[h];
                     state.rightDepLabels[h] = rightDepLabels[h];
                 }
-
                 if (leftMostArcs[h] != 0) {
                     state.leftMostArcs[h] = leftMostArcs[h];
                     state.leftValency[h] = leftValency[h];

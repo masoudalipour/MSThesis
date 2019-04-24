@@ -18,14 +18,11 @@ public class IndexMaps implements Serializable {
                      HashMap<String, Integer> brownFullClusters) {
         this.wordMap = wordMap;
         this.labels = labels;
-
         revWords = new String[wordMap.size() + 1];
         revWords[0] = "ROOT";
-
         for (String word : wordMap.keySet()) {
             revWords[wordMap.get(word)] = word;
         }
-
         this.brown4Clusters = brown4Clusters;
         this.brown6Clusters = brown6Clusters;
         this.brownFullClusters = brownFullClusters;
@@ -38,7 +35,6 @@ public class IndexMaps implements Serializable {
         ArrayList<Integer> bc4 = new ArrayList<>();
         ArrayList<Integer> bc6 = new ArrayList<>();
         ArrayList<Integer> bcf = new ArrayList<>();
-
         int i = 0;
         for (String word : words) {
             if (word.length() == 0)
@@ -46,28 +42,21 @@ public class IndexMaps implements Serializable {
             String lowerCaseWord = word.toLowerCase();
             if (lowerCased)
                 word = lowerCaseWord;
-
             int[] clusterIDs = clusterId(word);
             bcf.add(clusterIDs[0]);
             bc4.add(clusterIDs[1]);
             bc6.add(clusterIDs[2]);
-
             String pos = posTags[i];
-
             int wi = -1;
             if (wordMap.containsKey(word))
                 wi = wordMap.get(word);
-
             int pi = -1;
             if (wordMap.containsKey(pos))
                 pi = wordMap.get(pos);
-
             tokens.add(wi);
             tags.add(pi);
-
             i++;
         }
-
         if (!rootFirst) {
             tokens.add(0);
             tags.add(0);
@@ -75,14 +64,12 @@ public class IndexMaps implements Serializable {
             bc6.add(0);
             bc4.add(0);
         }
-
         return new Sentence(tokens, tags, bc4, bc6, bcf);
     }
 
     public HashMap<String, Integer> getWordMap() {
         return wordMap;
     }
-
 
     public HashMap<Integer, Integer> getLabels() {
         return labels;
@@ -95,7 +82,6 @@ public class IndexMaps implements Serializable {
         ids[2] = -100;
         if (brownFullClusters.containsKey(word))
             ids[0] = brownFullClusters.get(word);
-
         if (ids[0] > 0) {
             ids[1] = brown4Clusters.get(ids[0]);
             ids[2] = brown6Clusters.get(ids[0]);

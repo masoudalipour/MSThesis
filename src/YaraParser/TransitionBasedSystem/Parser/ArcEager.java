@@ -45,14 +45,11 @@ public class ArcEager extends TransitionBasedParser {
             if (state.stackEmpty())
                 return false;
             return !(!state.bufferEmpty() && state.bufferHead() == state.rootIndex) && !state.bufferEmpty() && !state.stackEmpty();
-
         } else if (action == Actions.LeftArc) { //left arc
             if (state.stackEmpty() || state.bufferEmpty())
                 return false;
-
             if (!state.stackEmpty() && state.peek() == state.rootIndex)
                 return false;
-
             return state.peek() != state.rootIndex && !state.hasHead(state.peek()) && !state.stackEmpty();
         } else if (action == Actions.Reduce) { //reduce
             return !state.stackEmpty() && state.hasHead(state.peek()) || !state.stackEmpty() && state.stackSize() == 1 && state.bufferSize() == 0 && state.peek() == state.rootIndex;
@@ -74,6 +71,4 @@ public class ArcEager extends TransitionBasedParser {
                 return true;
         return false;
     }
-
-
 }

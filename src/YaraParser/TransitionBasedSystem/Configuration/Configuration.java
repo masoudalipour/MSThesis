@@ -55,11 +55,9 @@ public class Configuration implements Comparable, Cloneable, Serializable {
     public int compareTo(Object o) {
         if (!(o instanceof Configuration))
             return hashCode() - o.hashCode();
-
         // may be unsafe
         Configuration configuration = (Configuration) o;
         float diff = getScore() - configuration.getScore();
-
         if (diff > 0)
             return (int) Math.ceil(diff);
         else if (diff < 0)
@@ -87,15 +85,11 @@ public class Configuration implements Comparable, Cloneable, Serializable {
     @Override
     public Configuration clone() {
         Configuration configuration = new Configuration(sentence);
-
         ArrayList<Integer> history = new ArrayList<>(actionHistory.size());
         history.addAll(actionHistory);
-
         configuration.actionHistory = history;
-
         configuration.score = score;
         configuration.state = state.clone();
-
         return configuration;
     }
 

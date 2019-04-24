@@ -1,9 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
-
 package YaraParser.TransitionBasedSystem.Configuration;
 
 import YaraParser.Accessories.Pair;
@@ -15,9 +9,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class GoldConfiguration {
-    protected HashMap<Integer, Pair<Integer, Integer>> goldDependencies;
-    protected HashMap<Integer, HashSet<Integer>> reversedDependencies;
-    protected Sentence sentence;
+    private HashMap<Integer, Pair<Integer, Integer>> goldDependencies;
+    private HashMap<Integer, HashSet<Integer>> reversedDependencies;
+    private Sentence sentence;
 
     public GoldConfiguration(Sentence sentence, HashMap<Integer, Pair<Integer, Integer>> goldDependencies) {
         this.goldDependencies = new HashMap<>();
@@ -32,7 +26,6 @@ public class GoldConfiguration {
         }
         this.sentence = sentence;
     }
-
 
     public Sentence getSentence() {
         return sentence;
@@ -106,24 +99,21 @@ public class GoldConfiguration {
         if (!ArcEager.canDo(action, state))
             return Integer.MAX_VALUE;
         int cost = 0;
-
         // added by me to take care of labels
         if (action == Actions.LeftArc) { // left arc
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
-
             if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first == bufferHead
                     && goldDependencies.get(stackHead).second != (dependency))
                 cost += 1;
-        } else if (action == Actions.RightArc && cost == 0) { //right arc
+        } else if (action == Actions.RightArc) { //right arc
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
             if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == stackHead
                     && goldDependencies.get(bufferHead).second != (dependency))
                 cost += 1;
         }
-
-        if (action == Actions.Shift && cost == 0) { //shift
+        if (action == Actions.Shift) { //shift
             int bufferHead = state.bufferHead();
             for (int stackItem : state.getStack()) {
                 if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first == (bufferHead))
@@ -131,8 +121,7 @@ public class GoldConfiguration {
                 if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (stackItem))
                     cost += 1;
             }
-
-        } else if (action == Actions.Reduce && cost == 0) { //reduce
+        } else if (action == Actions.Reduce) { //reduce
             int stackHead = state.peek();
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
@@ -156,7 +145,6 @@ public class GoldConfiguration {
                 if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (stackItem))
                     if (stackItem != stackHead)
                         cost += 1;
-
                 if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first == (bufferHead))
                     cost += 1;
             }

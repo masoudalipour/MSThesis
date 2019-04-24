@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-
 public class UnitTest {
 
     public static void main(String[] args) throws Exception {
@@ -38,12 +37,10 @@ public class UnitTest {
         options.labeled = true;
         options.useMaxViol = false;
         options.numOfThreads = 2;
-
         ArrayList<Options> optionList = Options.getAllPossibleOptions(options);
         options.numOfThreads = 2;
         for (Options o : optionList)
             testOption(o);
-
         System.exit(0);
     }
 
@@ -57,22 +54,15 @@ public class UnitTest {
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled,
                 options.rootFirst, options.lowercase, maps);
         System.out.println("CoNLL data reading done!");
-
-        ArrayList<Integer> dependencyLabels = new ArrayList<>();
-        for (int lab : maps.getLabels().keySet())
-            dependencyLabels.add(lab);
-
+        ArrayList<Integer> dependencyLabels = new ArrayList<>(maps.getLabels().keySet());
         HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = new HashMap<>();
-
         for (GoldConfiguration configuration : dataSet) {
             Sentence sentence = configuration.getSentence();
-
             for (int dep : configuration.getGoldDependencies().keySet()) {
                 Pair<Integer, Integer> headDepPair = configuration.getGoldDependencies().get(dep);
                 int relation = headDepPair.second;
                 int dependent = sentence.posAt(dep);
                 int head = sentence.posAt(headDepPair.first);
-
                 if (!headDepSet.containsKey(head))
                     headDepSet.put(head, new HashMap<>());
                 if (!headDepSet.get(head).containsKey(dependent))
@@ -80,13 +70,10 @@ public class UnitTest {
                 headDepSet.get(head).get(dependent).add(relation);
             }
         }
-
         int featureLength = options.useExtendedFeatures ? 72 : 26;
         if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
             featureLength = 153;
-
         System.out.println("size of training data (#sens): " + dataSet.size());
-
         HashMap<String, Integer> labels = new HashMap<>();
         int labIndex = 0;
         labels.put("sh", labIndex++);
@@ -101,9 +88,7 @@ public class UnitTest {
                 labels.put("la_" + label, 4);
             }
         }
-
         System.out.print("writing objects....");
-
         ObjectOutput writer = new ObjectOutputStream(new FileOutputStream(options.modelFile));
         writer.writeObject(dependencyLabels);
         writer.writeObject(maps);
@@ -112,7 +97,6 @@ public class UnitTest {
         writer.flush();
         writer.close();
         System.out.println("done!");
-
         ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                 new AveragedPerceptron(featureLength, dependencyLabels.size()),
                 options, dependencyLabels, featureLength, maps);

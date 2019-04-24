@@ -54,13 +54,11 @@ public class BinaryModelEvaluator {
         ExecutorService executor = Executors.newFixedThreadPool(options.numOfThreads);
         CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<>(
                 executor);
-
         CoNLLReader goldReader = new CoNLLReader(options.devPath);
         IndexMaps maps = CoNLLReader.createIndices(options.devPath, options.labeled, options.lowercase,
                 options.clusterFile);
         ArrayList<GoldConfiguration> trainData = goldReader.readData(Integer.MAX_VALUE, false, options.labeled,
                 options.rootFirst, options.lowercase, maps);
-
         long start = System.currentTimeMillis();
         System.out.println("### BinaryModelEvaluator:");
         int dataCount = 0;
@@ -103,7 +101,6 @@ public class BinaryModelEvaluator {
         System.out.println("Recall: " + decimalFormat.format(recall));
         System.out.println("F1 Score: " + decimalFormat.format(f1Score));
         System.out.println("done\n");
-
         boolean isTerminated = executor.isTerminated();
         while (!isTerminated) {
             executor.shutdownNow();
@@ -115,12 +112,10 @@ public class BinaryModelEvaluator {
                                   CompletionService<ArrayList<BeamElement>> pool) throws Exception {
         boolean isPartial = goldConfiguration.isPartial(options.rootFirst);
         Sentence sentence = goldConfiguration.getSentence();
-
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
         ArrayList<Configuration> beam = new ArrayList<>(options.beamWidth);
         beam.add(initialConfiguration);
-
         /**
          * The float is the oracle's cost For more information see: Yoav Goldberg and
          * Joakim Nivre. "Training Deterministic Parsers with Non-Deterministic
@@ -128,9 +123,7 @@ public class BinaryModelEvaluator {
          * oracles
          */
         HashMap<Configuration, Float> oracles = new HashMap<>();
-
         oracles.put(firstOracle, 0.0f);
-
         /**
          * For keeping track of the violations For more information see: Liang Huang,
          * Suphan Fayong and Yang Guo. "Structured perceptron with inexact search." In
@@ -139,32 +132,27 @@ public class BinaryModelEvaluator {
          * 142-151. Association for Computational Linguistics, 2012.
          */
         Configuration bestScoringOracle;
-
         while (ArcEager.isNotTerminal(beam) && beam.size() > 0) {
             /*
               generating new oracles it keeps the oracles which are in the terminal state
              */
             HashMap<Configuration, Float> newOracles = new HashMap<>();
-
             if (options.useDynamicOracle || isPartial) {
                 bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, newOracles);
             } else {
                 bestScoringOracle = staticOracle(goldConfiguration, oracles, newOracles);
             }
-
             if (newOracles.size() == 0) {
                 System.err.print("...no oracle(" + dataCount + ")...");
             }
             oracles = newOracles;
-
             TreeSet<BeamElement> beamPreserver = new TreeSet<>();
-
             if (options.numOfThreads == 1 || beam.size() == 1) {
                 beamSortOneThread(beam, beamPreserver, sentence);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new BeamScorerThread(false, classifier, beam.get(b), dependencyRelations, featureLength,
-                            b, options.rootFirst));
+                            b));
                 }
                 for (int b = 0; b < beam.size(); b++) {
                     for (BeamElement element : pool.take().get()) {
@@ -174,7 +162,6 @@ public class BinaryModelEvaluator {
                     }
                 }
             }
-
             if (beamPreserver.size() == 0 || beam.size() == 0) {
                 break;
             } else {
@@ -186,9 +173,7 @@ public class BinaryModelEvaluator {
                     int action = beamElement.action;
                     int label = beamElement.label;
                     float sc = beamElement.score;
-
                     Configuration newConfig = beam.get(b).clone();
-
                     if (action == 0) {
                         ArcEager.shift(newConfig.state);
                         newConfig.addAction(0);
@@ -223,7 +208,6 @@ public class BinaryModelEvaluator {
                     }
                 }
                 beam = repBeam;
-
                 if (beam.size() > 0 && oracles.size() > 0) {
                     Configuration bestConfig = beam.get(0);
                     if (oracles.containsKey(bestConfig)) {
@@ -251,19 +235,15 @@ public class BinaryModelEvaluator {
         int first = -1;
         HashMap<Integer, Pair<Integer, Integer>> goldDependencies = goldConfiguration.getGoldDependencies();
         HashMap<Integer, HashSet<Integer>> reversedDependencies = goldConfiguration.getReversedDependencies();
-
         for (Configuration configuration : oracles.keySet()) {
             State state = configuration.state;
             Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-
             if (!state.stackEmpty())
                 top = state.peek();
             if (!state.bufferEmpty())
                 first = state.bufferHead();
-
             if (configuration.state.isNotTerminalState()) {
                 Configuration newConfig = configuration.clone();
-
                 if (first > 0 && goldDependencies.containsKey(first) && goldDependencies.get(first).first == top) {
                     int dependency = goldDependencies.get(first).second;
                     float[] scores = classifier.rightArcScores(features, true);
@@ -279,7 +259,6 @@ public class BinaryModelEvaluator {
                     newConfig.addAction(3 + dependencyRelations.size() + dependency);
                     newConfig.addScore(score);
                 } else if (top >= 0 && state.hasHead(top)) {
-
                     if (reversedDependencies.containsKey(top)) {
                         if (reversedDependencies.get(top).size() == state.valence(top)) {
                             float score = classifier.reduceScore(features, true);
@@ -298,7 +277,6 @@ public class BinaryModelEvaluator {
                         newConfig.addAction(1);
                         newConfig.addScore(score);
                     }
-
                 } else if (state.bufferEmpty() && state.stackSize() == 1 && state.peek() == state.rootIndex) {
                     float score = classifier.reduceScore(features, true);
                     ArcEager.reduce(newConfig.state);
@@ -324,7 +302,6 @@ public class BinaryModelEvaluator {
                                                 HashMap<Configuration, Float> newOracles) {
         float bestScore = Float.NEGATIVE_INFINITY;
         Configuration bestScoringOracle = null;
-
         for (Configuration configuration : oracles.keySet()) {
             if (configuration.state.isNotTerminalState()) {
                 State currentState = configuration.state;
@@ -337,7 +314,6 @@ public class BinaryModelEvaluator {
                     newConfig.addAction(0);
                     newConfig.addScore(score);
                     newOracles.put(newConfig, (float) 0);
-
                     if (newConfig.getScore() > bestScore) {
                         bestScore = newConfig.getScore();
                         bestScoringOracle = newConfig;
@@ -353,7 +329,6 @@ public class BinaryModelEvaluator {
                             newConfig.addAction(3 + dependency);
                             newConfig.addScore(score);
                             newOracles.put(newConfig, (float) 0);
-
                             if (newConfig.getScore() > bestScore) {
                                 bestScore = newConfig.getScore();
                                 bestScoringOracle = newConfig;
@@ -363,7 +338,6 @@ public class BinaryModelEvaluator {
                 }
                 if (ArcEager.canDo(Actions.LeftArc, currentState)) {
                     float[] leftArcScores = classifier.leftArcScores(features, true);
-
                     for (int dependency : dependencyRelations) {
                         if (goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
                             Configuration newConfig = configuration.clone();
@@ -372,7 +346,6 @@ public class BinaryModelEvaluator {
                             newConfig.addAction(3 + dependencyRelations.size() + dependency);
                             newConfig.addScore(score);
                             newOracles.put(newConfig, (float) 0);
-
                             if (newConfig.getScore() > bestScore) {
                                 bestScore = newConfig.getScore();
                                 bestScoringOracle = newConfig;
@@ -387,7 +360,6 @@ public class BinaryModelEvaluator {
                     newConfig.addAction(1);
                     newConfig.addScore(score);
                     newOracles.put(newConfig, (float) 0);
-
                     if (newConfig.getScore() > bestScore) {
                         bestScore = newConfig.getScore();
                         bestScoringOracle = newConfig;
@@ -397,7 +369,6 @@ public class BinaryModelEvaluator {
                 newOracles.put(configuration, oracles.get(configuration));
             }
         }
-
         return bestScoringOracle;
     }
 
@@ -412,12 +383,10 @@ public class BinaryModelEvaluator {
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
             Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-
             if (canShift) {
                 float score = classifier.shiftScore(features, true);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-
                 if (beamPreserver.size() > options.beamWidth)
                     beamPreserver.pollFirst();
             }
@@ -425,18 +394,15 @@ public class BinaryModelEvaluator {
                 float score = classifier.reduceScore(features, true);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-
                 if (beamPreserver.size() > options.beamWidth)
                     beamPreserver.pollFirst();
             }
-
             if (canRightArc) {
                 float[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
                     float score = rightArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-
                     if (beamPreserver.size() > options.beamWidth)
                         beamPreserver.pollFirst();
                 }
@@ -447,7 +413,6 @@ public class BinaryModelEvaluator {
                     float score = leftArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-
                     if (beamPreserver.size() > options.beamWidth)
                         beamPreserver.pollFirst();
                 }
@@ -458,7 +423,6 @@ public class BinaryModelEvaluator {
     private boolean isOracle(Configuration bestConfiguration, int label) {
         int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
-
         float score = 0.0f;
         if (lastAction == 0) {
             for (int i = 0; i < features.length; i++) {
@@ -487,7 +451,6 @@ public class BinaryModelEvaluator {
                 if (values != null) {
                     int offset = values.getOffset();
                     float[] weightVector = values.getArray();
-
                     for (int d = offset; d < offset + weightVector.length; d++) {
                         scores[d] += weightVector[d - offset];
                     }
@@ -503,7 +466,6 @@ public class BinaryModelEvaluator {
                 if (values != null) {
                     int offset = values.getOffset();
                     float[] weightVector = values.getArray();
-
                     for (int d = offset; d < offset + weightVector.length; d++) {
                         scores[d] += weightVector[d - offset];
                     }

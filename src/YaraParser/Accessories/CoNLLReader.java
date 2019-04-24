@@ -7,6 +7,7 @@ import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -32,14 +33,11 @@ public class CoNLLReader {
         HashMap<String, Integer> clusterMap = new HashMap<>();
         HashMap<Integer, Integer> cluster4Map = new HashMap<>();
         HashMap<Integer, Integer> cluster6Map = new HashMap<>();
-
         int labelCount = 1;
         String rootString = "ROOT";
-
         int wi = 1;
         wordMap.put("ROOT", 0);
         labels.put(0, 0);
-
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
         String line;
         while ((line = reader.readLine()) != null) {
@@ -49,7 +47,6 @@ public class CoNLLReader {
                 int head = Integer.parseInt(spl[6]);
                 if (head == 0)
                     rootString = label;
-
                 if (label.equals("_"))
                     label = "-";
                 if (!labeled)
@@ -60,7 +57,6 @@ public class CoNLLReader {
                 }
             }
         }
-
         reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
@@ -71,7 +67,6 @@ public class CoNLLReader {
                 }
             }
         }
-
         if (clusterFile.length() > 0) {
             reader = new BufferedReader(new FileReader(clusterFile));
             while ((line = reader.readLine()) != null) {
@@ -82,7 +77,6 @@ public class CoNLLReader {
                     String prefix4 = cluster.substring(0, Math.min(4, cluster.length()));
                     String prefix6 = cluster.substring(0, Math.min(6, cluster.length()));
                     int clusterNum = wi;
-
                     if (!wordMap.containsKey(cluster)) {
                         clusterMap.put(word, wi);
                         wordMap.put(cluster, wi++);
@@ -90,27 +84,23 @@ public class CoNLLReader {
                         clusterNum = wordMap.get(cluster);
                         clusterMap.put(word, clusterNum);
                     }
-
                     int pref4Id = wi;
                     if (!wordMap.containsKey(prefix4)) {
                         wordMap.put(prefix4, wi++);
                     } else {
                         pref4Id = wordMap.get(prefix4);
                     }
-
                     int pref6Id = wi;
                     if (!wordMap.containsKey(prefix6)) {
                         wordMap.put(prefix6, wi++);
                     } else {
                         pref6Id = wordMap.get(prefix6);
                     }
-
                     cluster4Map.put(clusterNum, pref4Id);
                     cluster6Map.put(clusterNum, pref6Id);
                 }
             }
         }
-
         reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
@@ -123,7 +113,6 @@ public class CoNLLReader {
                 }
             }
         }
-
         return new IndexMaps(wordMap, labels, rootString, cluster4Map, cluster6Map, clusterMap);
     }
 
@@ -135,14 +124,12 @@ public class CoNLLReader {
                                                  boolean rootFirst, boolean lowerCased, IndexMaps maps) throws Exception {
         HashMap<String, Integer> wordMap = maps.getWordMap();
         ArrayList<GoldConfiguration> configurationSet = new ArrayList<>();
-
         String line;
         ArrayList<Integer> tokens = new ArrayList<>();
         ArrayList<Integer> tags = new ArrayList<>();
         ArrayList<Integer> cluster4Ids = new ArrayList<>();
         ArrayList<Integer> cluster6Ids = new ArrayList<>();
         ArrayList<Integer> clusterIds = new ArrayList<>();
-
         HashMap<Integer, Pair<Integer, Integer>> goldDependencies = new HashMap<>();
         int sentenceCounter = 0;
         while ((line = fileReader.readLine()) != null) {
@@ -192,39 +179,31 @@ public class CoNLLReader {
                 if (lowerCased)
                     word = word.toLowerCase();
                 String pos = splitLine[3].trim();
-
                 int wi = -1;
                 if (wordMap.containsKey(word))
                     wi = wordMap.get(word);
-
                 int pi = -1;
                 if (wordMap.containsKey(pos))
                     pi = wordMap.get(pos);
-
                 tags.add(pi);
                 tokens.add(wi);
-
                 int headIndex = Integer.parseInt(splitLine[6]);
                 String relation = splitLine[7];
                 if (relation.equals("_"))
                     relation = "-";
                 if (!labeled)
                     relation = "~";
-
                 if (headIndex == 0)
                     relation = "ROOT";
-
                 int ri = -1;
                 if (wordMap.containsKey(relation))
                     ri = wordMap.get(relation);
                 if (headIndex == -1)
                     ri = -1;
-
                 int[] ids = maps.clusterId(word);
                 clusterIds.add(ids[0]);
                 cluster4Ids.add(ids[1]);
                 cluster6Ids.add(ids[2]);
-
                 if (headIndex >= 0)
                     goldDependencies.put(wordIndex, new Pair<>(headIndex, ri));
             }
@@ -244,16 +223,13 @@ public class CoNLLReader {
             Sentence currentSentence = new Sentence(tokens, tags, cluster4Ids, cluster6Ids, clusterIds);
             configurationSet.add(new GoldConfiguration(currentSentence, goldDependencies));
         }
-
         return configurationSet;
     }
 
     ArrayList<CompactTree> readStringData() throws Exception {
         ArrayList<CompactTree> treeSet = new ArrayList<>();
-
         String line;
         ArrayList<String> tags = new ArrayList<>();
-
         HashMap<Integer, Pair<Integer, String>> goldDependencies = new HashMap<>();
         while ((line = fileReader.readLine()) != null) {
             line = line.trim();
@@ -270,27 +246,30 @@ public class CoNLLReader {
                     throw new Exception("wrong file format");
                 int wordIndex = Integer.parseInt(splitLine[0]);
                 String pos = splitLine[3].trim();
-
                 tags.add(pos);
-
                 int headIndex = Integer.parseInt(splitLine[6]);
                 String relation = splitLine[7];
-
                 if (headIndex == 0) {
                     relation = "ROOT";
                 }
-
                 if (pos.length() > 0)
                     goldDependencies.put(wordIndex, new Pair<>(headIndex, relation));
             }
         }
-
-
         if (tags.size() > 0) {
             treeSet.add(new CompactTree(goldDependencies, tags));
         }
-
         return treeSet;
     }
 
+    void close() throws IOException {
+        if (fileReader == null) {
+            return;
+        }
+        try {
+            fileReader.close();
+        } finally {
+            fileReader = null;
+        }
+    }
 }

@@ -17,18 +17,18 @@ import java.util.concurrent.Callable;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
-public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
-    int lineNum;
-    String line;
-    String delim;
-    boolean rootFirst;
-    boolean lowerCased;
-    IndexMaps maps;
-    int beamWidth;
-    KBeamArcEagerParser parser;
+class ParseTaggedThread implements Callable<Pair<String, Integer>> {
+    private int lineNum;
+    private String line;
+    private String delim;
+    private boolean rootFirst;
+    private boolean lowerCased;
+    private IndexMaps maps;
+    private int beamWidth;
+    private KBeamArcEagerParser parser;
 
-    public ParseTaggedThread(int lineNum, String line, String delim, boolean rootFirst, boolean lowerCased,
-                             IndexMaps maps, int beamWidth, KBeamArcEagerParser parser) {
+    ParseTaggedThread(int lineNum, String line, String delim, boolean rootFirst, boolean lowerCased,
+                      IndexMaps maps, int beamWidth, KBeamArcEagerParser parser) {
         this.lineNum = lineNum;
         this.line = line;
         this.delim = delim;
@@ -42,18 +42,15 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
     @Override
     public Pair<String, Integer> call() throws Exception {
         HashMap<String, Integer> wordMap = maps.getWordMap();
-
         line = line.trim();
         String[] wrds = line.split(" ");
         String[] words = new String[wrds.length];
         String[] posTags = new String[wrds.length];
-
         ArrayList<Integer> tokens = new ArrayList<>();
         ArrayList<Integer> tags = new ArrayList<>();
         ArrayList<Integer> brownCluster4thPrefix = new ArrayList<>();
         ArrayList<Integer> brownCluster6thPrefix = new ArrayList<>();
         ArrayList<Integer> brownClusterFullString = new ArrayList<>();
-
         int i = 0;
         for (String w : wrds) {
             if (w.length() == 0)
@@ -65,11 +62,9 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
             String pos = w.substring(index + 1);
             words[i] = word;
             posTags[i++] = pos;
-
             int wi = -1;
             if (wordMap.containsKey(word))
                 wi = wordMap.get(word);
-
             int pi = -1;
             if (wordMap.containsKey(pos))
                 pi = wordMap.get(pos);
@@ -77,11 +72,9 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
             brownClusterFullString.add(clusters[0]);
             brownCluster4thPrefix.add(clusters[1]);
             brownCluster6thPrefix.add(clusters[2]);
-
             tokens.add(wi);
             tags.add(pi);
         }
-
         if (tokens.size() > 0) {
             if (!rootFirst) {
                 tokens.add(0);
@@ -90,30 +83,21 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
                 brownCluster4thPrefix.add(0);
                 brownCluster6thPrefix.add(0);
             }
-
             Sentence sentence = new Sentence(tokens, tags, brownCluster4thPrefix, brownCluster6thPrefix,
                     brownClusterFullString);
             Configuration bestParse = parser.parse(sentence, rootFirst, beamWidth, 1);
-
             StringBuilder finalOutput = new StringBuilder();
             for (i = 0; i < words.length; i++) {
-
                 String word = words[i];
                 String pos = posTags[i];
-
                 int w = i + 1;
                 int head = bestParse.state.getHead(w);
                 int dep = bestParse.state.getDependency(w);
-
-
                 String lemma = "_";
-
                 String fpos = "_";
-
                 if (head == bestParse.state.rootIndex)
                     head = 0;
                 String label = head == 0 ? maps.rootString : maps.revWords[dep];
-
                 String output =
                         w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" + label +
                                 "\t_\t_\n";
@@ -121,7 +105,6 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
             }
             if (words.length > 0)
                 finalOutput.append("\n");
-
             return new Pair<>(finalOutput.toString(), lineNum);
         }
         return new Pair<>("", lineNum);

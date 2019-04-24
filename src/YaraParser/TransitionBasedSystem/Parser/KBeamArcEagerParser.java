@@ -67,7 +67,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
         int featureSize = averagedPerceptron.featureSize();
         return new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, numOfThreads);
-
     }
 
     private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver,
@@ -137,7 +136,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new BeamScorerThread(true, classifier, beam.get(b),
-                            dependencyRelations, featureLength, b, rootFirst));
+                            dependencyRelations, featureLength, b));
                 }
                 for (int b = 0; b < beam.size(); b++) {
                     for (BeamElement element : pool.take().get()) {
@@ -518,7 +517,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 outs[result.second] = result.first;
             }
             for (int i = 0; i < lineNum; i++) {
-
                 if (outs[i].length() > 0) {
                     writer.write(outs[i]);
                 }
@@ -573,7 +571,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     scoreList.add(bestParse.score / bestParse.sentence.size());
                 }
                 int sentenceWords = data.get(j).getSentence().getWords().length;
-
                 allArcs += sentenceWords - 1;
                 StringBuilder finalOutput = new StringBuilder();
                 for (int i = 1; i <= sentenceWords; i++) {

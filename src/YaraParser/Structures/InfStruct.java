@@ -48,11 +48,9 @@ public class InfStruct {
                      Options options) {
         shiftFeatureAveragedWeights = new HashMap[perceptron.shiftFeatureAveragedWeights.length];
         reduceFeatureAveragedWeights = new HashMap[perceptron.reduceFeatureAveragedWeights.length];
-
         HashMap<Object, Float>[] map = perceptron.shiftFeatureWeights;
         HashMap<Object, Float>[] avgMap = perceptron.shiftFeatureAveragedWeights;
         this.dependencySize = perceptron.dependencySize;
-
         for (int i = 0; i < shiftFeatureAveragedWeights.length; i++) {
             shiftFeatureAveragedWeights[i] = new HashMap<>();
             for (Object feat : map[i].keySet()) {
@@ -62,11 +60,9 @@ public class InfStruct {
                 shiftFeatureAveragedWeights[i].put(feat, newVals);
             }
         }
-
         HashMap<Object, Float>[] map4 = perceptron.reduceFeatureWeights;
         HashMap<Object, Float>[] avgMap4 = perceptron.reduceFeatureAveragedWeights;
         this.dependencySize = perceptron.dependencySize;
-
         for (int i = 0; i < reduceFeatureAveragedWeights.length; i++) {
             reduceFeatureAveragedWeights[i] = new HashMap<>();
             for (Object feat : map4[i].keySet()) {
@@ -76,11 +72,9 @@ public class InfStruct {
                 reduceFeatureAveragedWeights[i].put(feat, newVals);
             }
         }
-
         leftArcFeatureAveragedWeights = new HashMap[perceptron.leftArcFeatureAveragedWeights.length];
         HashMap<Object, CompactArray>[] map2 = perceptron.leftArcFeatureWeights;
         HashMap<Object, CompactArray>[] avgMap2 = perceptron.leftArcFeatureAveragedWeights;
-
         for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
             leftArcFeatureAveragedWeights[i] = new HashMap<>();
             for (Object feat : map2[i].keySet()) {
@@ -90,11 +84,9 @@ public class InfStruct {
                         perceptron.iteration));
             }
         }
-
         rightArcFeatureAveragedWeights = new HashMap[perceptron.rightArcFeatureAveragedWeights.length];
         HashMap<Object, CompactArray>[] map3 = perceptron.rightArcFeatureWeights;
         HashMap<Object, CompactArray>[] avgMap3 = perceptron.rightArcFeatureAveragedWeights;
-
         for (int i = 0; i < rightArcFeatureAveragedWeights.length; i++) {
             rightArcFeatureAveragedWeights[i] = new HashMap<>();
             for (Object feat : map3[i].keySet()) {
@@ -104,7 +96,6 @@ public class InfStruct {
                         perceptron.iteration));
             }
         }
-
         this.maps = maps;
         this.dependencyLabels = dependencyLabels;
         this.options = options;
@@ -114,11 +105,9 @@ public class InfStruct {
                      Options options) {
         shiftFeatureAveragedWeights = new HashMap[perceptron.shiftFeatureAveragedWeights.length];
         reduceFeatureAveragedWeights = new HashMap[perceptron.reduceFeatureAveragedWeights.length];
-
         HashMap<Object, Float>[] map = perceptron.shiftFeatureWeights;
         HashMap<Object, Float>[] avgMap = perceptron.shiftFeatureAveragedWeights;
         this.dependencySize = perceptron.dependencySize;
-
         for (int i = 0; i < shiftFeatureAveragedWeights.length; i++) {
             shiftFeatureAveragedWeights[i] = new HashMap<>();
             for (Object feat : map[i].keySet()) {
@@ -128,11 +117,9 @@ public class InfStruct {
                 shiftFeatureAveragedWeights[i].put(feat, newVals);
             }
         }
-
         HashMap<Object, Float>[] map4 = perceptron.reduceFeatureWeights;
         HashMap<Object, Float>[] avgMap4 = perceptron.reduceFeatureAveragedWeights;
         this.dependencySize = perceptron.dependencySize;
-
         for (int i = 0; i < reduceFeatureAveragedWeights.length; i++) {
             reduceFeatureAveragedWeights[i] = new HashMap<>();
             for (Object feat : map4[i].keySet()) {
@@ -142,11 +129,9 @@ public class InfStruct {
                 reduceFeatureAveragedWeights[i].put(feat, newVals);
             }
         }
-
         leftArcFeatureAveragedWeights = new HashMap[perceptron.leftArcFeatureAveragedWeights.length];
         HashMap<Object, CompactArray>[] map2 = perceptron.leftArcFeatureWeights;
         HashMap<Object, CompactArray>[] avgMap2 = perceptron.leftArcFeatureAveragedWeights;
-
         for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
             leftArcFeatureAveragedWeights[i] = new HashMap<>();
             for (Object feat : map2[i].keySet()) {
@@ -156,11 +141,9 @@ public class InfStruct {
                         perceptron.iteration));
             }
         }
-
         rightArcFeatureAveragedWeights = new HashMap[perceptron.rightArcFeatureAveragedWeights.length];
         HashMap<Object, CompactArray>[] map3 = perceptron.rightArcFeatureWeights;
         HashMap<Object, CompactArray>[] avgMap3 = perceptron.rightArcFeatureAveragedWeights;
-
         for (int i = 0; i < rightArcFeatureAveragedWeights.length; i++) {
             rightArcFeatureAveragedWeights[i] = new HashMap<>();
             for (Object feat : map3[i].keySet()) {
@@ -170,7 +153,6 @@ public class InfStruct {
                         perceptron.iteration));
             }
         }
-
         this.maps = maps;
         this.dependencyLabels = dependencyLabels;
         this.options = options;
@@ -179,7 +161,6 @@ public class InfStruct {
     public InfStruct(String modelPath) throws Exception {
         FileInputStream fos = new FileInputStream(modelPath);
         GZIPInputStream gz = new GZIPInputStream(fos);
-
         ObjectInputStream reader = new ObjectInputStream(gz);
         dependencyLabels = (ArrayList<Integer>) reader.readObject();
         maps = (IndexMaps) reader.readObject();
@@ -194,7 +175,6 @@ public class InfStruct {
     public void saveModel(String modelPath) throws Exception {
         FileOutputStream fos = new FileOutputStream(modelPath);
         GZIPOutputStream gz = new GZIPOutputStream(fos);
-
         ObjectOutput writer = new ObjectOutputStream(gz);
         writer.writeObject(dependencyLabels);
         writer.writeObject(maps);
