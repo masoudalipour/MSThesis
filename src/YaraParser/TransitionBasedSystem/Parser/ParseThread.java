@@ -245,6 +245,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         writer.append("right parse: ").append(String.valueOf(rightParse));
         writer.append("wrong parse: ").append(String.valueOf(wrongParse));
         writer.append("bestConfiguration isOracle: ").append(String.valueOf(isOracle(bestConfiguration)));
+        writer.close();
         return new Pair<>(bestConfiguration, id);
     }
 
