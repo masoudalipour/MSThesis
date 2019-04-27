@@ -19,6 +19,7 @@ import YaraParser.TransitionBasedSystem.Parser.BeamScorerThread;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 
 import java.io.File;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
@@ -110,9 +111,12 @@ public class ArcEagerBeamTrainer {
                     .substring(2)
                     .replaceAll("(\\d[HMS])(?!$)", "$1 ")
                     .toLowerCase());
-            long timeSec = (end - start) / 1000;
-            long timeMiliSec = (end - start) % 1000;
-            System.out.println("iteration " + i + " took " + timeSec + "." + timeMiliSec + " seconds\n");
+            double timeSec = (double) (end - start) / 1000;
+            DecimalFormat decimalFormat = new DecimalFormat("0.000");
+            decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
+            System.out.println("iteration " + i + " took " + decimalFormat.format(timeSec) + " seconds");
+            System.out.println("Speed: " + (trainSize / (timeSec / 60)) + " (sen/min)");
+            System.out.println();
             System.out.println("Saving the model");
             if (modelPath.lastIndexOf("/") > 0) {
                 String modelFolder = modelPath.substring(0, modelPath.lastIndexOf("/"));
