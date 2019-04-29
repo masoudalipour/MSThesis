@@ -276,7 +276,9 @@ public class ArcEagerBeamTrainer {
                       Binary classifier update
                      */
                     if (oracles.containsKey(newConfig) != isOracle(newConfig))
-                        updateWeights(true, initialConfiguration, isPartial, bestScoringOracle, newConfig);
+                        for (Configuration c: oracles.keySet()) {
+                            updateWeights(true, initialConfiguration, isPartial, c, newConfig);
+                        }
                     if (oracles.containsKey(newConfig))
                         oracleInBeam = true;
                 }

@@ -241,10 +241,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 wrongParse++;
             }
         }
-        BufferedWriter writer = new BufferedWriter(new FileWriter("parseBeam"));
-        writer.append("right parse: ").append(String.valueOf(rightParse));
-        writer.append("wrong parse: ").append(String.valueOf(wrongParse));
-        writer.append("bestConfiguration isOracle: ").append(String.valueOf(isOracle(bestConfiguration)));
+        BufferedWriter writer = new BufferedWriter(new FileWriter("parseBeam.log"));
+        writer.write("right parse: " + rightParse + "\n");
+        writer.write("wrong parse: " + wrongParse + "\n");
+        writer.write("bestConfiguration isOracle: " + isOracle(bestConfiguration) + "\n\n");
         writer.close();
         return new Pair<>(bestConfiguration, id);
     }
