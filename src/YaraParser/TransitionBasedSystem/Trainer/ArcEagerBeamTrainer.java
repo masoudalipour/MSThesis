@@ -46,7 +46,7 @@ public class ArcEagerBeamTrainer {
     private ArrayList<Integer> dependencyRelations;
     private Random randGen;
     private IndexMaps maps;
-
+    private int scoreZero;
     public ArcEagerBeamTrainer(String updateMode, AveragedPerceptron classifier, Options options,
                                ArrayList<Integer> dependencyRelations, int featureLength, IndexMaps maps) {
         this.updateMode = updateMode;
@@ -94,6 +94,7 @@ public class ArcEagerBeamTrainer {
             }
             System.out.println("train size " + trainSize);
             System.out.print("progress: 0%\r");
+            scoreZero = 0;
             for (GoldConfiguration goldConfiguration : trainData) {
                 dataCount++;
                 if ((int) (dataCount % progress) == 0)
@@ -102,8 +103,9 @@ public class ArcEagerBeamTrainer {
                 classifier.incrementIteration();
                 bClassifier.incrementIteration();
             }
-            System.out.print("\n");
+            System.out.println();
             System.out.println("train phase completed!");
+            System.out.println("scoreZero: " + scoreZero);
             long end = System.currentTimeMillis();
             long endInNanos = System.nanoTime();
             Duration duration = Duration.ofNanos(endInNanos - startInNanos);
@@ -699,6 +701,8 @@ public class ArcEagerBeamTrainer {
                 score += rightArcScores[label];
             }
         }
+        if (score == 0)
+            scoreZero++;
         return (score >= 0);
     }
 }
