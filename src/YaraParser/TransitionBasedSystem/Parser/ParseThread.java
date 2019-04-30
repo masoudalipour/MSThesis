@@ -12,6 +12,7 @@ import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
@@ -241,10 +242,14 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 wrongParse++;
             }
         }
-        BufferedWriter writer = new BufferedWriter(new FileWriter("parseBeam.log"));
-        writer.write("right parse: " + rightParse + "\n");
-        writer.write("wrong parse: " + wrongParse + "\n");
-        writer.write("bestConfiguration isOracle: " + isOracle(bestConfiguration) + "\n\n");
+        BufferedWriter writer = new BufferedWriter(new FileWriter("parseBeam.log", true));
+        writer.write("right parse: " + rightParse);
+        writer.newLine();
+        writer.write("wrong parse: " + wrongParse);
+        writer.newLine();
+        writer.write("bestConfiguration isOracle: " + isOracle(bestConfiguration));
+        writer.newLine();
+        writer.newLine();
         writer.close();
         return new Pair<>(bestConfiguration, id);
     }
