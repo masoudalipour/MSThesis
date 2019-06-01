@@ -229,20 +229,20 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         }
         Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
-        int wrongParse = 0;
-        int rightParse = 0;
+        /*int wrongParse = 0;
+        int rightParse = 0;*/
         for (Configuration configuration : beam) {
             if (configuration.getScore() > bestScore) {
                 bestScore = configuration.getScore();
                 bestConfiguration = configuration;
             }
-            if (isOracle(configuration)) {
+            /*if (isOracle(configuration)) {
                 rightParse++;
             } else {
                 wrongParse++;
-            }
+            }*/
         }
-        BufferedWriter writer = new BufferedWriter(new FileWriter("parseBeam.log", true));
+        /*BufferedWriter writer = new BufferedWriter(new FileWriter("parseBeam.log", true));
         writer.write("right parse: " + rightParse);
         writer.newLine();
         writer.write("wrong parse: " + wrongParse);
@@ -250,7 +250,11 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         writer.write("bestConfiguration isOracle: " + isOracle(bestConfiguration));
         writer.newLine();
         writer.newLine();
-        writer.close();
+        writer.close();*/
+        if (!isOracle(bestConfiguration)) {
+            GeneticAlg geneticAlg = new GeneticAlg(bestConfiguration);
+            bestConfiguration = geneticAlg.getConfiguration();
+        }
         return new Pair<>(bestConfiguration, id);
     }
 
