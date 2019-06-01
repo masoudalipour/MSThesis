@@ -154,7 +154,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         newConfig.addAction(2);
                     }
                     newConfig.setScore(score);
-                    repBeam.add(newConfig);
+                    if (isOracle(newConfig))
+                        repBeam.add(newConfig);
                 }
                 beam = repBeam;
             } else {
