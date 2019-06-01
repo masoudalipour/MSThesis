@@ -12,7 +12,6 @@ import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
@@ -43,7 +42,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         this.partial = partial;
     }
 
-    ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength,
+    ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier,
+                ArrayList<Integer> dependencyRelations, int featureLength,
                 Sentence sentence,
                 boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
         this.id = id;
@@ -150,7 +150,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         newConfig.addAction(2);
                     }
                     newConfig.setScore(score);
-                    repBeam.add(newConfig);
+                    if (isOracle(newConfig))
+                        repBeam.add(newConfig);
                 }
                 beam = repBeam;
             } else {
