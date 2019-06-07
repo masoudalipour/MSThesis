@@ -9,11 +9,7 @@ package YaraParser.TransitionBasedSystem.Parser;
  */
 
 public enum Actions {
-    RightArc(2),
-    LeftArc(3),
-    Shift(0),
-    Reduce(1),
-    Unshift(4);
+    RightArc(2), LeftArc(3), Shift(0), Reduce(1), Unshift(4);
 
     private int value;
 

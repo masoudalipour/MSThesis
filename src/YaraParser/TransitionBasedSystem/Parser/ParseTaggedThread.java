@@ -27,8 +27,8 @@ class ParseTaggedThread implements Callable<Pair<String, Integer>> {
     private int beamWidth;
     private KBeamArcEagerParser parser;
 
-    ParseTaggedThread(int lineNum, String line, String delim, boolean rootFirst, boolean lowerCased,
-                      IndexMaps maps, int beamWidth, KBeamArcEagerParser parser) {
+    ParseTaggedThread(int lineNum, String line, String delim, boolean rootFirst, boolean lowerCased, IndexMaps maps,
+                      int beamWidth, KBeamArcEagerParser parser) {
         this.lineNum = lineNum;
         this.line = line;
         this.delim = delim;
@@ -53,21 +53,25 @@ class ParseTaggedThread implements Callable<Pair<String, Integer>> {
         ArrayList<Integer> brownClusterFullString = new ArrayList<>();
         int i = 0;
         for (String w : wrds) {
-            if (w.length() == 0)
+            if (w.length() == 0) {
                 continue;
+            }
             int index = w.lastIndexOf(delim);
             String word = w.substring(0, index);
-            if (lowerCased)
+            if (lowerCased) {
                 word = word.toLowerCase();
+            }
             String pos = w.substring(index + 1);
             words[i] = word;
             posTags[i++] = pos;
             int wi = -1;
-            if (wordMap.containsKey(word))
+            if (wordMap.containsKey(word)) {
                 wi = wordMap.get(word);
+            }
             int pi = -1;
-            if (wordMap.containsKey(pos))
+            if (wordMap.containsKey(pos)) {
                 pi = wordMap.get(pos);
+            }
             int[] clusters = maps.clusterId(word);
             brownClusterFullString.add(clusters[0]);
             brownCluster4thPrefix.add(clusters[1]);
@@ -95,16 +99,18 @@ class ParseTaggedThread implements Callable<Pair<String, Integer>> {
                 int dep = bestParse.state.getDependency(w);
                 String lemma = "_";
                 String fpos = "_";
-                if (head == bestParse.state.rootIndex)
+                if (head == bestParse.state.rootIndex) {
                     head = 0;
+                }
                 String label = head == 0 ? maps.rootString : maps.revWords[dep];
                 String output =
                         w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" + label +
                                 "\t_\t_\n";
                 finalOutput.append(output);
             }
-            if (words.length > 0)
+            if (words.length > 0) {
                 finalOutput.append("\n");
+            }
             return new Pair<>(finalOutput.toString(), lineNum);
         }
         return new Pair<>("", lineNum);

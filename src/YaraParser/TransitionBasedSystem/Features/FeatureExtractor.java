@@ -11,12 +11,13 @@ public class FeatureExtractor {
      * @return Object[]
      */
     public static Object[] extractAllParseFeatures(Configuration configuration, int length) {
-        if (length == 26)
+        if (length == 26) {
             return extractBasicFeatures(configuration, length);
-        else if (length == 72)
+        } else if (length == 72) {
             return extractExtendedFeatures(configuration, length);
-        else
+        } else {
             return extractExtendedFeaturesWithBrownClusters(configuration, length);
+        }
     }
 
     /**
@@ -271,8 +272,9 @@ public class FeatureExtractor {
           distance
          */
         long distance = 0;
-        if (s0Position > 0 && b0Position > 0)
+        if (s0Position > 0 && b0Position > 0) {
             distance = Math.abs(b0Position - s0Position);
+        }
         if (s0w != 1) {
             featureMap[index++] = s0w | (distance << 20);
         } else {
@@ -837,8 +839,9 @@ public class FeatureExtractor {
          * distance
          */
         long distance = 0;
-        if (s0Position > 0 && b0Position > 0)
+        if (s0Position > 0 && b0Position > 0) {
             distance = Math.abs(b0Position - s0Position);
+        }
         if (s0w != 1) {
             featureMap[index++] = s0w | (distance << 20);
         } else {
@@ -979,22 +982,26 @@ public class FeatureExtractor {
          */
         long b0wbc4 = b0bc4;
         b0wbc4 |= (b0w << 12);
-        if (b0w == 1)
+        if (b0w == 1) {
             b0wbc4 = 0;
+        }
         long b0wbc6 = b0bc6;
         b0wbc6 |= (b0w << 12);
-        if (b0w == 1)
+        if (b0w == 1) {
             b0wbc6 = 0;
+        }
         long b0bcfP = b0p;
         b0bcfP |= (b0bcf << 8);
         long s0wbc4 = s0bc4;
         s0wbc4 |= (s0w << 12);
-        if (s0w == 0)
+        if (s0w == 0) {
             s0wbc4 = 0;
+        }
         long s0wbc6 = s0bc6;
         s0wbc6 |= (s0w << 12);
-        if (s0w == 0)
+        if (s0w == 0) {
             s0wbc6 = 0;
+        }
         long s0bcfP = s0p;
         s0bcfP |= (s0bcf << 8);
         /**

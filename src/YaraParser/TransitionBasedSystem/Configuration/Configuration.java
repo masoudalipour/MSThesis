@@ -53,30 +53,36 @@ public class Configuration implements Comparable, Cloneable, Serializable {
 
     @Override
     public int compareTo(Object o) {
-        if (!(o instanceof Configuration))
+        if (!(o instanceof Configuration)) {
             return hashCode() - o.hashCode();
+        }
         // may be unsafe
         Configuration configuration = (Configuration) o;
         float diff = getScore() - configuration.getScore();
-        if (diff > 0)
+        if (diff > 0) {
             return (int) Math.ceil(diff);
-        else if (diff < 0)
+        } else if (diff < 0) {
             return (int) Math.floor(diff);
-        else
+        } else {
             return 0;
+        }
     }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof Configuration) {
             Configuration configuration = (Configuration) o;
-            if (configuration.score != score)
+            if (configuration.score != score) {
                 return false;
-            if (configuration.actionHistory.size() != actionHistory.size())
+            }
+            if (configuration.actionHistory.size() != actionHistory.size()) {
                 return false;
-            for (int i = 0; i < actionHistory.size(); i++)
-                if (!actionHistory.get(i).equals(configuration.actionHistory.get(i)))
+            }
+            for (int i = 0; i < actionHistory.size(); i++) {
+                if (!actionHistory.get(i).equals(configuration.actionHistory.get(i))) {
                     return false;
+                }
+            }
             return true;
         }
         return false;
@@ -97,8 +103,9 @@ public class Configuration implements Comparable, Cloneable, Serializable {
     public int hashCode() {
         int hashCode = 0;
         int i = 0;
-        for (int action : actionHistory)
+        for (int action : actionHistory) {
             hashCode += action << i++;
+        }
         hashCode += score;
         return hashCode;
     }

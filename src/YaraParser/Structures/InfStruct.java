@@ -32,8 +32,8 @@ public class InfStruct {
     public InfStruct(HashMap<Object, Float>[] shiftFeatureAveragedWeights,
                      HashMap<Object, Float>[] reduceFeatureAveragedWeights,
                      HashMap<Object, CompactArray>[] leftArcFeatureAveragedWeights,
-                     HashMap<Object, CompactArray>[] rightArcFeatureAveragedWeights,
-                     IndexMaps maps, ArrayList<Integer> dependencyLabels, Options options, int dependencySize) {
+                     HashMap<Object, CompactArray>[] rightArcFeatureAveragedWeights, IndexMaps maps,
+                     ArrayList<Integer> dependencyLabels, Options options, int dependencySize) {
         this.shiftFeatureAveragedWeights = shiftFeatureAveragedWeights;
         this.reduceFeatureAveragedWeights = reduceFeatureAveragedWeights;
         this.leftArcFeatureAveragedWeights = leftArcFeatureAveragedWeights;

@@ -39,8 +39,9 @@ public class UnitTest {
         options.numOfThreads = 2;
         ArrayList<Options> optionList = Options.getAllPossibleOptions(options);
         options.numOfThreads = 2;
-        for (Options o : optionList)
+        for (Options o : optionList) {
             testOption(o);
+        }
         System.exit(0);
     }
 
@@ -63,16 +64,19 @@ public class UnitTest {
                 int relation = headDepPair.second;
                 int dependent = sentence.posAt(dep);
                 int head = sentence.posAt(headDepPair.first);
-                if (!headDepSet.containsKey(head))
+                if (!headDepSet.containsKey(head)) {
                     headDepSet.put(head, new HashMap<>());
-                if (!headDepSet.get(head).containsKey(dependent))
+                }
+                if (!headDepSet.get(head).containsKey(dependent)) {
                     headDepSet.get(head).put(dependent, new HashSet<>());
+                }
                 headDepSet.get(head).get(dependent).add(relation);
             }
         }
         int featureLength = options.useExtendedFeatures ? 72 : 26;
-        if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
+        if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters()) {
             featureLength = 153;
+        }
         System.out.println("size of training data (#sens): " + dataSet.size());
         HashMap<String, Integer> labels = new HashMap<>();
         int labIndex = 0;
@@ -98,8 +102,8 @@ public class UnitTest {
         writer.close();
         System.out.println("done!");
         ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
-                new AveragedPerceptron(featureLength, dependencyLabels.size()),
-                options, dependencyLabels, featureLength, maps);
+                new AveragedPerceptron(featureLength, dependencyLabels.size()), options, dependencyLabels,
+                featureLength, maps);
         trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase,
                 options.punctuations, options.partialTrainingStartingIteration);
         trainer = null;

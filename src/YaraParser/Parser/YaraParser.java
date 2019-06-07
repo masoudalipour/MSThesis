@@ -34,9 +34,9 @@ public class YaraParser {
     }
 
     private static void evaluate(Options options) throws Exception {
-        if (options.goldFile.equals("") || options.predFile.equals(""))
+        if (options.goldFile.equals("") || options.predFile.equals("")) {
             Options.showHelp();
-        else {
+        } else {
             Evaluator.evaluate(options.goldFile, options.predFile, options.punctuations);
         }
     }
@@ -53,19 +53,18 @@ public class YaraParser {
             AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
             BinaryPerceptron bPerceptron = new BinaryPerceptron(bInfStruct);
             int featureSize = averagedPerceptron.featureSize();
-            KBeamArcEagerParser parser = new KBeamArcEagerParser(bPerceptron, averagedPerceptron, dependencyLabels, featureSize,
-                    maps, options.numOfThreads);
-            if (options.parseTaggedFile)
+            KBeamArcEagerParser parser = new KBeamArcEagerParser(bPerceptron, averagedPerceptron, dependencyLabels,
+                    featureSize, maps, options.numOfThreads);
+            if (options.parseTaggedFile) {
                 parser.parseTaggedFile(options.inputFile, options.outputFile, inf_options.rootFirst,
                         inf_options.beamWidth, inf_options.lowercase, options.separator, options.numOfThreads);
-            else if (options.parseConllFile)
+            } else if (options.parseConllFile) {
                 parser.parseCoNLLFile(options.inputFile, options.outputFile, inf_options.rootFirst,
-                        inf_options.beamWidth, true, inf_options.lowercase, options.numOfThreads, false,
-                        options.scorePath);
-            else if (options.parsePartialConll)
+                        inf_options.beamWidth, true, inf_options.lowercase, options.numOfThreads, false, options.scorePath);
+            } else if (options.parsePartialConll) {
                 parser.parseCoNLLFile(options.inputFile, options.outputFile, inf_options.rootFirst,
-                        inf_options.beamWidth, options.labeled, inf_options.lowercase, options.numOfThreads, true,
-                        options.scorePath);
+                        inf_options.beamWidth, options.labeled, inf_options.lowercase, options.numOfThreads, true, options.scorePath);
+            }
             parser.shutDownLiveThreads();
         }
     }
@@ -82,12 +81,13 @@ public class YaraParser {
             System.out.println("CoNLL data reading is done.");
             ArrayList<Integer> dependencyLabels = new ArrayList<>(maps.getLabels().keySet());
             int featureLength;
-            if (options.useExtendedFeatures)
+            if (options.useExtendedFeatures) {
                 featureLength = 72;
-            else if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
+            } else if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters()) {
                 featureLength = 153;
-            else
+            } else {
                 featureLength = 26;
+            }
             System.out.println("# of sentences in training data set: " + dataSet.size());
 
             /*HashMap<String, Integer> labels = new HashMap<>();

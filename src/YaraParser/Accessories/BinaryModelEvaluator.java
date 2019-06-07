@@ -53,8 +53,7 @@ public class BinaryModelEvaluator {
          * la_dep=3+dependencyRelations.size()+dep
          */
         ExecutorService executor = Executors.newFixedThreadPool(options.numOfThreads);
-        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<>(
-                executor);
+        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<>(executor);
         CoNLLReader goldReader = new CoNLLReader(options.devPath);
         IndexMaps maps = CoNLLReader.createIndices(options.devPath, options.labeled, options.lowercase,
                 options.clusterFile);
@@ -75,8 +74,9 @@ public class BinaryModelEvaluator {
         System.out.print("progress: 0%\r");
         for (GoldConfiguration goldConfiguration : trainData) {
             dataCount++;
-            if (dataCount % progress == 0)
+            if (dataCount % progress == 0) {
                 System.out.print("progress: " + (dataCount * 100) / trainData.size() + "%\r");
+            }
             trainOnOneSample(goldConfiguration, dataCount, pool);
             classifier.incrementIteration();
             bClassifier.incrementIteration();
@@ -157,14 +157,15 @@ public class BinaryModelEvaluator {
                 beamSortOneThread(beam, beamPreserver, sentence);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
-                    pool.submit(new BeamScorerThread(false, classifier, beam.get(b), dependencyRelations, featureLength,
-                            b));
+                    pool.submit(new BeamScorerThread(false, classifier, beam.get(b), dependencyRelations,
+                            featureLength, b));
                 }
                 for (int b = 0; b < beam.size(); b++) {
                     for (BeamElement element : pool.take().get()) {
                         beamPreserver.add(element);
-                        if (beamPreserver.size() > options.beamWidth)
+                        if (beamPreserver.size() > options.beamWidth) {
                             beamPreserver.pollFirst();
+                        }
                     }
                 }
             }
@@ -173,8 +174,9 @@ public class BinaryModelEvaluator {
             } else {
                 ArrayList<Configuration> repBeam = new ArrayList<>(options.beamWidth);
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
-                    if (repBeam.size() >= options.beamWidth)
+                    if (repBeam.size() >= options.beamWidth) {
                         break;
+                    }
                     int b = beamElement.number;
                     int action = beamElement.action;
                     int label = beamElement.label;
@@ -202,15 +204,17 @@ public class BinaryModelEvaluator {
                     boolean oracle = oracles.containsKey(newConfig);
                     boolean prediction = isOracle(newConfig, label);
                     if (oracle) {
-                        if (prediction)
+                        if (prediction) {
                             TP++;
-                        else
+                        } else {
                             FN++;
+                        }
                     } else {
-                        if (prediction)
+                        if (prediction) {
                             FP++;
-                        else
+                        } else {
                             TN++;
+                        }
                     }
                 }
                 beam = repBeam;
@@ -228,8 +232,9 @@ public class BinaryModelEvaluator {
                         oracles = new HashMap<>();
                         oracles.put(bestScoringOracle, 0.0f);
                     }
-                } else
+                } else {
                     break;
+                }
             }
         }
     }
@@ -244,10 +249,12 @@ public class BinaryModelEvaluator {
         for (Configuration configuration : oracles.keySet()) {
             State state = configuration.state;
             Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-            if (!state.stackEmpty())
+            if (!state.stackEmpty()) {
                 top = state.peek();
-            if (!state.bufferEmpty())
+            }
+            if (!state.bufferEmpty()) {
                 first = state.bufferHead();
+            }
             if (configuration.state.isNotTerminalState()) {
                 Configuration newConfig = configuration.clone();
                 if (first > 0 && goldDependencies.containsKey(first) && goldDependencies.get(first).first == top) {
@@ -393,15 +400,17 @@ public class BinaryModelEvaluator {
                 float score = classifier.shiftScore(features, true);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-                if (beamPreserver.size() > options.beamWidth)
+                if (beamPreserver.size() > options.beamWidth) {
                     beamPreserver.pollFirst();
+                }
             }
             if (canReduce) {
                 float score = classifier.reduceScore(features, true);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-                if (beamPreserver.size() > options.beamWidth)
+                if (beamPreserver.size() > options.beamWidth) {
                     beamPreserver.pollFirst();
+                }
             }
             if (canRightArc) {
                 float[] rightArcScores = classifier.rightArcScores(features, true);
@@ -409,8 +418,9 @@ public class BinaryModelEvaluator {
                     float score = rightArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-                    if (beamPreserver.size() > options.beamWidth)
+                    if (beamPreserver.size() > options.beamWidth) {
                         beamPreserver.pollFirst();
+                    }
                 }
             }
             if (canLeftArc) {
@@ -419,8 +429,9 @@ public class BinaryModelEvaluator {
                     float score = leftArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-                    if (beamPreserver.size() > options.beamWidth)
+                    if (beamPreserver.size() > options.beamWidth) {
                         beamPreserver.pollFirst();
+                    }
                 }
             }
         }
@@ -432,8 +443,9 @@ public class BinaryModelEvaluator {
         float score = 0.0f;
         if (lastAction == 0) {
             for (int i = 0; i < features.length; i++) {
-                if (features[i] == null || (i >= 26 && i < 32))
+                if (features[i] == null || (i >= 26 && i < 32)) {
                     continue;
+                }
                 Float values = infStruct.shiftFeatureAveragedWeights[i].get(features[i]);
                 if (values != null) {
                     score += values;
@@ -441,8 +453,9 @@ public class BinaryModelEvaluator {
             }
         } else if (lastAction == 1) {
             for (int i = 0; i < features.length; i++) {
-                if (features[i] == null || (i >= 26 && i < 32))
+                if (features[i] == null || (i >= 26 && i < 32)) {
                     continue;
+                }
                 Float values = infStruct.reduceFeatureAveragedWeights[i].get(features[i]);
                 if (values != null) {
                     score += values;
@@ -451,8 +464,9 @@ public class BinaryModelEvaluator {
         } else if ((lastAction - 3 - label) == 0) {
             float[] scores = new float[infStruct.dependencySize];
             for (int i = 0; i < features.length; i++) {
-                if (features[i] == null)
+                if (features[i] == null) {
                     continue;
+                }
                 CompactArray values = infStruct.rightArcFeatureAveragedWeights[i].get(features[i]);
                 if (values != null) {
                     int offset = values.getOffset();
@@ -466,8 +480,9 @@ public class BinaryModelEvaluator {
         } else {
             float[] scores = new float[infStruct.dependencySize];
             for (int i = 0; i < features.length; i++) {
-                if (features[i] == null)
+                if (features[i] == null) {
                     continue;
+                }
                 CompactArray values = infStruct.leftArcFeatureAveragedWeights[i].get(features[i]);
                 if (values != null) {
                     int offset = values.getOffset();

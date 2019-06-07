@@ -37,9 +37,9 @@ public class Evaluator {
                     String pl = predDeps.get(dep).second.trim();
                     if (ph == gh) {
                         unlabMatch++;
-                        if (pl.equals(gl))
+                        if (pl.equals(gl)) {
                             labMatch++;
-                        else {
+                        } else {
                             fullMatch = false;
                         }
                     } else {
@@ -48,10 +48,12 @@ public class Evaluator {
                     }
                 }
             }
-            if (fullMatch)
+            if (fullMatch) {
                 fullLabMatch++;
-            if (fullUnlabMatch)
+            }
+            if (fullUnlabMatch) {
                 fullULabMatch++;
+            }
         }
         DecimalFormat decimalFormat = new DecimalFormat("0.00%");
         double labeledAccuracy = labMatch / all;

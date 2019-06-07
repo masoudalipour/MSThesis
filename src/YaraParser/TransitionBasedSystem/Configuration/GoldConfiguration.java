@@ -16,12 +16,14 @@ public class GoldConfiguration {
     public GoldConfiguration(Sentence sentence, HashMap<Integer, Pair<Integer, Integer>> goldDependencies) {
         this.goldDependencies = new HashMap<>();
         reversedDependencies = new HashMap<>();
-        for (int head : goldDependencies.keySet())
+        for (int head : goldDependencies.keySet()) {
             this.goldDependencies.put(head, goldDependencies.get(head).clone());
+        }
         for (int dependent : goldDependencies.keySet()) {
             int head = goldDependencies.get(dependent).first;
-            if (!reversedDependencies.containsKey(head))
+            if (!reversedDependencies.containsKey(head)) {
                 reversedDependencies.put(head, new HashSet<>());
+            }
             reversedDependencies.get(head).add(dependent);
         }
         this.sentence = sentence;
@@ -32,14 +34,16 @@ public class GoldConfiguration {
     }
 
     public int head(int dependent) {
-        if (!goldDependencies.containsKey(dependent))
+        if (!goldDependencies.containsKey(dependent)) {
             return -1;
+        }
         return goldDependencies.get(dependent).first;
     }
 
     public String relation(int dependent) {
-        if (!goldDependencies.containsKey(dependent))
+        if (!goldDependencies.containsKey(dependent)) {
             return "_";
+        }
         return goldDependencies.get(dependent).second + "";
     }
 
@@ -57,14 +61,19 @@ public class GoldConfiguration {
             int head1 = goldDependencies.get(dep1).first;
             for (int dep2 : goldDependencies.keySet()) {
                 int head2 = goldDependencies.get(dep2).first;
-                if (head1 < 0 || head2 < 0)
+                if (head1 < 0 || head2 < 0) {
                     continue;
-                if (dep1 > head1 && head1 != head2)
-                    if ((dep1 > head2 && dep1 < dep2 && head1 < head2) || (dep1 < head2 && dep1 > dep2 && head1 < dep2))
+                }
+                if (dep1 > head1 && head1 != head2) {
+                    if ((dep1 > head2 && dep1 < dep2 && head1 < head2) || (dep1 < head2 && dep1 > dep2 && head1 < dep2)) {
                         return true;
-                if (dep1 < head1 && head1 != head2)
-                    if ((head1 > head2 && head1 < dep2 && dep1 < head2) || (head1 < head2 && head1 > dep2 && dep1 < dep2))
+                    }
+                }
+                if (dep1 < head1 && head1 != head2) {
+                    if ((head1 > head2 && head1 < dep2 && dep1 < head2) || (head1 < head2 && head1 > dep2 && dep1 < dep2)) {
                         return true;
+                    }
+                }
             }
         }
         return false;
@@ -73,8 +82,9 @@ public class GoldConfiguration {
     public boolean isPartial(boolean rootFirst) {
         for (int i = 0; i < sentence.size(); i++) {
             if (rootFirst || i < sentence.size() - 1) {
-                if (!goldDependencies.containsKey(i + 1))
+                if (!goldDependencies.containsKey(i + 1)) {
                     return true;
+                }
             }
         }
         return false;
@@ -96,63 +106,77 @@ public class GoldConfiguration {
      * @return oracle cost of the action
      */
     public int actionCost(Actions action, int dependency, State state) {
-        if (!ArcEager.canDo(action, state))
+        if (!ArcEager.canDo(action, state)) {
             return Integer.MAX_VALUE;
+        }
         int cost = 0;
         // added by me to take care of labels
         if (action == Actions.LeftArc) { // left arc
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
-            if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first == bufferHead
-                    && goldDependencies.get(stackHead).second != (dependency))
+            if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first == bufferHead && goldDependencies.get(stackHead).second != (dependency)) {
                 cost += 1;
+            }
         } else if (action == Actions.RightArc) { //right arc
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
-            if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == stackHead
-                    && goldDependencies.get(bufferHead).second != (dependency))
+            if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == stackHead && goldDependencies.get(bufferHead).second != (dependency)) {
                 cost += 1;
+            }
         }
         if (action == Actions.Shift) { //shift
             int bufferHead = state.bufferHead();
             for (int stackItem : state.getStack()) {
-                if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first == (bufferHead))
+                if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first == (bufferHead)) {
                     cost += 1;
-                if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (stackItem))
+                }
+                if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (stackItem)) {
                     cost += 1;
+                }
             }
         } else if (action == Actions.Reduce) { //reduce
             int stackHead = state.peek();
-            if (!state.bufferEmpty())
+            if (!state.bufferEmpty()) {
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
-                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first == (stackHead))
+                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first == (stackHead)) {
                         cost += 1;
+                    }
                 }
+            }
         } else if (action == Actions.LeftArc && cost == 0) { //left arc
             int stackHead = state.peek();
-            if (!state.bufferEmpty())
+            if (!state.bufferEmpty()) {
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
-                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first == (stackHead))
+                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first == (stackHead)) {
                         cost += 1;
-                    if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first == (bufferItem))
-                        if (bufferItem != state.bufferHead())
+                    }
+                    if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first == (bufferItem)) {
+                        if (bufferItem != state.bufferHead()) {
                             cost += 1;
+                        }
+                    }
                 }
+            }
         } else if (action == Actions.RightArc && cost == 0) { //right arc
             int stackHead = state.peek();
             int bufferHead = state.bufferHead();
             for (int stackItem : state.getStack()) {
-                if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (stackItem))
-                    if (stackItem != stackHead)
+                if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (stackItem)) {
+                    if (stackItem != stackHead) {
                         cost += 1;
-                if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first == (bufferHead))
-                    cost += 1;
-            }
-            if (!state.bufferEmpty())
-                for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
-                    if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (bufferItem))
-                        cost += 1;
+                    }
                 }
+                if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first == (bufferHead)) {
+                    cost += 1;
+                }
+            }
+            if (!state.bufferEmpty()) {
+                for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
+                    if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (bufferItem)) {
+                        cost += 1;
+                    }
+                }
+            }
         }
         return cost;
     }

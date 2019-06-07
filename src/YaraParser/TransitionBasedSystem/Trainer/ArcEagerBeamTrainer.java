@@ -721,8 +721,9 @@ public class ArcEagerBeamTrainer {
                 score += rightArcScores[label];
             }
         }
-        if (score == 0)
+        if (score == 0) {
             scoreZero++;
-        return (score >= 0);*/
+        }
+        return (score >= 0);
     }
 }

@@ -74,10 +74,11 @@ public class State implements Cloneable {
     }
 
     private void incrementBufferHead() {
-        if (bufferH == maxSentenceSize)
+        if (bufferH == maxSentenceSize) {
             bufferH = -1;
-        else
+        } else {
             bufferH++;
+        }
     }
 
     public void pushStack() {
@@ -90,13 +91,15 @@ public class State implements Cloneable {
         long value = 1L << (dependency);
         assert dependency < 64;
         if (dependent > head) { //right dep
-            if (rightMostArcs[head] == 0 || dependent > rightMostArcs[head])
+            if (rightMostArcs[head] == 0 || dependent > rightMostArcs[head]) {
                 rightMostArcs[head] = dependent;
+            }
             rightValency[head] += 1;
             rightDepLabels[head] = rightDepLabels[head] | value;
         } else { //left dependency
-            if (leftMostArcs[head] == 0 || dependent < leftMostArcs[head])
+            if (leftMostArcs[head] == 0 || dependent < leftMostArcs[head]) {
                 leftMostArcs[head] = dependent;
+            }
             leftDepLabels[head] = leftDepLabels[head] | value;
             leftValency[head] += 1;
         }
@@ -123,8 +126,9 @@ public class State implements Cloneable {
     }
 
     public int peek() {
-        if (stack.size() > 0)
+        if (stack.size() > 0) {
             return stack.peek();
+        }
         return -1;
     }
 
@@ -149,8 +153,9 @@ public class State implements Cloneable {
     }
 
     public int bufferSize() {
-        if (bufferH < 0)
+        if (bufferH < 0) {
             return 0;
+        }
         return (maxSentenceSize - bufferH + 1);
     }
 
@@ -191,14 +196,16 @@ public class State implements Cloneable {
     }
 
     public int getHead(int index) {
-        if (arcs[index] != null)
+        if (arcs[index] != null) {
             return arcs[index].first;
+        }
         return -1;
     }
 
     public int getDependency(int index) {
-        if (arcs[index] != null)
+        if (arcs[index] != null) {
             return arcs[index].second;
+        }
         return -1;
     }
 

@@ -39,8 +39,9 @@ public class Sentence implements Comparable {
     }
 
     public int posAt(int position) {
-        if (position == 0)
+        if (position == 0) {
             return 0;
+        }
         return tags[position - 1];
     }
 
@@ -68,13 +69,16 @@ public class Sentence implements Comparable {
     public boolean equals(Object obj) {
         if (obj instanceof Sentence) {
             Sentence sentence = (Sentence) obj;
-            if (sentence.words.length != words.length)
+            if (sentence.words.length != words.length) {
                 return false;
+            }
             for (int i = 0; i < sentence.words.length; i++) {
-                if (sentence.words[i] != words[i])
+                if (sentence.words[i] != words[i]) {
                     return false;
-                if (sentence.tags[i] != tags[i])
+                }
+                if (sentence.tags[i] != tags[i]) {
                     return false;
+                }
             }
             return true;
         }
@@ -83,8 +87,9 @@ public class Sentence implements Comparable {
 
     @Override
     public int compareTo(Object o) {
-        if (equals(o))
+        if (equals(o)) {
             return 0;
+        }
         return hashCode() - o.hashCode();
     }
 

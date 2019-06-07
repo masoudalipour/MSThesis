@@ -28,16 +28,20 @@ public class Pair<T1, T2> implements Comparable, Cloneable, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Pair))
+        if (!(o instanceof Pair)) {
             return false;
+        }
         Pair pair = (Pair) o;
-        if (pair.second == null)
-            if (second == null)
+        if (pair.second == null) {
+            if (second == null) {
                 return pair.first.equals(first);
-            else
+            } else {
                 return false;
-        if (second == null)
+            }
+        }
+        if (second == null) {
             return false;
+        }
         return pair.first.equals(first) && pair.second.equals(second);
     }
 
@@ -45,17 +49,20 @@ public class Pair<T1, T2> implements Comparable, Cloneable, Serializable {
     public int hashCode() {
         int firstHash = 0;
         int secondHash = 0;
-        if (first != null)
+        if (first != null) {
             firstHash = first.hashCode();
-        if (second != null)
+        }
+        if (second != null) {
             secondHash = second.hashCode();
+        }
         return firstHash + secondHash;
     }
 
     @Override
     public int compareTo(Object o) {
-        if (equals(o))
+        if (equals(o)) {
             return 0;
+        }
         return hashCode() - o.hashCode();
     }
 }

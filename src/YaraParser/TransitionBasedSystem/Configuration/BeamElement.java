@@ -21,12 +21,15 @@ public class BeamElement implements Comparable<BeamElement> {
     @Override
     public int compareTo(BeamElement beamElement) {
         float diff = score - beamElement.score;
-        if (diff > 0)
+        if (diff > 0) {
             return 2;
-        if (diff < 0)
+        }
+        if (diff < 0) {
             return -2;
-        if (number != beamElement.number)
+        }
+        if (number != beamElement.number) {
             return beamElement.number - number;
+        }
         return beamElement.action - action;
     }
 

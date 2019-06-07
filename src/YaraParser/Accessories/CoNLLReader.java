@@ -45,12 +45,15 @@ public class CoNLLReader {
             if (spl.length > 7) {
                 String label = spl[7];
                 int head = Integer.parseInt(spl[6]);
-                if (head == 0)
+                if (head == 0) {
                     rootString = label;
-                if (label.equals("_"))
+                }
+                if (label.equals("_")) {
                     label = "-";
-                if (!labeled)
+                }
+                if (!labeled) {
                     label = "~";
+                }
                 if (!wordMap.containsKey(label)) {
                     labels.put(wi, labelCount++);
                     wordMap.put(label, wi++);
@@ -106,8 +109,9 @@ public class CoNLLReader {
             String[] spl = line.trim().split("\t");
             if (spl.length > 7) {
                 String word = spl[1];
-                if (lowercased)
+                if (lowercased) {
                     word = word.toLowerCase();
+                }
                 if (!wordMap.containsKey(word)) {
                     wordMap.put(word, wi++);
                 }
@@ -139,8 +143,9 @@ public class CoNLLReader {
                     sentenceCounter++;
                     if (!rootFirst) {
                         for (int gold : goldDependencies.keySet()) {
-                            if (goldDependencies.get(gold).first.equals(0))
+                            if (goldDependencies.get(gold).first.equals(0)) {
                                 goldDependencies.get(gold).setFirst(tokens.size() + 1);
+                            }
                         }
                         tokens.add(0);
                         tags.add(0);
@@ -150,8 +155,9 @@ public class CoNLLReader {
                     }
                     Sentence currentSentence = new Sentence(tokens, tags, cluster4Ids, cluster6Ids, clusterIds);
                     GoldConfiguration goldConfiguration = new GoldConfiguration(currentSentence, goldDependencies);
-                    if (keepNonProjective || !goldConfiguration.isNonprojective())
+                    if (keepNonProjective || !goldConfiguration.isNonprojective()) {
                         configurationSet.add(goldConfiguration);
+                    }
                     goldDependencies = new HashMap<>();
                     tokens = new ArrayList<>();
                     tags = new ArrayList<>();
@@ -172,47 +178,58 @@ public class CoNLLReader {
                 }
             } else {
                 String[] splitLine = line.split("\t");
-                if (splitLine.length < 8)
+                if (splitLine.length < 8) {
                     throw new Exception("wrong file format");
+                }
                 int wordIndex = Integer.parseInt(splitLine[0]);
                 String word = splitLine[1].trim();
-                if (lowerCased)
+                if (lowerCased) {
                     word = word.toLowerCase();
+                }
                 String pos = splitLine[3].trim();
                 int wi = -1;
-                if (wordMap.containsKey(word))
+                if (wordMap.containsKey(word)) {
                     wi = wordMap.get(word);
+                }
                 int pi = -1;
-                if (wordMap.containsKey(pos))
+                if (wordMap.containsKey(pos)) {
                     pi = wordMap.get(pos);
+                }
                 tags.add(pi);
                 tokens.add(wi);
                 int headIndex = Integer.parseInt(splitLine[6]);
                 String relation = splitLine[7];
-                if (relation.equals("_"))
+                if (relation.equals("_")) {
                     relation = "-";
-                if (!labeled)
+                }
+                if (!labeled) {
                     relation = "~";
-                if (headIndex == 0)
+                }
+                if (headIndex == 0) {
                     relation = "ROOT";
+                }
                 int ri = -1;
-                if (wordMap.containsKey(relation))
+                if (wordMap.containsKey(relation)) {
                     ri = wordMap.get(relation);
-                if (headIndex == -1)
+                }
+                if (headIndex == -1) {
                     ri = -1;
+                }
                 int[] ids = maps.clusterId(word);
                 clusterIds.add(ids[0]);
                 cluster4Ids.add(ids[1]);
                 cluster6Ids.add(ids[2]);
-                if (headIndex >= 0)
+                if (headIndex >= 0) {
                     goldDependencies.put(wordIndex, new Pair<>(headIndex, ri));
+                }
             }
         }
         if (tokens.size() > 0) {
             if (!rootFirst) {
                 for (int gold : goldDependencies.keySet()) {
-                    if (goldDependencies.get(gold).first.equals(0))
+                    if (goldDependencies.get(gold).first.equals(0)) {
                         goldDependencies.get(gold).setFirst(goldDependencies.size() + 1);
+                    }
                 }
                 tokens.add(0);
                 tags.add(0);
@@ -242,8 +259,9 @@ public class CoNLLReader {
                 goldDependencies = new HashMap<>();
             } else {
                 String[] splitLine = line.split("\t");
-                if (splitLine.length < 8)
+                if (splitLine.length < 8) {
                     throw new Exception("wrong file format");
+                }
                 int wordIndex = Integer.parseInt(splitLine[0]);
                 String pos = splitLine[3].trim();
                 tags.add(pos);
@@ -252,8 +270,9 @@ public class CoNLLReader {
                 if (headIndex == 0) {
                     relation = "ROOT";
                 }
-                if (pos.length() > 0)
+                if (pos.length() > 0) {
                     goldDependencies.put(wordIndex, new Pair<>(headIndex, relation));
+                }
             }
         }
         if (tags.size() > 0) {
