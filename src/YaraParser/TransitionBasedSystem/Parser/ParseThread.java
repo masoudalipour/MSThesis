@@ -12,7 +12,6 @@ import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;

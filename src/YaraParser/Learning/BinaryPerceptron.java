@@ -7,8 +7,14 @@ package YaraParser.Learning;
 
 import YaraParser.Structures.CompactArray;
 import YaraParser.Structures.InfStruct;
+import YaraParser.Structures.Sentence;
+import YaraParser.TransitionBasedSystem.Configuration.Configuration;
+import YaraParser.TransitionBasedSystem.Configuration.State;
+import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import YaraParser.TransitionBasedSystem.Parser.Actions;
+import YaraParser.TransitionBasedSystem.Parser.ArcEager;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class BinaryPerceptron {
@@ -70,8 +76,7 @@ public class BinaryPerceptron {
     private BinaryPerceptron(HashMap<Object, Float>[] shiftFeatureAveragedWeights,
                              HashMap<Object, Float>[] reduceFeatureAveragedWeights,
                              HashMap<Object, CompactArray>[] leftArcFeatureAveragedWeights, HashMap<Object,
-            CompactArray>[] rightArcFeatureAveragedWeights,
-                             int dependencySize) {
+            CompactArray>[] rightArcFeatureAveragedWeights, int dependencySize) {
         this.shiftFeatureAveragedWeights = shiftFeatureAveragedWeights;
         this.reduceFeatureAveragedWeights = reduceFeatureAveragedWeights;
         this.leftArcFeatureAveragedWeights = leftArcFeatureAveragedWeights;
@@ -86,28 +91,33 @@ public class BinaryPerceptron {
     }
 
     public float changeWeight(Actions actionType, int slotNum, Object featureName, int labelIndex, float change) {
-        if (featureName == null)
+        if (featureName == null) {
             return 0;
+        }
         if (actionType == Actions.Shift) {
-            if (!shiftFeatureWeights[slotNum].containsKey(featureName))
+            if (!shiftFeatureWeights[slotNum].containsKey(featureName)) {
                 shiftFeatureWeights[slotNum].put(featureName, change);
-            else
+            } else {
                 shiftFeatureWeights[slotNum].put(featureName, shiftFeatureWeights[slotNum].get(featureName) + change);
-            if (!shiftFeatureAveragedWeights[slotNum].containsKey(featureName))
+            }
+            if (!shiftFeatureAveragedWeights[slotNum].containsKey(featureName)) {
                 shiftFeatureAveragedWeights[slotNum].put(featureName, iteration * change);
-            else
+            } else {
                 shiftFeatureAveragedWeights[slotNum].put(featureName,
                         shiftFeatureAveragedWeights[slotNum].get(featureName) + iteration * change);
+            }
         } else if (actionType == Actions.Reduce) {
-            if (!reduceFeatureWeights[slotNum].containsKey(featureName))
+            if (!reduceFeatureWeights[slotNum].containsKey(featureName)) {
                 reduceFeatureWeights[slotNum].put(featureName, change);
-            else
+            } else {
                 reduceFeatureWeights[slotNum].put(featureName, reduceFeatureWeights[slotNum].get(featureName) + change);
-            if (!reduceFeatureAveragedWeights[slotNum].containsKey(featureName))
+            }
+            if (!reduceFeatureAveragedWeights[slotNum].containsKey(featureName)) {
                 reduceFeatureAveragedWeights[slotNum].put(featureName, iteration * change);
-            else
+            } else {
                 reduceFeatureAveragedWeights[slotNum].put(featureName,
                         reduceFeatureAveragedWeights[slotNum].get(featureName) + iteration * change);
+            }
         } else if (actionType == Actions.RightArc) {
             changeFeatureWeight(rightArcFeatureWeights[slotNum], rightArcFeatureAveragedWeights[slotNum], featureName
                     , labelIndex, change, dependencySize);
@@ -147,8 +157,9 @@ public class BinaryPerceptron {
         float score = 0.0f;
         HashMap<Object, Float>[] map = decode ? shiftFeatureAveragedWeights : shiftFeatureWeights;
         for (int i = 0; i < features.length; i++) {
-            if (features[i] == null || (i >= 26 && i < 32))
+            if (features[i] == null || (i >= 26 && i < 32)) {
                 continue;
+            }
             Float values = map[i].get(features[i]);
             if (values != null) {
                 score += values;
@@ -161,8 +172,9 @@ public class BinaryPerceptron {
         float score = 0.0f;
         HashMap<Object, Float>[] map = decode ? reduceFeatureAveragedWeights : reduceFeatureWeights;
         for (int i = 0; i < features.length; i++) {
-            if (features[i] == null || (i >= 26 && i < 32))
+            if (features[i] == null || (i >= 26 && i < 32)) {
                 continue;
+            }
             Float values = map[i].get(features[i]);
             if (values != null) {
                 score += values;
@@ -175,8 +187,9 @@ public class BinaryPerceptron {
         float[] scores = new float[dependencySize];
         HashMap<Object, CompactArray>[] map = decode ? leftArcFeatureAveragedWeights : leftArcFeatureWeights;
         for (int i = 0; i < features.length; i++) {
-            if (features[i] == null)
+            if (features[i] == null) {
                 continue;
+            }
             CompactArray values = map[i].get(features[i]);
             if (values != null) {
                 int offset = values.getOffset();
@@ -193,8 +206,9 @@ public class BinaryPerceptron {
         float[] scores = new float[dependencySize];
         HashMap<Object, CompactArray>[] map = decode ? rightArcFeatureAveragedWeights : rightArcFeatureWeights;
         for (int i = 0; i < features.length; i++) {
-            if (features[i] == null)
+            if (features[i] == null) {
                 continue;
+            }
             CompactArray values = map[i].get(features[i]);
             if (values != null) {
                 int offset = values.getOffset();
@@ -225,9 +239,11 @@ public class BinaryPerceptron {
         int size = 0;
         for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
             for (Object feat : rightArcFeatureAveragedWeights[i].keySet()) {
-                for (float f : rightArcFeatureAveragedWeights[i].get(feat).getArray())
-                    if (f != 0f)
+                for (float f : rightArcFeatureAveragedWeights[i].get(feat).getArray()) {
+                    if (f != 0f) {
                         size++;
+                    }
+                }
             }
         }
         return size;
@@ -247,11 +263,42 @@ public class BinaryPerceptron {
         int size = 0;
         for (HashMap<Object, CompactArray> leftArcFeatureAveragedWeight : leftArcFeatureAveragedWeights) {
             for (Object feat : leftArcFeatureAveragedWeight.keySet()) {
-                for (float f : leftArcFeatureAveragedWeight.get(feat).getArray())
-                    if (f != 0f)
+                for (float f : leftArcFeatureAveragedWeight.get(feat).getArray()) {
+                    if (f != 0f) {
                         size++;
+                    }
+                }
             }
         }
         return size;
+    }
+
+    public float calcScore(final boolean decode, final Sentence sentence, final boolean rootFirst,
+                           final ArrayList<Integer> actionHistory, final int featureLength,
+                           final ArrayList<Integer> dependencyRelations) {
+        float score = 0f;
+        Configuration currentConfiguration = new Configuration(sentence, rootFirst);
+        for (int action : actionHistory) {
+            State currentState = currentConfiguration.state;
+            Object[] features = FeatureExtractor.extractAllParseFeatures(currentConfiguration, featureLength);
+            if (action == 0) {
+                score += shiftScore(features, decode);
+                ArcEager.shift(currentState);
+            } else if (action == 1) {
+                score += reduceScore(features, decode);
+                ArcEager.reduce(currentState);
+            } else if (action >= 3 + dependencyRelations.size()) {
+                int label = action - (3 + dependencyRelations.size());
+                float[] leftArcScores = leftArcScores(features, decode);
+                score += leftArcScores[label];
+                ArcEager.rightArc(currentState, label);
+            } else {
+                int label = action - 3;
+                float[] rightArcScores = rightArcScores(features, decode);
+                score += rightArcScores[label];
+                ArcEager.leftArc(currentState, label);
+            }
+        }
+        return score;
     }
 }
