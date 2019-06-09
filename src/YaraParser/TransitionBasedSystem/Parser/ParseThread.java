@@ -84,25 +84,22 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                     if (!canShift && !canReduce && !canRightArc && !canLeftArc) {
                         beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
-                        if (beamPreserver.size() > beamWidth) {
-                            beamPreserver.pollFirst();
-                        }
+                        /*if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();*/
                     }
                     if (canShift) {
                         float score = classifier.shiftScore(features, true);
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-                        if (beamPreserver.size() > beamWidth) {
-                            beamPreserver.pollFirst();
-                        }
+                        /*if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();*/
                     }
                     if (canReduce) {
                         float score = classifier.reduceScore(features, true);
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-                        if (beamPreserver.size() > beamWidth) {
-                            beamPreserver.pollFirst();
-                        }
+                        /*if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();*/
                     }
                     if (canRightArc) {
                         float[] rightArcScores = classifier.rightArcScores(features, true);
@@ -110,9 +107,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                             float score = rightArcScores[dependency];
                             float addedScore = score + prevScore;
                             beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-                            if (beamPreserver.size() > beamWidth) {
-                                beamPreserver.pollFirst();
-                            }
+                            /*if (beamPreserver.size() > beamWidth)
+                                beamPreserver.pollFirst();*/
                         }
                     }
                     if (canLeftArc) {
@@ -121,9 +117,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                             float score = leftArcScores[dependency];
                             float addedScore = score + prevScore;
                             beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-                            if (beamPreserver.size() > beamWidth) {
-                                beamPreserver.pollFirst();
-                            }
+                            /*if (beamPreserver.size() > beamWidth)
+                                beamPreserver.pollFirst();*/
                         }
                     }
                 }
