@@ -47,6 +47,7 @@ public class ArcEagerBeamTrainer {
     private Random randGen;
     private IndexMaps maps;
     private int scoreZero;
+
     public ArcEagerBeamTrainer(String updateMode, AveragedPerceptron classifier, Options options,
                                ArrayList<Integer> dependencyRelations, int featureLength, IndexMaps maps) {
         this.updateMode = updateMode;
@@ -97,8 +98,9 @@ public class ArcEagerBeamTrainer {
             scoreZero = 0;
             for (GoldConfiguration goldConfiguration : trainData) {
                 dataCount++;
-                if ((int) (dataCount % progress) == 0)
+                if ((int) (dataCount % progress) == 0) {
                     System.out.print("progress: " + (dataCount * 100) / trainSize + "%\r");
+                }
                 trainOnOneSample(goldConfiguration, partialTreeIter, i, dataCount, pool);
                 classifier.incrementIteration();
                 bClassifier.incrementIteration();
@@ -109,10 +111,8 @@ public class ArcEagerBeamTrainer {
             long end = System.currentTimeMillis();
             long endInNanos = System.nanoTime();
             Duration duration = Duration.ofNanos(endInNanos - startInNanos);
-            System.out.println("iteration " + i + " took " + duration.toString()
-                    .substring(2)
-                    .replaceAll("(\\d[HMS])(?!$)", "$1 ")
-                    .toLowerCase());
+            System.out.println("iteration " + i + " took " + duration.toString().substring(2).replaceAll("(\\d[HMS])" +
+                    "(?!$)", "$1 ").toLowerCase());
             double timeSec = (double) (end - start) / 1000;
             DecimalFormat decimalFormat = new DecimalFormat("0.000");
             decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
@@ -145,12 +145,10 @@ public class ArcEagerBeamTrainer {
                 int effectiveLaSize = averagedPerceptron.effectiveLaSize();
                 float laRatio = 100.0f * effectiveLaSize / laSize;
                 DecimalFormat format = new DecimalFormat("##.00");
-                System.out.println("size of RA features in memory:" + effectiveRaSize + "/" + raSize + "->"
-                        + format.format(raRatio) + "%");
-                System.out.println("size of LA features in memory:" + effectiveLaSize + "/" + laSize + "->"
-                        + format.format(laRatio) + "%");
-                KBeamArcEagerParser parser = new KBeamArcEagerParser(binaryPerceptron, averagedPerceptron, dependencyRelations,
-                        featureLength, maps, options.numOfThreads);
+                System.out.println("size of RA features in memory:" + effectiveRaSize + "/" + raSize + "->" + format.format(raRatio) + "%");
+                System.out.println("size of LA features in memory:" + effectiveLaSize + "/" + laSize + "->" + format.format(laRatio) + "%");
+                KBeamArcEagerParser parser = new KBeamArcEagerParser(binaryPerceptron, averagedPerceptron,
+                        dependencyRelations, featureLength, maps, options.numOfThreads);
                 parser.parseCoNLLFile(devPath, modelPath + ".__tmp__", options.rootFirst, options.beamWidth, true,
                         lowerCased, options.numOfThreads, false, "");
                 Evaluator.evaluate(devPath, modelPath + ".__tmp__", punctuations);
@@ -164,10 +162,8 @@ public class ArcEagerBeamTrainer {
                 effectiveLaSize = binaryPerceptron.effectiveLaSize();
                 laRatio = 100.0f * effectiveLaSize / laSize;
                 format = new DecimalFormat("##.00");
-                System.out.println("size of RA features in memory:" + effectiveRaSize + "/" + raSize + "->"
-                        + format.format(raRatio) + "%");
-                System.out.println("size of LA features in memory:" + effectiveLaSize + "/" + laSize + "->"
-                        + format.format(laRatio) + "%");
+                System.out.println("size of RA features in memory:" + effectiveRaSize + "/" + raSize + "->" + format.format(raRatio) + "%");
+                System.out.println("size of LA features in memory:" + effectiveLaSize + "/" + laSize + "->" + format.format(laRatio) + "%");
                 BinaryModelEvaluator bEval = new BinaryModelEvaluator(modelPath + "_Binary_iter" + i, classifier,
                         bClassifier, options, dependencyRelations, featureLength);
                 bEval.evaluate();
@@ -183,8 +179,9 @@ public class ArcEagerBeamTrainer {
     private void trainOnOneSample(GoldConfiguration goldConfiguration, int partialTreeIter, int i, int dataCount,
                                   CompletionService<ArrayList<BeamElement>> pool) throws Exception {
         boolean isPartial = goldConfiguration.isPartial(options.rootFirst);
-        if (isPartial && partialTreeIter > i)
+        if (isPartial && partialTreeIter > i) {
             return;
+        }
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
         ArrayList<Configuration> beam = new ArrayList<>(options.beamWidth);
@@ -227,8 +224,8 @@ public class ArcEagerBeamTrainer {
                 beamSortOneThread(beam, beamPreserver);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
-                    pool.submit(new BeamScorerThread(false, classifier, beam.get(b), dependencyRelations, featureLength,
-                            b));
+                    pool.submit(new BeamScorerThread(false, classifier, beam.get(b), dependencyRelations,
+                            featureLength, b));
                 }
                 /*
                   store top configurations as much as beam width in beamPreserver
@@ -236,8 +233,9 @@ public class ArcEagerBeamTrainer {
                 for (int b = 0; b < beam.size(); b++) {
                     for (BeamElement element : pool.take().get()) {
                         beamPreserver.add(element);
-                        if (beamPreserver.size() > options.beamWidth)
+                        if (beamPreserver.size() > options.beamWidth) {
                             beamPreserver.pollFirst();
+                        }
                     }
                 }
             }
@@ -247,8 +245,9 @@ public class ArcEagerBeamTrainer {
                 oracleInBeam = false;
                 ArrayList<Configuration> repBeam = new ArrayList<>(options.beamWidth);
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
-                    if (repBeam.size() >= options.beamWidth)
+                    if (repBeam.size() >= options.beamWidth) {
                         break;
+                    }
                     int b = beamElement.number;
                     int action = beamElement.action;
                     int label = beamElement.label;
@@ -281,12 +280,14 @@ public class ArcEagerBeamTrainer {
                     /*
                       Binary classifier update
                      */
-                    if (oracles.containsKey(newConfig) != isOracle(newConfig))
-                        for (Configuration c: oracles.keySet()) {
+                    if (oracles.containsKey(newConfig) != isOracle(newConfig)) {
+                        for (Configuration c : oracles.keySet()) {
                             updateWeights(true, initialConfiguration, isPartial, c, newConfig);
                         }
-                    if (oracles.containsKey(newConfig))
+                    }
+                    if (oracles.containsKey(newConfig)) {
                         oracleInBeam = true;
+                    }
                 }
                 beam = repBeam;
                 if (beam.size() > 0 && oracles.size() > 0) {
@@ -309,8 +310,9 @@ public class ArcEagerBeamTrainer {
                             oracles.put(bestScoringOracle, 0.0f);
                         }
                     }
-                    if (!oracleInBeam && updateMode.equals("early"))
+                    if (!oracleInBeam && updateMode.equals("early")) {
                         break;
+                    }
                     if (beam.size() > 0 && !oracleInBeam && updateMode.equals("max_violation")) {
                         float violation = beam.get(0).getScore() - bestScoringOracle.getScore();
                         if (violation > maxViol) {
@@ -318,8 +320,9 @@ public class ArcEagerBeamTrainer {
                             maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
                         }
                     }
-                } else
+                } else {
                     break;
+                }
             }
         }
         /*
@@ -354,10 +357,12 @@ public class ArcEagerBeamTrainer {
         for (Configuration configuration : oracles.keySet()) {
             State state = configuration.state;
             Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-            if (!state.stackEmpty())
+            if (!state.stackEmpty()) {
                 top = state.peek();
-            if (!state.bufferEmpty())
+            }
+            if (!state.bufferEmpty()) {
                 first = state.bufferHead();
+            }
             if (configuration.state.isNotTerminalState()) {
                 Configuration newConfig = configuration.clone();
                 if (first > 0 && goldDependencies.containsKey(first) && goldDependencies.get(first).first == top) {
@@ -500,15 +505,17 @@ public class ArcEagerBeamTrainer {
                 float score = classifier.shiftScore(features, false);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-                if (beamPreserver.size() > options.beamWidth)
+                if (beamPreserver.size() > options.beamWidth) {
                     beamPreserver.pollFirst();
+                }
             }
             if (ArcEager.canDo(Actions.Reduce, currentState)) {
                 float score = classifier.reduceScore(features, false);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-                if (beamPreserver.size() > options.beamWidth)
+                if (beamPreserver.size() > options.beamWidth) {
                     beamPreserver.pollFirst();
+                }
             }
             if (ArcEager.canDo(Actions.RightArc, currentState)) {
                 float[] rightArcScores = classifier.rightArcScores(features, false);
@@ -516,8 +523,9 @@ public class ArcEagerBeamTrainer {
                     float score = rightArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-                    if (beamPreserver.size() > options.beamWidth)
+                    if (beamPreserver.size() > options.beamWidth) {
                         beamPreserver.pollFirst();
+                    }
                 }
             }
             if (ArcEager.canDo(Actions.LeftArc, currentState)) {
@@ -526,8 +534,9 @@ public class ArcEagerBeamTrainer {
                     float score = leftArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-                    if (beamPreserver.size() > options.beamWidth)
+                    if (beamPreserver.size() > options.beamWidth) {
                         beamPreserver.pollFirst();
+                    }
                 }
             }
         }
@@ -536,8 +545,7 @@ public class ArcEagerBeamTrainer {
     private boolean checkIfTrueFeature(Configuration conf, boolean isPartial, int action) {
         if (isPartial) {
             if (action >= 3) {
-                return conf.state.hasHead(conf.state.peek())
-                        && conf.state.hasHead(conf.state.bufferHead());
+                return conf.state.hasHead(conf.state.peek()) && conf.state.hasHead(conf.state.bufferHead());
             } else if (action == 0) {
                 return conf.state.hasHead(conf.state.bufferHead());
             } else if (action == 1) {
@@ -642,12 +650,13 @@ public class ArcEagerBeamTrainer {
                     Object feature = feat.second;
                     Actions actionType = Actions.intToAction(action, dependencyRelations.size());
                     int dependency = getDependencyInsideIndex(action, actionType, dependencyRelations.size());
-                    if (!(oracleMap.containsKey(feat) && oracleMap.get(feat).equals(predictedMap.get(feat))))
+                    if (!(oracleMap.containsKey(feat) && oracleMap.get(feat).equals(predictedMap.get(feat)))) {
                         if (isBinary) {
                             bClassifier.changeWeight(actionType, f, feature, dependency, -predictedMap.get(feat));
                         } else {
                             classifier.changeWeight(actionType, f, feature, dependency, -predictedMap.get(feat));
                         }
+                    }
                 }
             }
             for (Pair<Integer, Object> feat : oracleMap.keySet()) {
@@ -656,18 +665,26 @@ public class ArcEagerBeamTrainer {
                     Object feature = feat.second;
                     Actions actionType = Actions.intToAction(action, dependencyRelations.size());
                     int dependency = getDependencyInsideIndex(action, actionType, dependencyRelations.size());
-                    if (!(predictedMap.containsKey(feat) && predictedMap.get(feat).equals(oracleMap.get(feat))))
+                    if (!(predictedMap.containsKey(feat) && predictedMap.get(feat).equals(oracleMap.get(feat)))) {
                         if (isBinary) {
                             bClassifier.changeWeight(actionType, f, feature, dependency, oracleMap.get(feat));
                         } else {
                             classifier.changeWeight(actionType, f, feature, dependency, oracleMap.get(feat));
                         }
+                    }
                 }
             }
         }
     }
 
-    private boolean isOracle(Configuration bestConfiguration) {
+    private boolean isOracle(Configuration bestConfiguration) throws Exception {
+        if (bestConfiguration == null) {
+            throw new Exception("The input of isOracle is null");
+        }
+        return bClassifier.calcScore(true, bestConfiguration.sentence, options.rootFirst,
+                bestConfiguration.actionHistory, featureLength, dependencyRelations) >= 0;
+
+
         /*int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
         float score;
@@ -682,7 +699,10 @@ public class ArcEagerBeamTrainer {
             float[] leftArcScores = bClassifier.leftArcScores(features, false);
             score = leftArcScores[label];
         }*/
-        ArrayList<Integer> actions = bestConfiguration.actionHistory;
+
+
+
+        /*ArrayList<Integer> actions = bestConfiguration.actionHistory;
         Object[] features = FeatureExtractor.extractAllParseFeatures(bestConfiguration, featureLength);
         float score = 0f;
         int label;
@@ -703,6 +723,6 @@ public class ArcEagerBeamTrainer {
         }
         if (score == 0)
             scoreZero++;
-        return (score >= 0);
+        return (score >= 0);*/
     }
 }
