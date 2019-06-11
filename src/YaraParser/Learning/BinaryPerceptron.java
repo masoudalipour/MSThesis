@@ -284,19 +284,23 @@ public class BinaryPerceptron {
             if (action == 0) {
                 score += shiftScore(features, decode);
                 ArcEager.shift(currentState);
+                currentConfiguration.addAction(action);
             } else if (action == 1) {
                 score += reduceScore(features, decode);
                 ArcEager.reduce(currentState);
+                currentConfiguration.addAction(action);
             } else if (action >= 3 + dependencyRelations.size()) {
                 int label = action - (3 + dependencyRelations.size());
                 float[] leftArcScores = leftArcScores(features, decode);
                 score += leftArcScores[label];
-                ArcEager.rightArc(currentState, label);
+                ArcEager.leftArc(currentState, label);
+                currentConfiguration.addAction(action);
             } else {
                 int label = action - 3;
                 float[] rightArcScores = rightArcScores(features, decode);
                 score += rightArcScores[label];
-                ArcEager.leftArc(currentState, label);
+                ArcEager.rightArc(currentState, label);
+                currentConfiguration.addAction(action);
             }
         }
         return score;
