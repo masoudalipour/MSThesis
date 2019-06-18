@@ -7,13 +7,11 @@ import java.util.ArrayList;
 
 public class Configuration implements Comparable, Cloneable, Serializable {
     public Sentence sentence;
-
     public State state;
     /**
      * 0 = shift, 1 = reduce, 2 = unshift, 3 - dependencyLabels.size() = right arc and the rest of it is left arc
      */
     public ArrayList<Integer> actionHistory;
-
     public float score;
 
     public Configuration(Sentence sentence, boolean rootFirst) {

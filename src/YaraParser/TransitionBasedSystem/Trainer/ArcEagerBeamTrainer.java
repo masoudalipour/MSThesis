@@ -46,7 +46,6 @@ public class ArcEagerBeamTrainer {
     private ArrayList<Integer> dependencyRelations;
     private Random randGen;
     private IndexMaps maps;
-    private int scoreZero;
 
     public ArcEagerBeamTrainer(String updateMode, AveragedPerceptron classifier, Options options,
                                ArrayList<Integer> dependencyRelations, int featureLength, IndexMaps maps) {
@@ -95,7 +94,6 @@ public class ArcEagerBeamTrainer {
             }
             System.out.println("train size " + trainSize);
             System.out.print("progress: 0%\r");
-            scoreZero = 0;
             for (GoldConfiguration goldConfiguration : trainData) {
                 dataCount++;
                 if ((int) (dataCount % progress) == 0) {
@@ -107,7 +105,6 @@ public class ArcEagerBeamTrainer {
             }
             System.out.println();
             System.out.println("train phase completed!");
-            System.out.println("scoreZero: " + scoreZero);
             long end = System.currentTimeMillis();
             long endInNanos = System.nanoTime();
             Duration duration = Duration.ofNanos(endInNanos - startInNanos);
@@ -682,7 +679,7 @@ public class ArcEagerBeamTrainer {
             throw new Exception("The input of isOracle is null");
         }
         return bClassifier.calcScore(true, bestConfiguration.sentence, options.rootFirst,
-                bestConfiguration.actionHistory, featureLength, dependencyRelations) >= 0;
+                bestConfiguration.actionHistory, dependencyRelations) >= 0;
 
 
         /*int lastAction = bestConfiguration.actionHistory.get(bestConfiguration.actionHistory.size() - 1);
@@ -721,9 +718,6 @@ public class ArcEagerBeamTrainer {
                 score += rightArcScores[label];
             }
         }
-        if (score == 0) {
-            scoreZero++;
-        }
-        return (score >= 0);
+        return (score >= 0);*/
     }
 }

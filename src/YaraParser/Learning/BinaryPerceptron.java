@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.Learning;
 
 import YaraParser.Structures.CompactArray;
@@ -18,22 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class BinaryPerceptron {
-    /**
-     * This class tries to implement averaged Perceptron algorithm
-     * Collins, Michael. "Discriminative training methods for hidden Markov models: Theory and experiments with
-     * Perceptron algorithms."
-     * In Proceedings of the ACL-02 conference on Empirical methods in natural language processing-Volume 10, pp. 1-8.
-     * Association for Computational Linguistics, 2002.
-     * <p/>
-     * The averaging update is also optimized by using the trick introduced in Hal Daume's dissertation.
-     * For more information see the second chapter of his thesis:
-     * Harold Charles Daume' III. "Practical Structured YaraParser.Learning Techniques for Natural Language
-     * Processing", PhD thesis, ISI USC, 2006.
-     * http://www.umiacs.umd.edu/~hal/docs/daume06thesis.pdf
-     */
-    /**
-     * For the weights for all features
-     */
     public HashMap<Object, Float>[] shiftFeatureWeights;
     public HashMap<Object, Float>[] reduceFeatureWeights;
     public HashMap<Object, CompactArray>[] leftArcFeatureWeights;
@@ -90,9 +69,9 @@ public class BinaryPerceptron {
                 infStruct.dependencySize);
     }
 
-    public float changeWeight(Actions actionType, int slotNum, Object featureName, int labelIndex, float change) {
+    public void changeWeight(Actions actionType, int slotNum, Object featureName, int labelIndex, float change) {
         if (featureName == null) {
-            return 0;
+            return;
         }
         if (actionType == Actions.Shift) {
             if (!shiftFeatureWeights[slotNum].containsKey(featureName)) {
@@ -120,16 +99,15 @@ public class BinaryPerceptron {
             }
         } else if (actionType == Actions.RightArc) {
             changeFeatureWeight(rightArcFeatureWeights[slotNum], rightArcFeatureAveragedWeights[slotNum], featureName
-                    , labelIndex, change, dependencySize);
+                    , labelIndex, change);
         } else if (actionType == Actions.LeftArc) {
             changeFeatureWeight(leftArcFeatureWeights[slotNum], leftArcFeatureAveragedWeights[slotNum], featureName,
-                    labelIndex, change, dependencySize);
+                    labelIndex, change);
         }
-        return change;
     }
 
     private void changeFeatureWeight(HashMap<Object, CompactArray> map, HashMap<Object, CompactArray> aMap,
-                                     Object featureName, int labelIndex, float change, int size) {
+                                     Object featureName, int labelIndex, float change) {
         CompactArray values = map.get(featureName);
         CompactArray aValues;
         if (values != null) {
@@ -274,13 +252,12 @@ public class BinaryPerceptron {
     }
 
     public float calcScore(final boolean decode, final Sentence sentence, final boolean rootFirst,
-                           final ArrayList<Integer> actionHistory, final int featureLength,
-                           final ArrayList<Integer> dependencyRelations) {
+                           final ArrayList<Integer> actionHistory, final ArrayList<Integer> dependencyRelations) {
         float score = 0f;
         Configuration currentConfiguration = new Configuration(sentence, rootFirst);
         for (int action : actionHistory) {
             State currentState = currentConfiguration.state;
-            Object[] features = FeatureExtractor.extractAllParseFeatures(currentConfiguration, featureLength);
+            Object[] features = FeatureExtractor.extractAllParseFeatures(currentConfiguration, featureSize());
             if (action == 0) {
                 score += shiftScore(features, decode);
                 ArcEager.shift(currentState);

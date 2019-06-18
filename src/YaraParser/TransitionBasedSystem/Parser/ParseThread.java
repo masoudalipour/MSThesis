@@ -9,6 +9,7 @@ import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Configuration.State;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
+import YaraParser.TransitionBasedSystem.Trainer.GeneticAlg;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -25,20 +26,6 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     private GoldConfiguration goldConfiguration;
     private boolean partial;
     private int id;
-
-    ParseThread(int id, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength,
-                Sentence sentence, boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration,
-                boolean partial) {
-        this.id = id;
-        this.classifier = classifier;
-        this.dependencyRelations = dependencyRelations;
-        this.featureLength = featureLength;
-        this.sentence = sentence;
-        this.rootFirst = rootFirst;
-        this.beamWidth = beamWidth;
-        this.goldConfiguration = goldConfiguration;
-        this.partial = partial;
-    }
 
     ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier,
                 ArrayList<Integer> dependencyRelations, int featureLength, Sentence sentence, boolean rootFirst,
@@ -228,30 +215,14 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         }
         Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
-        /*int wrongParse = 0;
-        int rightParse = 0;*/
         for (Configuration configuration : beam) {
             if (configuration.getScore() > bestScore) {
                 bestScore = configuration.getScore();
                 bestConfiguration = configuration;
             }
-            /*if (isOracle(configuration)) {
-                rightParse++;
-            } else {
-                wrongParse++;
-            }*/
         }
-        /*BufferedWriter writer = new BufferedWriter(new FileWriter("parseBeam.log", true));
-        writer.write("right parse: " + rightParse);
-        writer.newLine();
-        writer.write("wrong parse: " + wrongParse);
-        writer.newLine();
-        writer.write("bestConfiguration isOracle: " + isOracle(bestConfiguration));
-        writer.newLine();
-        writer.newLine();
-        writer.close();*/
         if (!isOracle(bestConfiguration)) {
-            GeneticAlg geneticAlg = new GeneticAlg(bestConfiguration);
+            GeneticAlg geneticAlg = new GeneticAlg(beam, bClassifier, classifier, rootFirst, dependencyRelations);
             bestConfiguration = geneticAlg.getConfiguration();
         }
         return new Pair<>(bestConfiguration, id);
@@ -438,8 +409,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             throw new Exception("The input of isOracle is null");
         }
         return bClassifier.calcScore(true, configuration.sentence, rootFirst, configuration.actionHistory,
-                featureLength, dependencyRelations) >= 0;
-
+                dependencyRelations) >= 0;
 
 
         // int lastAction = configuration.actionHistory.get(configuration.actionHistory.size() - 1);
