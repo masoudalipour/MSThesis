@@ -3,7 +3,7 @@ package YaraParser.TransitionBasedSystem.Configuration;
 import java.util.ArrayList;
 
 public class GeneticElement implements Comparable<GeneticElement> {
-    ArrayList<Boolean> isRightAction;
+    ArrayList<Float> actionsScore;
     ArrayList<Integer> actions;
     float score;
 
@@ -11,12 +11,15 @@ public class GeneticElement implements Comparable<GeneticElement> {
         actions = actionHistory;
     }
 
-    public GeneticElement(ArrayList<Integer> actionHistory, ArrayList<Boolean> actionsStatus) throws Exception {
-        if (actionHistory.size() != actionsStatus.size()) {
-            throw new Exception("Actions' length and status' length are different");
+    public GeneticElement(ArrayList<Integer> actionHistory, ArrayList<Float> scores) throws Exception {
+        if (actionHistory.size() != scores.size()) {
+            throw new Exception("The array of actions and the array of actions' score have different lengths");
         }
         actions = actionHistory;
-        isRightAction = actionsStatus;
+        actionsScore = scores;
+        for (float scr : actionsScore) {
+            score += scr;
+        }
     }
 
     @Override
