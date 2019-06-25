@@ -39,6 +39,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     private ExecutorService executor;
     private CompletionService<ArrayList<BeamElement>> pool;
     private int generationSize;
+
     public KBeamArcEagerParser(AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations,
                                int featureLength, IndexMaps maps, int numOfThreads) {
         this.classifier = classifier;
@@ -395,7 +396,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             parseCoNLLFileNoParallel(inputFile, outputFile, rootFirst, beamWidth, labeled, lowerCased, numThreads,
                     partial, scorePath);
         } else {
-            parseCoNLLFileParallel(inputFile, outputFile, rootFirst, beamWidth, lowerCased, numThreads, partial, scorePath);
+            parseCoNLLFileParallel(inputFile, outputFile, rootFirst, beamWidth, lowerCased, numThreads, partial,
+                    scorePath);
         }
     }
 
@@ -583,6 +585,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             System.out.println("sentences parsed:");
             for (int i = 0; i < confs.length; i++) {
                 dataCount++;
+                // log
+                System.out.print("sentence " + dataCount + "started to parse");
                 if (dataCount % 100 == 0) {
                     System.out.print(dataCount + " ... ");
                 }
