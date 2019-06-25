@@ -54,7 +54,7 @@ public class YaraParser {
             BinaryPerceptron bPerceptron = new BinaryPerceptron(bInfStruct);
             int featureSize = averagedPerceptron.featureSize();
             KBeamArcEagerParser parser = new KBeamArcEagerParser(bPerceptron, averagedPerceptron, dependencyLabels,
-                    featureSize, maps, options.numOfThreads);
+                    featureSize, maps, options.numOfThreads, 256);
             if (options.parseTaggedFile) {
                 parser.parseTaggedFile(options.inputFile, options.outputFile, inf_options.rootFirst,
                         inf_options.beamWidth, inf_options.lowercase, options.separator, options.numOfThreads);

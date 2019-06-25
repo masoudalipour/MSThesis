@@ -145,7 +145,7 @@ public class ArcEagerBeamTrainer {
                 System.out.println("size of RA features in memory:" + effectiveRaSize + "/" + raSize + "->" + format.format(raRatio) + "%");
                 System.out.println("size of LA features in memory:" + effectiveLaSize + "/" + laSize + "->" + format.format(laRatio) + "%");
                 KBeamArcEagerParser parser = new KBeamArcEagerParser(binaryPerceptron, averagedPerceptron,
-                        dependencyRelations, featureLength, maps, options.numOfThreads);
+                        dependencyRelations, featureLength, maps, options.numOfThreads, 256);
                 parser.parseCoNLLFile(devPath, modelPath + ".__tmp__", options.rootFirst, options.beamWidth, true,
                         lowerCased, options.numOfThreads, false, "");
                 Evaluator.evaluate(devPath, modelPath + ".__tmp__", punctuations);

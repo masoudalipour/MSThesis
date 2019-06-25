@@ -25,10 +25,12 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     private GoldConfiguration goldConfiguration;
     private boolean partial;
     private int id;
+    private int generationSize;
 
     public ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier,
                        ArrayList<Integer> dependencyRelations, int featureLength, Sentence sentence,
-                       boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
+                       boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial,
+                       int genSize) {
         this.id = id;
         this.classifier = classifier;
         this.bClassifier = bClassifier;
@@ -39,6 +41,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         this.beamWidth = beamWidth;
         this.goldConfiguration = goldConfiguration;
         this.partial = partial;
+        generationSize = genSize;
     }
 
     public ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier,
@@ -136,7 +139,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     newConfig.setScore(score);
                     repBeam.add(newConfig);
                 }
-                beam = new ArrayList<>(repBeam.subList(0, beamWidth));
+                beam = new ArrayList<>(beamWidth);
+                for (int i = 0; i < beamWidth && i < repBeam.size(); i++) {
+                    beam.add(repBeam.get(i));
+                }
             } else {
                 Configuration configuration = beam.get(0);
                 State currentState = configuration.state;
@@ -217,16 +223,25 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             }
         }
         if (!isOracle(bestConfiguration)) {
-            repBeam = beamSearch(repBeam, 128);
-            GeneticAlg geneticAlg = new GeneticAlg(repBeam, bClassifier, classifier, rootFirst, dependencyRelations);
+            // log
+            System.out.println("bestConfiguration was wrong at id " + id);
+            repBeam = beamSearch(repBeam, beamWidth);
+            GeneticAlg geneticAlg = new GeneticAlg(repBeam, bClassifier, classifier, rootFirst, dependencyRelations,
+                    generationSize);
             bestConfiguration = geneticAlg.getConfiguration();
+            // log
+            if (isOracle(bestConfiguration)) {
+                System.out.println("genetic corrected the answer");
+            } else {
+                System.out.println("genetic could not correct the answer");
+            }
         }
         return new Pair<>(bestConfiguration, id);
     }
 
     public Pair<Configuration, Integer> parse(Configuration initialConfiguration) throws Exception {
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
-        ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
+        ArrayList<Configuration> repBeam;
         beam.add(initialConfiguration);
         while (ArcEager.isNotTerminal(beam)) {
             if (beamWidth != 1) {
@@ -296,7 +311,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     newConfig.setScore(score);
                     repBeam.add(newConfig);
                 }
-                beam = new ArrayList<>(repBeam.subList(0, beamWidth));
+                beam = new ArrayList<>(beamWidth);
+                for (int i = 0; i < beamWidth && i < repBeam.size(); i++) {
+                    beam.add(repBeam.get(i));
+                }
             } else {
                 Configuration configuration = beam.get(0);
                 State currentState = configuration.state;
@@ -375,11 +393,6 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 bestScore = configuration.getScore();
                 bestConfiguration = configuration;
             }
-        }
-        if (!isOracle(bestConfiguration)) {
-            repBeam = beamSearch(repBeam, 128);
-            GeneticAlg geneticAlg = new GeneticAlg(repBeam, bClassifier, classifier, rootFirst, dependencyRelations);
-            bestConfiguration = geneticAlg.getConfiguration();
         }
         return new Pair<>(bestConfiguration, id);
     }

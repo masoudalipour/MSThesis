@@ -17,15 +17,17 @@ public class GeneticAlg {
     private ArrayList<Configuration> initConfigurations;
     private BinaryPerceptron binaryClassifier;
     private AveragedPerceptron yaraClassifier;
+    private int generationSize;
 
     public GeneticAlg(ArrayList<Configuration> configs, BinaryPerceptron binaryPerceptron,
                       AveragedPerceptron averagedPerceptron, final boolean rootFirst,
-                      final ArrayList<Integer> dependencyRelations) {
+                      final ArrayList<Integer> dependencyRelations, final int genSize) {
         initConfigurations = configs;
         binaryClassifier = binaryPerceptron;
         yaraClassifier = averagedPerceptron;
         this.rootFirst = rootFirst;
         this.dependencyRelations = dependencyRelations;
+        generationSize = genSize;
     }
 
     public Configuration getConfiguration() throws Exception {
@@ -33,27 +35,45 @@ public class GeneticAlg {
         /*for (Configuration config : initConfigurations) {
             population.add(new GeneticElement(config.actionHistory, getActionsScore(config)));
         }*/
-        for (int i = 0; i < 10; i++) {
-            TreeSet<Configuration> population = new TreeSet<>();
+        float highestScore = Float.NEGATIVE_INFINITY;
+        int genWithoutEnhance = 0;
+        while (genWithoutEnhance < 10) {
+            TreeSet<Configuration> population = new TreeSet<>(nextGen);
             for (Configuration config : nextGen) {
                 ArrayList<Float> scores = getActionsScore(config);
                 Configuration c = mutate(config, findWorstAction(scores));
                 ParseThread pt = new ParseThread(1, binaryClassifier, yaraClassifier, dependencyRelations,
-                        binaryClassifier.featureSize(), c.sentence, rootFirst, 128);
+                        binaryClassifier.featureSize(), c.sentence, rootFirst, 8);
                 Pair<Configuration, Integer> configurationIntegerPair = pt.parse(c);
                 population.add(configurationIntegerPair.first);
-                if (population.size() > 128) {
+                if (population.size() > generationSize) {
                     population.pollFirst();
                 }
             }
             nextGen = new ArrayList<>(population.descendingSet());
+            float thisGenBestScore = Float.NEGATIVE_INFINITY;
+            for (Configuration c : nextGen) {
+                if (c.score > thisGenBestScore) {
+                    thisGenBestScore = c.score;
+                }
+            }
+            if (highestScore == thisGenBestScore) {
+                genWithoutEnhance++;
+            } else {
+                // log
+                if (highestScore > Float.NEGATIVE_INFINITY) {
+                    System.out.println("Improve with genetic by the amount of " + (thisGenBestScore - highestScore));
+                }
+                highestScore = thisGenBestScore;
+                genWithoutEnhance = 0;
+            }
         }
-        float bestScoreConf = Float.NEGATIVE_INFINITY;
+        highestScore = Float.NEGATIVE_INFINITY;
         Configuration bestConf = nextGen.get(0);
         for (Configuration c : nextGen) {
-            if (c.score > bestScoreConf) {
+            if (c.score > highestScore) {
                 bestConf = c;
-                bestScoreConf = c.score;
+                highestScore = c.score;
             }
         }
         return bestConf;

@@ -38,7 +38,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     private IndexMaps maps;
     private ExecutorService executor;
     private CompletionService<ArrayList<BeamElement>> pool;
-
+    private int generationSize;
     public KBeamArcEagerParser(AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations,
                                int featureLength, IndexMaps maps, int numOfThreads) {
         this.classifier = classifier;
@@ -51,7 +51,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
     public KBeamArcEagerParser(BinaryPerceptron bClassifier, AveragedPerceptron classifier,
                                ArrayList<Integer> dependencyRelations, int featureLength, IndexMaps maps,
-                               int numOfThreads) {
+                               int numOfThreads, int genSize) {
         this.classifier = classifier;
         this.bClassifier = bClassifier;
         this.dependencyRelations = dependencyRelations;
@@ -59,6 +59,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         this.maps = maps;
         executor = Executors.newFixedThreadPool(numOfThreads);
         pool = new ExecutorCompletionService<>(executor);
+        generationSize = genSize;
     }
 
     public static KBeamArcEagerParser createParser(String modelPath, int numOfThreads) throws Exception {
@@ -575,7 +576,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             for (GoldConfiguration goldConfiguration : data) {
                 ParseThread thread = new ParseThread(index, bClassifier, classifier, dependencyRelations,
                         featureLength, goldConfiguration.getSentence(), rootFirst, beamWidth, goldConfiguration,
-                        partial);
+                        partial, generationSize);
                 pool.submit(thread);
                 index++;
             }
