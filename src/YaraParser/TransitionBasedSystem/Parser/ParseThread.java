@@ -171,18 +171,18 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         repBeam.add(newConfig);
                     } else {
                         wrongParse++;
-                        writer.write("Wrong configuration " + (wrongParse + rightParse) + " in beam " + beamCounter);
+                        writer.write("configuration " + (wrongParse + rightParse) + " was Wrong in beam " + beamCounter);
                         writer.newLine();
                     }
                 }
                 totalWrongParse += wrongParse;
-                writer.write(wrongParse + "configuration was wrong in beam " + beamCounter);
+                writer.write(wrongParse + " configuration was wrong in beam " + beamCounter);
                 writer.newLine();
                 beam = repBeam;
                 if (isOracle(bestConfiguration)) {
                     topBeamIsOracle = true;
                 }
-                writer.write("in beam " + beamCounter + " top beam was oracle?" + topBeamIsOracle);
+                writer.write("in beam " + beamCounter + " top beam was oracle? " + topBeamIsOracle);
                 writer.newLine();
             } else {
                 Configuration configuration = beam.get(0);
@@ -264,8 +264,6 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             }
         }*/
         writer.write("total of " + totalWrongParse + " configuration was wrong in parse process");
-        writer.newLine();
-        writer.write("the oracle predicts that ");
         writer.newLine();
         writer.close();
         return new Pair<>(beam.get(0), id);

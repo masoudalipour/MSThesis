@@ -23,12 +23,13 @@ public class Evaluator {
         double fullUnlabeledMatch = 0;
         double fullLabMatch = 0;
         int numTree = 0;
-        BufferedWriter writer = new BufferedWriter(new FileWriter("evaluation.log", true));
+        BufferedWriter writer = new BufferedWriter(new FileWriter("evaluation.log", false));
         for (int i = 0; i < predConfiguration.size(); i++) {
             HashMap<Integer, Pair<Integer, String>> goldDeps = goldConfiguration.get(i).goldDependencies;
             HashMap<Integer, Pair<Integer, String>> predDeps = predConfiguration.get(i).goldDependencies;
             ArrayList<String> goldTags = goldConfiguration.get(i).posTags;
             numTree++;
+            writer.write("started evaluating sentence " + numTree);
             boolean isFullMatch = true;
             boolean isUnlabeledMatch = true;
             for (int dep : goldDeps.keySet()) {
@@ -42,24 +43,34 @@ public class Evaluator {
                         unlabeledMatch++;
                         if (pl.equals(gl)) {
                             labeledMatch++;
-                            writer.write("sentence " + i + " parsed right");
+                            writer.write("right parse. " + gh + " - " + gl + " -> " + dep);
+                            writer.newLine();
+
                         } else {
                             isFullMatch = false;
+                            writer.write("wrong parse. Expected " + (gh + " - " + gl + " -> " + dep) + " instead got " +
+                                         (ph + " - " + pl + " -> " + dep));
+                            writer.newLine();
                         }
                     } else {
                         isFullMatch = false;
                         isUnlabeledMatch = false;
-                        writer.write("sentence " + i + " parsed wrong");
                     }
                 }
             }
             if (isFullMatch) {
                 fullLabMatch++;
+                writer.write("sentence " + i + " parse was right");
+                writer.newLine();
+            } else {
+                writer.write("sentence " + i + " parse was wrong");
+                writer.newLine();
             }
             if (isUnlabeledMatch) {
                 fullUnlabeledMatch++;
             }
         }
+        writer.close();
         DecimalFormat decimalFormat = new DecimalFormat("0.00%");
         double labeledAccuracy = labeledMatch / all;
         double unlabeledAccuracy = unlabeledMatch / all;
