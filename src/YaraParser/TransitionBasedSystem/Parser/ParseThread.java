@@ -43,8 +43,9 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     }
 
     ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier,
-                ArrayList<Integer> dependencyRelations, int featureLength, Sentence sentence, boolean rootFirst,
-                int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
+                ArrayList<Integer> dependencyRelations, int featureLength,
+                Sentence sentence,
+                boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
         this.id = id;
         this.classifier = classifier;
         this.bClassifier = bClassifier;
