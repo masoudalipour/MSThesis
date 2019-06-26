@@ -421,8 +421,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
             for (GoldConfiguration goldConfiguration : data) {
                 dataCount++;
-                if (dataCount % 100 == 0)
+                if (dataCount % 100 == 0) {
                     System.out.print(dataCount + " ... ");
+                }
                 Configuration bestParse;
                 if (partial) {
                     bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst, beamWidth
@@ -515,8 +516,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 String[] outs = new String[lineNum];
                 for (int i = 0; i < lineNum; i++) {
                     count++;
-                    if (count % 100 == 0)
+                    if (count % 100 == 0) {
                         System.out.print(count + "...");
+                    }
                     Pair<String, Integer> result = pool.take().get();
                     outs[result.second] = result.first;
                 }
@@ -532,8 +534,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             String[] outs = new String[lineNum];
             for (int i = 0; i < lineNum; i++) {
                 count++;
-                if (count % 100 == 0)
+                if (count % 100 == 0) {
                     System.out.print(count + "...");
+                }
                 Pair<String, Integer> result = pool.take().get();
                 outs[result.second] = result.first;
             }
