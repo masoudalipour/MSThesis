@@ -576,7 +576,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             for (GoldConfiguration goldConfiguration : data) {
                 ParseThread thread = new ParseThread(index, bClassifier, classifier, dependencyRelations,
                         featureLength, goldConfiguration.getSentence(), rootFirst, beamWidth, goldConfiguration,
-                        partial);
+                        partial, outputFile);
                 pool.submit(thread);
                 index++;
             }

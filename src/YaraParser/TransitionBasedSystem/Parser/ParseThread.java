@@ -27,6 +27,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     private GoldConfiguration goldConfiguration;
     private boolean partial;
     private int id;
+    private String outputFile;
 
     ParseThread(int id, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength,
                 Sentence sentence, boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration,
@@ -43,9 +44,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     }
 
     ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier,
-                ArrayList<Integer> dependencyRelations, int featureLength,
-                Sentence sentence,
-                boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
+                ArrayList<Integer> dependencyRelations, int featureLength, Sentence sentence, boolean rootFirst,
+                int beamWidth, GoldConfiguration goldConfiguration, boolean partial, String outputFile) {
         this.id = id;
         this.classifier = classifier;
         this.bClassifier = bClassifier;
@@ -56,6 +56,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         this.beamWidth = beamWidth;
         this.goldConfiguration = goldConfiguration;
         this.partial = partial;
+        this.outputFile = outputFile;
     }
 
     @Override
@@ -71,7 +72,15 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile + ".parse.sentence" + id + ".log", true));
+        int wrongParse;
+        int totalWrongParse = 0;
+        int rightParse;
+        int beamCounter = 0;
+        boolean topBeamIsOracle;
         while (ArcEager.isNotTerminal(beam)) {
+            topBeamIsOracle = false;
+            beamCounter++;
             if (beamWidth != 1) {
                 TreeSet<BeamElement> beamPreserver = new TreeSet<>();
                 for (int b = 0; b < beam.size(); b++) {
@@ -124,6 +133,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
                 }
                 ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
+                rightParse = 0;
+                wrongParse = 0;
+                float bestScore = beamPreserver.last().score;
+                Configuration bestConfiguration = null;
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
                     if (repBeam.size() >= beamWidth) {
                         break;
@@ -150,10 +163,27 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         newConfig.addAction(2);
                     }
                     newConfig.setScore(score);
-                    if (isOracle(newConfig))
+                    if (score == bestScore) {
+                        bestConfiguration = newConfig;
+                    }
+                    if (isOracle(newConfig)) {
+                        rightParse++;
                         repBeam.add(newConfig);
+                    } else {
+                        wrongParse++;
+                        writer.write("Wrong configuration " + (wrongParse + rightParse) + " in beam " + beamCounter);
+                        writer.newLine();
+                    }
                 }
+                totalWrongParse += wrongParse;
+                writer.write(wrongParse + "configuration was wrong in beam " + beamCounter);
+                writer.newLine();
                 beam = repBeam;
+                if (isOracle(bestConfiguration)) {
+                    topBeamIsOracle = true;
+                }
+                writer.write("in beam " + beamCounter + " top beam was oracle?" + topBeamIsOracle);
+                writer.newLine();
             } else {
                 Configuration configuration = beam.get(0);
                 State currentState = configuration.state;
@@ -225,31 +255,20 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
             }
         }
-        Configuration bestConfiguration = null;
+        /*Configuration bestConfiguration = null;
         float bestScore = Float.NEGATIVE_INFINITY;
-        int wrongParse = 0;
-        int rightParse = 0;
         for (Configuration configuration : beam) {
             if (configuration.getScore() > bestScore) {
                 bestScore = configuration.getScore();
                 bestConfiguration = configuration;
             }
-            if (isOracle(configuration)) {
-                rightParse++;
-            } else {
-                wrongParse++;
-            }
-        }
-        BufferedWriter writer = new BufferedWriter(new FileWriter("parseBeam.log", true));
-        writer.write("right parse: " + rightParse);
+        }*/
+        writer.write("total of " + totalWrongParse + " configuration was wrong in parse process");
         writer.newLine();
-        writer.write("wrong parse: " + wrongParse);
-        writer.newLine();
-        writer.write("bestConfiguration isOracle: " + isOracle(bestConfiguration));
-        writer.newLine();
+        writer.write("the oracle predicts that ");
         writer.newLine();
         writer.close();
-        return new Pair<>(bestConfiguration, id);
+        return new Pair<>(beam.get(0), id);
     }
 
     private Configuration parsePartial() {
@@ -434,7 +453,6 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         }
         return bClassifier.calcScore(true, configuration.sentence, rootFirst, configuration.actionHistory,
                 featureLength, dependencyRelations) >= 0;
-
 
 
         // int lastAction = configuration.actionHistory.get(configuration.actionHistory.size() - 1);

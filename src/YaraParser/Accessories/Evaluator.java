@@ -2,6 +2,8 @@ package YaraParser.Accessories;
 
 import YaraParser.TransitionBasedSystem.Configuration.CompactTree;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,19 +17,20 @@ public class Evaluator {
         ArrayList<CompactTree> predConfiguration = predictedReader.readStringData();
         goldReader.close();
         predictedReader.close();
-        double unlabMatch = 0;
-        double labMatch = 0;
+        double unlabeledMatch = 0;
+        double labeledMatch = 0;
         int all = 0;
-        double fullULabMatch = 0;
+        double fullUnlabeledMatch = 0;
         double fullLabMatch = 0;
         int numTree = 0;
+        BufferedWriter writer = new BufferedWriter(new FileWriter("evaluation.log", true));
         for (int i = 0; i < predConfiguration.size(); i++) {
             HashMap<Integer, Pair<Integer, String>> goldDeps = goldConfiguration.get(i).goldDependencies;
             HashMap<Integer, Pair<Integer, String>> predDeps = predConfiguration.get(i).goldDependencies;
             ArrayList<String> goldTags = goldConfiguration.get(i).posTags;
             numTree++;
-            boolean fullMatch = true;
-            boolean fullUnlabMatch = true;
+            boolean isFullMatch = true;
+            boolean isUnlabeledMatch = true;
             for (int dep : goldDeps.keySet()) {
                 if (!puncTags.contains(goldTags.get(dep - 1).trim())) {
                     all++;
@@ -36,32 +39,36 @@ public class Evaluator {
                     String gl = goldDeps.get(dep).second.trim();
                     String pl = predDeps.get(dep).second.trim();
                     if (ph == gh) {
-                        unlabMatch++;
-                        if (pl.equals(gl))
-                            labMatch++;
-                        else {
-                            fullMatch = false;
+                        unlabeledMatch++;
+                        if (pl.equals(gl)) {
+                            labeledMatch++;
+                            writer.write("sentence " + i + " parsed right");
+                        } else {
+                            isFullMatch = false;
                         }
                     } else {
-                        fullMatch = false;
-                        fullUnlabMatch = false;
+                        isFullMatch = false;
+                        isUnlabeledMatch = false;
+                        writer.write("sentence " + i + " parsed wrong");
                     }
                 }
             }
-            if (fullMatch)
+            if (isFullMatch) {
                 fullLabMatch++;
-            if (fullUnlabMatch)
-                fullULabMatch++;
+            }
+            if (isUnlabeledMatch) {
+                fullUnlabeledMatch++;
+            }
         }
         DecimalFormat decimalFormat = new DecimalFormat("0.00%");
-        double labeledAccuracy = labMatch / all;
-        double unlabaledAccuracy = unlabMatch / all;
+        double labeledAccuracy = labeledMatch / all;
+        double unlabeledAccuracy = unlabeledMatch / all;
         System.out.println("Labeled accuracy: " + decimalFormat.format(labeledAccuracy));
-        System.out.println("Unlabeled accuracy:  " + decimalFormat.format(unlabaledAccuracy));
+        System.out.println("Unlabeled accuracy:  " + decimalFormat.format(unlabeledAccuracy));
         double labExact = fullLabMatch / numTree;
-        double ulabExact = fullULabMatch / numTree;
+        double unlabExact = fullUnlabeledMatch / numTree;
         System.out.println("Labeled exact match:  " + decimalFormat.format(labExact));
-        System.out.println("Unlabeled exact match:  " + decimalFormat.format(ulabExact));
+        System.out.println("Unlabeled exact match:  " + decimalFormat.format(unlabExact));
         System.out.println();
     }
 }
