@@ -9,28 +9,27 @@ import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
-import java.util.stream.IntStream;
 
 public class GeneticAlg {
     private final boolean rootFirst;
     private final ArrayList<Integer> dependencyRelations;
     private ArrayList<Configuration> initConfigurations;
-    private BinaryPerceptron binaryClassifier;
+    private BinaryPerceptron mammClassifier;
     private AveragedPerceptron yaraClassifier;
     private int generationSize;
 
-    public GeneticAlg(ArrayList<Configuration> configs, BinaryPerceptron binaryPerceptron,
-                      AveragedPerceptron averagedPerceptron, final boolean rootFirst,
-                      final ArrayList<Integer> dependencyRelations, final int genSize) {
+    GeneticAlg(ArrayList<Configuration> configs, BinaryPerceptron binaryPerceptron,
+               AveragedPerceptron averagedPerceptron, final boolean rootFirst,
+               final ArrayList<Integer> dependencyRelations, final int genSize) {
         initConfigurations = configs;
-        binaryClassifier = binaryPerceptron;
+        mammClassifier = binaryPerceptron;
         yaraClassifier = averagedPerceptron;
         this.rootFirst = rootFirst;
         this.dependencyRelations = dependencyRelations;
         generationSize = genSize;
     }
 
-    public Configuration getConfiguration() throws Exception {
+    public Configuration getConfiguration() {
         ArrayList<Configuration> nextGen = initConfigurations;
         /*for (Configuration config : initConfigurations) {
             population.add(new GeneticElement(config.actionHistory, getActionsScore(config)));
@@ -41,9 +40,18 @@ public class GeneticAlg {
             TreeSet<Configuration> population = new TreeSet<>(nextGen);
             for (Configuration config : nextGen) {
                 ArrayList<Float> scores = getActionsScore(config);
-                Configuration c = mutate(config, findWorstAction(scores));
-                ParseThread pt = new ParseThread(1, binaryClassifier, yaraClassifier, dependencyRelations,
-                        binaryClassifier.featureSize(), c.sentence, rootFirst, 8);
+                int mutationIndex = findWorstAction(scores, config.tabooList);
+                Configuration c = mutate(config, mutationIndex);
+                // remove the indexes bigger than mutation point from the configuration's taboo list
+                config.tabooList.removeIf(integer -> integer > mutationIndex);
+                config.tabooList.add(mutationIndex);
+                ParseThread pt = new ParseThread(1, mammClassifier,
+                                                 yaraClassifier,
+                                                 dependencyRelations,
+                                                 mammClassifier.featureSize(),
+                                                 c.sentence,
+                                                 rootFirst,
+                                                 8);
                 Pair<Configuration, Integer> configurationIntegerPair = pt.parse(c);
                 population.add(configurationIntegerPair.first);
                 if (population.size() > generationSize) {
@@ -79,6 +87,12 @@ public class GeneticAlg {
         return bestConf;
     }
 
+    /**
+     * receives a configuration and returns the MAMM model's score for each action in the configuration's action
+     * history
+     * @param configuration The configuration to be calculated it's action's sequence
+     * @return The sequence of the action's score
+     */
     private ArrayList<Float> getActionsScore(Configuration configuration) {
         ArrayList<Float> scores = new ArrayList<>(configuration.actionHistory.size());
         Configuration currentConfiguration = new Configuration(configuration.sentence, rootFirst);
@@ -86,24 +100,24 @@ public class GeneticAlg {
             float score;
             State currentState = currentConfiguration.state;
             Object[] features = FeatureExtractor.extractAllParseFeatures(currentConfiguration,
-                    binaryClassifier.featureSize());
+                                                                         mammClassifier.featureSize());
             if (action == 0) {
-                score = binaryClassifier.shiftScore(features, true);
+                score = mammClassifier.shiftScore(features, true);
                 ArcEager.shift(currentState);
                 currentConfiguration.addAction(action);
             } else if (action == 1) {
-                score = binaryClassifier.reduceScore(features, true);
+                score = mammClassifier.reduceScore(features, true);
                 ArcEager.reduce(currentState);
                 currentConfiguration.addAction(action);
             } else if (action >= 3 + dependencyRelations.size()) {
                 int label = action - (3 + dependencyRelations.size());
-                float[] leftArcScores = binaryClassifier.leftArcScores(features, true);
+                float[] leftArcScores = mammClassifier.leftArcScores(features, true);
                 score = leftArcScores[label];
                 ArcEager.leftArc(currentState, label);
                 currentConfiguration.addAction(action);
             } else {
                 int label = action - 3;
-                float[] rightArcScores = binaryClassifier.rightArcScores(features, true);
+                float[] rightArcScores = mammClassifier.rightArcScores(features, true);
                 score = rightArcScores[label];
                 ArcEager.rightArc(currentState, label);
                 currentConfiguration.addAction(action);
@@ -114,61 +128,78 @@ public class GeneticAlg {
     }
 
     private Configuration mutate(Configuration configuration, int mutateIndex) {
-        Configuration config = parse(configuration, new ArrayList<>(configuration.actionHistory.subList(0,
-                mutateIndex - 1)));
+        Configuration config = parse(new Configuration(configuration.sentence, rootFirst),
+                                     new ArrayList<>(configuration.actionHistory.subList(0, mutateIndex)));
         boolean canShift = ArcEager.canDo(Actions.Shift, config.state);
         boolean canReduce = ArcEager.canDo(Actions.Reduce, config.state);
         boolean canRightArc = ArcEager.canDo(Actions.RightArc, config.state);
         boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, config.state);
         ArrayList<Integer> actions = new ArrayList<>();
-        ArrayList<Float> actionsScore = new ArrayList<>();
+        ArrayList<Float> yaraActionsScore = new ArrayList<>();
+        ArrayList<Float> mammActionsScore = new ArrayList<>();
         float scoresSum = 0;
-        Object[] features = FeatureExtractor.extractAllParseFeatures(config, binaryClassifier.featureSize());
-        if (canShift && binaryClassifier.shiftScore(features, true) >= 0) {
+        Object[] features = FeatureExtractor.extractAllParseFeatures(config, mammClassifier.featureSize());
+        if (canShift) {
             actions.add(0);
-            actionsScore.add(yaraClassifier.shiftScore(features, true));
+            yaraActionsScore.add(yaraClassifier.shiftScore(features, true));
+            mammActionsScore.add(mammClassifier.shiftScore(features, true));
         }
 
-        if (canReduce && binaryClassifier.reduceScore(features, true) > 0) {
+        if (canReduce) {
             actions.add(1);
-            actionsScore.add(yaraClassifier.reduceScore(features, true));
+            yaraActionsScore.add(yaraClassifier.reduceScore(features, true));
+            mammActionsScore.add(mammClassifier.reduceScore(features, true));
         }
         if (canRightArc) {
-            float[] binaryScores = binaryClassifier.rightArcScores(features, true);
+            float[] mammScores = mammClassifier.rightArcScores(features, true);
             float[] yaraScores = yaraClassifier.rightArcScores(features, true);
-            for (int i = 0; i < binaryScores.length; i++) {
-                if (binaryScores[i] > 0) {
-                    actions.add(3 + i);
-                    actionsScore.add(yaraScores[i]);
-                }
+            for (int dependency : dependencyRelations){
+                actions.add(3+dependency);
+                yaraActionsScore.add(yaraScores[dependency]);
+                mammActionsScore.add(mammScores[dependency]);
             }
         }
         if (canLeftArc) {
-            float[] binaryScores = binaryClassifier.leftArcScores(features, true);
+            float[] mammScores = mammClassifier.leftArcScores(features, true);
             float[] yaraScores = yaraClassifier.leftArcScores(features, true);
-            for (int i = 0; i < binaryScores.length; i++) {
-                if (binaryScores[i] > 0) {
-                    actions.add(3 + i);
-                    actionsScore.add(yaraScores[i]);
-                }
+            for (int dependency : dependencyRelations){
+                actions.add(3+dependencyRelations.size()+dependency);
+                yaraActionsScore.add(yaraScores[dependency]);
+                mammActionsScore.add(mammScores[dependency]);
             }
         }
-        // remove negative scores
-        IntStream.range(0, actionsScore.size()).filter(i -> actionsScore.get(i) < 0).forEach(i -> {
-            actionsScore.remove(i);
+        // reduce  negative scores
+        for(int i=0; i<yaraActionsScore.size();i++){
+            if(mammActionsScore.get(i) < 0){
+                float reduceValue = yaraActionsScore.get(i);
+                if(reduceValue > 0) {
+                    reduceValue = reduceValue/3*2;
+                    reduceValue = 0 - reduceValue;
+                } else if(reduceValue<0) {
+                    reduceValue = reduceValue/3*2;
+                } else {
+                    reduceValue = -50;
+                }
+                yaraActionsScore.set(i, yaraActionsScore.get(i) + reduceValue);
+            }
+        }
+        /*IntStream.range(0, yaraActionsScore.size()).filter(i -> yaraActionsScore.get(i) < 0).forEach(i -> {
+            yaraActionsScore.remove(i);
             actions.remove(i);
-        });
-        for (float actionScore : actionsScore) {
+        });*/
+
+        // roulette wheel
+        for (float actionScore : yaraActionsScore) {
             scoresSum += actionScore;
         }
-        actionsScore.set(0, actionsScore.get(0) / scoresSum);
-        for (int i = 1; i < actionsScore.size(); i++) {
-            float s = actionsScore.get(i) / scoresSum + actionsScore.get(i - 1);
-            actionsScore.set(i, s);
+        yaraActionsScore.set(0, yaraActionsScore.get(0) / scoresSum);
+        for (int i = 1; i < yaraActionsScore.size(); i++) {
+            float s = yaraActionsScore.get(i) / scoresSum + yaraActionsScore.get(i - 1);
+            yaraActionsScore.set(i, s);
         }
         float ind = (float) Math.random();
-        for (int i = 0; i < actionsScore.size(); i++) {
-            if (actionsScore.get(i) >= ind) {
+        for (int i = 0; i < yaraActionsScore.size(); i++) {
+            if (yaraActionsScore.get(i) >= ind) {
                 ArrayList<Integer> action = new ArrayList<>();
                 action.add(actions.get(i));
                 parse(config, action);
@@ -206,10 +237,10 @@ public class GeneticAlg {
         return currentConfiguration;
     }
 
-    private int findWorstAction(ArrayList<Float> actions) {
-        int worstAction = 0;
+    private int findWorstAction(ArrayList<Float> actions, ArrayList<Integer> tabuList) {
+        int worstAction = -1;
         float worstScore = Float.POSITIVE_INFINITY;
-        for (int i = 0; i < actions.size(); i++) {
+        for (int i = 0; i < actions.size() && !tabuList.contains(i); i++) {
             if (actions.get(i) < worstScore) {
                 worstAction = i;
                 worstScore = actions.get(i);
