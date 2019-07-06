@@ -586,7 +586,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             for (int i = 0; i < confs.length; i++) {
                 dataCount++;
                 // log
-                System.out.print("sentence " + dataCount + "started to parse");
+                System.out.println("sentence " + dataCount + " started to parse");
                 if (dataCount % 100 == 0) {
                     System.out.print(dataCount + " ... ");
                 }

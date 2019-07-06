@@ -53,17 +53,41 @@ public class YaraParser {
             AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
             BinaryPerceptron bPerceptron = new BinaryPerceptron(bInfStruct);
             int featureSize = averagedPerceptron.featureSize();
-            KBeamArcEagerParser parser = new KBeamArcEagerParser(bPerceptron, averagedPerceptron, dependencyLabels,
-                    featureSize, maps, options.numOfThreads, 256);
+            KBeamArcEagerParser parser = new KBeamArcEagerParser(bPerceptron,
+                                                                 averagedPerceptron,
+                                                                 dependencyLabels,
+                                                                 featureSize,
+                                                                 maps,
+                                                                 options.numOfThreads,
+                                                                 256);
             if (options.parseTaggedFile) {
-                parser.parseTaggedFile(options.inputFile, options.outputFile, inf_options.rootFirst,
-                        inf_options.beamWidth, inf_options.lowercase, options.separator, options.numOfThreads);
+                parser.parseTaggedFile(options.inputFile,
+                                       options.outputFile,
+                                       inf_options.rootFirst,
+                                       inf_options.beamWidth,
+                                       inf_options.lowercase,
+                                       options.separator,
+                                       options.numOfThreads);
             } else if (options.parseConllFile) {
-                parser.parseCoNLLFile(options.inputFile, options.outputFile, inf_options.rootFirst,
-                        inf_options.beamWidth, true, inf_options.lowercase, options.numOfThreads, false, options.scorePath);
+                parser.parseCoNLLFile(options.inputFile,
+                                      options.outputFile,
+                                      inf_options.rootFirst,
+                                      inf_options.beamWidth,
+                                      true,
+                                      inf_options.lowercase,
+                                      options.numOfThreads,
+                                      false,
+                                      options.scorePath);
             } else if (options.parsePartialConll) {
-                parser.parseCoNLLFile(options.inputFile, options.outputFile, inf_options.rootFirst,
-                        inf_options.beamWidth, options.labeled, inf_options.lowercase, options.numOfThreads, true, options.scorePath);
+                parser.parseCoNLLFile(options.inputFile,
+                                      options.outputFile,
+                                      inf_options.rootFirst,
+                                      inf_options.beamWidth,
+                                      options.labeled,
+                                      inf_options.lowercase,
+                                      options.numOfThreads,
+                                      true,
+                                      options.scorePath);
             }
             parser.shutDownLiveThreads();
         }
@@ -73,11 +97,17 @@ public class YaraParser {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase,
-                    options.clusterFile);
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile,
+                                                       options.labeled,
+                                                       options.lowercase,
+                                                       options.clusterFile);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled,
-                    options.rootFirst, options.lowercase, maps);
+            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE,
+                                                                   false,
+                                                                   options.labeled,
+                                                                   options.rootFirst,
+                                                                   options.lowercase,
+                                                                   maps);
             System.out.println("CoNLL data reading is done.");
             ArrayList<Integer> dependencyLabels = new ArrayList<>(maps.getLabels().keySet());
             int featureLength;
@@ -105,11 +135,21 @@ public class YaraParser {
                 }
             }*/
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
-                    new AveragedPerceptron(featureLength, dependencyLabels.size()),
-                    new BinaryPerceptron(featureLength, dependencyLabels.size()), options, dependencyLabels,
-                    featureLength, maps);
-            trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase,
-                    options.punctuations, options.partialTrainingStartingIteration);
+                                                                  new AveragedPerceptron(featureLength,
+                                                                                         dependencyLabels.size()),
+                                                                  new BinaryPerceptron(featureLength,
+                                                                                       dependencyLabels.size()),
+                                                                  options,
+                                                                  dependencyLabels,
+                                                                  featureLength,
+                                                                  maps);
+            trainer.train(dataSet,
+                          options.devPath,
+                          options.trainingIter,
+                          options.modelFile,
+                          options.lowercase,
+                          options.punctuations,
+                          options.partialTrainingStartingIteration);
         }
     }
 }

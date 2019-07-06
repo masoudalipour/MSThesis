@@ -27,10 +27,9 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     private int id;
     private int generationSize;
 
-    public ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier,
-                       ArrayList<Integer> dependencyRelations, int featureLength, Sentence sentence,
-                       boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial,
-                       int genSize) {
+    ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier,
+                ArrayList<Integer> dependencyRelations, int featureLength, Sentence sentence, boolean rootFirst,
+                int beamWidth, GoldConfiguration goldConfiguration, boolean partial, int genSize) {
         this.id = id;
         this.classifier = classifier;
         this.bClassifier = bClassifier;
@@ -44,9 +43,9 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         generationSize = genSize;
     }
 
-    public ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier,
-                       ArrayList<Integer> dependencyRelations, int featureLength, Sentence sentence,
-                       boolean rootFirst, int beamWidth) {
+    ParseThread(int id, BinaryPerceptron bClassifier, AveragedPerceptron classifier,
+                ArrayList<Integer> dependencyRelations, int featureLength, Sentence sentence, boolean rootFirst,
+                int beamWidth) {
         this.id = id;
         this.classifier = classifier;
         this.bClassifier = bClassifier;
@@ -70,7 +69,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     private Pair<Configuration, Integer> parse() throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
-        ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
+        ArrayList<Configuration> repBeam = new ArrayList<>();
         beam.add(initialConfiguration);
         while (ArcEager.isNotTerminal(beam)) {
             if (beamWidth != 1) {
@@ -114,6 +113,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         }
                     }
                 }
+                repBeam = new ArrayList<>(beamPreserver.size());
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
                     int b = beamElement.number;
                     int action = beamElement.action;
@@ -186,7 +186,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         }
                     }
                 }
-                if (ArcEager.canDo(Actions.LeftArc, currentState)) {
+                if (canLeftArc) {
                     float[] leftArcScores = classifier.leftArcScores(features, true);
                     for (int dependency : dependencyRelations) {
                         float score = leftArcScores[dependency];
@@ -239,9 +239,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         return new Pair<>(bestConfiguration, id);
     }
 
-    public Pair<Configuration, Integer> parse(Configuration initialConfiguration) throws Exception {
+    Pair<Configuration, Integer> parse(Configuration initialConfiguration) {
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
-        ArrayList<Configuration> repBeam;
         beam.add(initialConfiguration);
         while (ArcEager.isNotTerminal(beam)) {
             if (beamWidth != 1) {
@@ -285,8 +284,11 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         }
                     }
                 }
-                repBeam = new ArrayList<>(beamWidth);
+                ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
+                    if (repBeam.size() == beamWidth) {
+                        break;
+                    }
                     int b = beamElement.number;
                     int action = beamElement.action;
                     int label = beamElement.label;
@@ -311,10 +313,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     newConfig.setScore(score);
                     repBeam.add(newConfig);
                 }
-                beam = new ArrayList<>(beamWidth);
-                for (int i = 0; i < beamWidth && i < repBeam.size(); i++) {
-                    beam.add(repBeam.get(i));
-                }
+                beam = repBeam;
             } else {
                 Configuration configuration = beam.get(0);
                 State currentState = configuration.state;
