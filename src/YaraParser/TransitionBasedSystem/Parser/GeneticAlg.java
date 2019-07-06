@@ -29,7 +29,7 @@ public class GeneticAlg {
         generationSize = genSize;
     }
 
-    public Configuration getConfiguration() {
+    public Configuration getConfiguration() throws Exception {
         ArrayList<Configuration> nextGen = initConfigurations;
         /*for (Configuration config : initConfigurations) {
             population.add(new GeneticElement(config.actionHistory, getActionsScore(config)));
@@ -39,21 +39,25 @@ public class GeneticAlg {
         while (genWithoutEnhance < 10) {
             TreeSet<Configuration> population = new TreeSet<>(nextGen);
             for (Configuration config : nextGen) {
-                ArrayList<Float> scores = getActionsScore(config);
-                int mutationIndex = findWorstAction(scores, config.tabooList);
-                Configuration c = mutate(config, mutationIndex);
-                // remove the indexes bigger than mutation point from the configuration's taboo list
-                config.tabooList.removeIf(integer -> integer > mutationIndex);
-                config.tabooList.add(mutationIndex);
-                ParseThread pt = new ParseThread(1, mammClassifier,
-                                                 yaraClassifier,
-                                                 dependencyRelations,
-                                                 mammClassifier.featureSize(),
-                                                 c.sentence,
-                                                 rootFirst,
-                                                 8);
-                Pair<Configuration, Integer> configurationIntegerPair = pt.parse(c);
-                population.add(configurationIntegerPair.first);
+                if(isOracle(config)) {
+                    ArrayList<Float> scores = getActionsScore(config);
+                    int mutationIndex = findWorstAction(scores, config.tabooList);
+                    Configuration c = mutate(config, mutationIndex);
+                    // remove the indexes bigger than mutation point from the configuration's taboo list
+                    config.tabooList.removeIf(integer -> integer > mutationIndex);
+                    config.tabooList.add(mutationIndex);
+                    ParseThread pt = new ParseThread(1, mammClassifier,
+                            yaraClassifier,
+                            dependencyRelations,
+                            mammClassifier.featureSize(),
+                            c.sentence,
+                            rootFirst,
+                            8);
+                    Pair<Configuration, Integer> configurationIntegerPair = pt.parse(c);
+                    population.add(configurationIntegerPair.first);
+                } else {
+                    population.add(config);
+                }
                 if (population.size() > generationSize) {
                     population.pollFirst();
                 }
@@ -252,5 +256,13 @@ public class GeneticAlg {
             }
         }
         return worstAction;
+    }
+
+    private boolean isOracle(Configuration configuration) throws Exception {
+        if (configuration == null) {
+            throw new Exception("The input of isOracle is null");
+        }
+        return mammClassifier.calcScore(true, configuration.sentence, rootFirst, configuration.actionHistory,
+                dependencyRelations) >= 0;
     }
 }
