@@ -128,6 +128,8 @@ public class GeneticAlg {
     }
 
     private Configuration mutate(Configuration configuration, int mutateIndex) {
+        // log
+        System.out.println("mutation start parse");
         Configuration config = parse(new Configuration(configuration.sentence, rootFirst),
                                      new ArrayList<>(configuration.actionHistory.subList(0, mutateIndex)));
         boolean canShift = ArcEager.canDo(Actions.Shift, config.state);
@@ -168,7 +170,7 @@ public class GeneticAlg {
                 mammActionsScore.add(mammScores[dependency]);
             }
         }
-        // reduce  negative scores
+        // reduce negative scores
         for(int i=0; i<yaraActionsScore.size();i++){
             if(mammActionsScore.get(i) < 0){
                 float reduceValue = yaraActionsScore.get(i);
@@ -202,7 +204,10 @@ public class GeneticAlg {
             if (yaraActionsScore.get(i) >= ind) {
                 ArrayList<Integer> action = new ArrayList<>();
                 action.add(actions.get(i));
+                // log
+                System.out.println("mutation end parse");
                 parse(config, action);
+                break;
             }
         }
         return config;

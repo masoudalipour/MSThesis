@@ -20,6 +20,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
         state = new State(sentence.size(), rootFirst);
         score = (float) 0.0;
         actionHistory = new ArrayList<>(2 * (sentence.size() + 1));
+        tabooList = new ArrayList<>();
     }
 
     public Configuration(Sentence sentence) {
@@ -27,6 +28,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
         state = new State(sentence.size());
         score = (float) 0.0;
         actionHistory = new ArrayList<>(2 * (sentence.size() + 1));
+        tabooList = new ArrayList<>();
     }
 
     /**
