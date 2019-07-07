@@ -39,6 +39,8 @@ public class GeneticAlg {
         while (genWithoutEnhance < 10) {*/
         while (!isOracle(nextGen.get(0))) {
             TreeSet<Configuration> population = new TreeSet<>(nextGen);
+            // log
+            System.out.println("generation size " + nextGen.size());
             for (Configuration config : nextGen) {
                 if (isOracle(config)) {
                     population.add(config);
