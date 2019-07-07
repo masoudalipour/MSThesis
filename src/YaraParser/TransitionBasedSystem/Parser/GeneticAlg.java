@@ -30,40 +30,42 @@ public class GeneticAlg {
     }
 
     public Configuration getConfiguration() throws Exception {
-        ArrayList<Configuration> nextGen = initConfigurations;
+        ArrayList<Configuration> nextGen = getSortedConfigList(initConfigurations);
         /*for (Configuration config : initConfigurations) {
             population.add(new GeneticElement(config.actionHistory, getActionsScore(config)));
         }*/
-        float highestScore = Float.NEGATIVE_INFINITY;
+        /*float highestScore = Float.NEGATIVE_INFINITY;
         int genWithoutEnhance = 0;
-        while (genWithoutEnhance < 10) {
+        while (genWithoutEnhance < 10) {*/
+        while (!isOracle(nextGen.get(0))) {
             TreeSet<Configuration> population = new TreeSet<>(nextGen);
             for (Configuration config : nextGen) {
-                if(isOracle(config)) {
+                if (isOracle(config)) {
+                    population.add(config);
+                } else {
                     ArrayList<Float> scores = getActionsScore(config);
                     int mutationIndex = findWorstAction(scores, config.tabooList);
                     Configuration c = mutate(config, mutationIndex);
                     // remove the indexes bigger than mutation point from the configuration's taboo list
                     config.tabooList.removeIf(integer -> integer > mutationIndex);
                     config.tabooList.add(mutationIndex);
-                    ParseThread pt = new ParseThread(1, mammClassifier,
-                            yaraClassifier,
-                            dependencyRelations,
-                            mammClassifier.featureSize(),
-                            c.sentence,
-                            rootFirst,
-                            8);
+                    ParseThread pt = new ParseThread(1,
+                                                     mammClassifier,
+                                                     yaraClassifier,
+                                                     dependencyRelations,
+                                                     mammClassifier.featureSize(),
+                                                     c.sentence,
+                                                     rootFirst,
+                                                     8);
                     Pair<Configuration, Integer> configurationIntegerPair = pt.parse(c);
                     population.add(configurationIntegerPair.first);
-                } else {
-                    population.add(config);
                 }
                 if (population.size() > generationSize) {
                     population.pollFirst();
                 }
             }
             nextGen = new ArrayList<>(population.descendingSet());
-            float thisGenBestScore = Float.NEGATIVE_INFINITY;
+            /*float thisGenBestScore = Float.NEGATIVE_INFINITY;
             for (Configuration c : nextGen) {
                 if (c.score > thisGenBestScore) {
                     thisGenBestScore = c.score;
@@ -78,22 +80,23 @@ public class GeneticAlg {
                 }
                 highestScore = thisGenBestScore;
                 genWithoutEnhance = 0;
-            }
+            }*/
         }
-        highestScore = Float.NEGATIVE_INFINITY;
+        /*highestScore = Float.NEGATIVE_INFINITY;
         Configuration bestConf = nextGen.get(0);
         for (Configuration c : nextGen) {
             if (c.score > highestScore) {
                 bestConf = c;
                 highestScore = c.score;
             }
-        }
-        return bestConf;
+        }*/
+        return nextGen.get(0);
     }
 
     /**
      * receives a configuration and returns the MAMM model's score for each action in the configuration's action
      * history
+     *
      * @param configuration The configuration to be calculated it's action's sequence
      * @return The sequence of the action's score
      */
@@ -159,8 +162,8 @@ public class GeneticAlg {
         if (canRightArc) {
             float[] mammScores = mammClassifier.rightArcScores(features, true);
             float[] yaraScores = yaraClassifier.rightArcScores(features, true);
-            for (int dependency : dependencyRelations){
-                actions.add(3+dependency);
+            for (int dependency : dependencyRelations) {
+                actions.add(3 + dependency);
                 yaraActionsScore.add(yaraScores[dependency]);
                 mammActionsScore.add(mammScores[dependency]);
             }
@@ -168,21 +171,21 @@ public class GeneticAlg {
         if (canLeftArc) {
             float[] mammScores = mammClassifier.leftArcScores(features, true);
             float[] yaraScores = yaraClassifier.leftArcScores(features, true);
-            for (int dependency : dependencyRelations){
-                actions.add(3+dependencyRelations.size()+dependency);
+            for (int dependency : dependencyRelations) {
+                actions.add(3 + dependencyRelations.size() + dependency);
                 yaraActionsScore.add(yaraScores[dependency]);
                 mammActionsScore.add(mammScores[dependency]);
             }
         }
         // reduce negative scores
-        for(int i=0; i<yaraActionsScore.size();i++){
-            if(mammActionsScore.get(i) < 0){
+        for (int i = 0; i < yaraActionsScore.size(); i++) {
+            if (mammActionsScore.get(i) < 0) {
                 float reduceValue = yaraActionsScore.get(i);
-                if(reduceValue > 0) {
-                    reduceValue = reduceValue/3*2;
+                if (reduceValue > 0) {
+                    reduceValue = reduceValue / 3 * 2;
                     reduceValue = 0 - reduceValue;
-                } else if(reduceValue<0) {
-                    reduceValue = reduceValue/3*2;
+                } else if (reduceValue < 0) {
+                    reduceValue = reduceValue / 3 * 2;
                 } else {
                     reduceValue = -50;
                 }
@@ -262,7 +265,15 @@ public class GeneticAlg {
         if (configuration == null) {
             throw new Exception("The input of isOracle is null");
         }
-        return mammClassifier.calcScore(true, configuration.sentence, rootFirst, configuration.actionHistory,
-                dependencyRelations) >= 0;
+        return mammClassifier.calcScore(true,
+                                        configuration.sentence,
+                                        rootFirst,
+                                        configuration.actionHistory,
+                                        dependencyRelations) >= 0;
+    }
+
+    private ArrayList<Configuration> getSortedConfigList(ArrayList<Configuration> input) {
+        TreeSet<Configuration> tree = new TreeSet<>(input);
+        return new ArrayList<>(tree.descendingSet());
     }
 }
