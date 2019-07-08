@@ -79,7 +79,6 @@ public class YaraParser {
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled,
                     options.rootFirst, options.lowercase, maps);
-            System.out.println("CoNLL data reading is done.");
             ArrayList<Integer> dependencyLabels = new ArrayList<>(maps.getLabels().keySet());
             int featureLength;
             if (options.useExtendedFeatures)
@@ -88,8 +87,8 @@ public class YaraParser {
                 featureLength = 153;
             else
                 featureLength = 26;
-            System.out.println("# of sentences in training data set: " + dataSet.size());
-
+            System.out.println("# of sentences in train dataset: " + dataSet.size());
+            System.out.println("# of features: " + featureLength);
             /*HashMap<String, Integer> labels = new HashMap<>();
             int labIndex = 0;
             labels.put("sh", labIndex++);
