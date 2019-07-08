@@ -7,6 +7,8 @@ import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.State;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
@@ -17,41 +19,48 @@ public class GeneticAlg {
     private BinaryPerceptron mammClassifier;
     private AveragedPerceptron yaraClassifier;
     private int generationSize;
+    private int sentenceId;
 
     GeneticAlg(ArrayList<Configuration> configs, BinaryPerceptron binaryPerceptron,
                AveragedPerceptron averagedPerceptron, final boolean rootFirst,
-               final ArrayList<Integer> dependencyRelations, final int genSize) {
+               final ArrayList<Integer> dependencyRelations, final int genSize, final int id) {
         initConfigurations = configs;
         mammClassifier = binaryPerceptron;
         yaraClassifier = averagedPerceptron;
         this.rootFirst = rootFirst;
         this.dependencyRelations = dependencyRelations;
         generationSize = genSize;
+        sentenceId = id;
     }
 
     public Configuration getConfiguration() throws Exception {
         ArrayList<Configuration> nextGen = getSortedConfigList(initConfigurations);
+        BufferedWriter writer = new BufferedWriter(new FileWriter("mamm.scores." + sentenceId + ".md"));
         /*for (Configuration config : initConfigurations) {
             population.add(new GeneticElement(config.actionHistory, getActionsScore(config)));
         }*/
-        /*float highestScore = Float.NEGATIVE_INFINITY;
+        float highestScore = Float.NEGATIVE_INFINITY;
         int genWithoutEnhance = 0;
-        while (genWithoutEnhance < 10) {*/
-        while (!isOracle(nextGen.get(0))) {
+        while (!isOracle(nextGen.get(0)) && genWithoutEnhance < 10) {
             TreeSet<Configuration> population = new TreeSet<>(nextGen);
-            // log
-            System.out.println("generation size " + nextGen.size());
             for (Configuration config : nextGen) {
                 if (isOracle(config)) {
                     population.add(config);
                 } else {
                     ArrayList<Float> scores = getActionsScore(config);
+                    for (float f : scores) {
+                        writer.write(f + " | ");
+                    }
+                    writer.newLine();
                     int mutationIndex = findWorstAction(scores, config.tabooList);
+                    if (mutationIndex == -1) {
+                        continue;
+                    }
                     Configuration c = mutate(config, mutationIndex);
                     // remove the indexes bigger than mutation point from the configuration's taboo list
                     config.tabooList.removeIf(integer -> integer > mutationIndex);
                     config.tabooList.add(mutationIndex);
-                    ParseThread pt = new ParseThread(1,
+                    ParseThread pt = new ParseThread(sentenceId,
                                                      mammClassifier,
                                                      yaraClassifier,
                                                      dependencyRelations,
@@ -67,7 +76,7 @@ public class GeneticAlg {
                 }
             }
             nextGen = new ArrayList<>(population.descendingSet());
-            /*float thisGenBestScore = Float.NEGATIVE_INFINITY;
+            float thisGenBestScore = Float.NEGATIVE_INFINITY;
             for (Configuration c : nextGen) {
                 if (c.score > thisGenBestScore) {
                     thisGenBestScore = c.score;
@@ -82,8 +91,9 @@ public class GeneticAlg {
                 }
                 highestScore = thisGenBestScore;
                 genWithoutEnhance = 0;
-            }*/
+            }
         }
+        writer.close();
         /*highestScore = Float.NEGATIVE_INFINITY;
         Configuration bestConf = nextGen.get(0);
         for (Configuration c : nextGen) {
@@ -137,8 +147,6 @@ public class GeneticAlg {
     }
 
     private Configuration mutate(Configuration configuration, int mutateIndex) {
-        // log
-        System.out.println("mutation start parse");
         Configuration config = parse(new Configuration(configuration.sentence, rootFirst),
                                      new ArrayList<>(configuration.actionHistory.subList(0, mutateIndex)));
         boolean canShift = ArcEager.canDo(Actions.Shift, config.state);
@@ -155,7 +163,6 @@ public class GeneticAlg {
             yaraActionsScore.add(yaraClassifier.shiftScore(features, true));
             mammActionsScore.add(mammClassifier.shiftScore(features, true));
         }
-
         if (canReduce) {
             actions.add(1);
             yaraActionsScore.add(yaraClassifier.reduceScore(features, true));
@@ -213,8 +220,6 @@ public class GeneticAlg {
             if (yaraActionsScore.get(i) >= ind) {
                 ArrayList<Integer> action = new ArrayList<>();
                 action.add(actions.get(i));
-                // log
-                System.out.println("mutation end parse");
                 parse(config, action);
                 break;
             }
