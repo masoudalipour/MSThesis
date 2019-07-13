@@ -22,7 +22,6 @@ public class Options implements Serializable {
     public boolean parsePartialConll;
     public String scorePath;
     public String clusterFile;
-
     public String modelFile;
     public String binaryModelFile;
     public boolean lowercase;
@@ -33,12 +32,9 @@ public class Options implements Serializable {
     public boolean useRandomOracleSelection;
     public String separator;
     public int numOfThreads;
-
     public String goldFile;
-
     public HashSet<String> punctuations;
     public String predFile;
-
     public int partialTrainingStartingIteration;
 
     public Options() {

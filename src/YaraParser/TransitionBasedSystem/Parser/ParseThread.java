@@ -243,7 +243,9 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 wrongParse++;
             }
         }
-        BufferedWriter writer = new BufferedWriter(new FileWriter("parseBeam.log", true));
+        BufferedWriter writer = new BufferedWriter(new FileWriter("./out/model/2019.07.08/parseBeam.log", true));
+        writer.write("Sentence " + id);
+        writer.newLine();
         writer.write("right parse: " + rightParse);
         writer.newLine();
         writer.write("wrong parse: " + wrongParse);
