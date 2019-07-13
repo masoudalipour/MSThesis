@@ -85,16 +85,25 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                     if (!canShift && !canReduce && !canRightArc && !canLeftArc) {
                         beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
+                        if (beamPreserver.size() > beamWidth) {
+                            beamPreserver.pollFirst();
+                        }
                     }
                     if (canShift) {
                         float score = classifier.shiftScore(features, true);
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
+                        if (beamPreserver.size() > beamWidth) {
+                            beamPreserver.pollFirst();
+                        }
                     }
                     if (canReduce) {
                         float score = classifier.reduceScore(features, true);
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
+                        if (beamPreserver.size() > beamWidth) {
+                            beamPreserver.pollFirst();
+                        }
                     }
                     if (canRightArc) {
                         float[] rightArcScores = classifier.rightArcScores(features, true);
@@ -102,6 +111,9 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                             float score = rightArcScores[dependency];
                             float addedScore = score + prevScore;
                             beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
+                            if (beamPreserver.size() > beamWidth) {
+                                beamPreserver.pollFirst();
+                            }
                         }
                     }
                     if (canLeftArc) {
@@ -110,6 +122,9 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                             float score = leftArcScores[dependency];
                             float addedScore = score + prevScore;
                             beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
+                            if (beamPreserver.size() > beamWidth) {
+                                beamPreserver.pollFirst();
+                            }
                         }
                     }
                 }
@@ -137,12 +152,33 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         newConfig.addAction(2);
                     }
                     newConfig.setScore(score);
+                    if (!isOracle(newConfig)) {
+                        // log
+                        System.out.println("bestConfiguration was wrong at id " + id);
+                        ArrayList<Configuration> geneticInput = new ArrayList<>();
+                        geneticInput.add(newConfig);
+                        GeneticAlg geneticAlg = new GeneticAlg(geneticInput,
+                                                               bClassifier,
+                                                               classifier,
+                                                               rootFirst,
+                                                               dependencyRelations,
+                                                               generationSize,
+                                                               id);
+                        newConfig = geneticAlg.getConfiguration();
+                        // log
+                        if (isOracle(newConfig)) {
+                            System.out.println("genetic corrected the answer");
+                        } else {
+                            System.out.println("genetic could not correct the answer");
+                        }
+                    }
                     repBeam.add(newConfig);
                 }
-                beam = new ArrayList<>(beamWidth);
+                beam = repBeam;
+                /*beam = new ArrayList<>(beamWidth);
                 for (int i = 0; i < beamWidth && i < repBeam.size(); i++) {
                     beam.add(repBeam.get(i));
-                }
+                }*/
             } else {
                 Configuration configuration = beam.get(0);
                 State currentState = configuration.state;
@@ -225,9 +261,14 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         if (!isOracle(bestConfiguration)) {
             // log
             System.out.println("bestConfiguration was wrong at id " + id);
-            repBeam = beamSearch(repBeam, beamWidth);
-            GeneticAlg geneticAlg = new GeneticAlg(repBeam, bClassifier, classifier, rootFirst, dependencyRelations,
-                    generationSize);
+            //            repBeam = beamSearch(repBeam, beamWidth);
+            GeneticAlg geneticAlg = new GeneticAlg(repBeam,
+                                                   bClassifier,
+                                                   classifier,
+                                                   rootFirst,
+                                                   dependencyRelations,
+                                                   generationSize,
+                                                   id);
             bestConfiguration = geneticAlg.getConfiguration();
             // log
             if (isOracle(bestConfiguration)) {
@@ -490,7 +531,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             if (canRightArc) {
                 float[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
-                    if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
+                    if (isNonProjective ||
+                        goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
                         float score = rightArcScores[dependency];
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
@@ -503,7 +545,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             if (canLeftArc) {
                 float[] leftArcScores = classifier.leftArcScores(features, true);
                 for (int dependency : dependencyRelations) {
-                    if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
+                    if (isNonProjective ||
+                        goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
                         float score = leftArcScores[dependency];
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
@@ -576,8 +619,11 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         if (configuration == null) {
             throw new Exception("The input of isOracle is null");
         }
-        return bClassifier.calcScore(true, configuration.sentence, rootFirst, configuration.actionHistory,
-                dependencyRelations) >= 0;
+        return bClassifier.calcScore(true,
+                                     configuration.sentence,
+                                     rootFirst,
+                                     configuration.actionHistory,
+                                     dependencyRelations) >= 0;
 
 
         // int lastAction = configuration.actionHistory.get(configuration.actionHistory.size() - 1);

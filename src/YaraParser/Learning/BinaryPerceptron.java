@@ -54,8 +54,8 @@ public class BinaryPerceptron {
 
     private BinaryPerceptron(HashMap<Object, Float>[] shiftFeatureAveragedWeights,
                              HashMap<Object, Float>[] reduceFeatureAveragedWeights,
-                             HashMap<Object, CompactArray>[] leftArcFeatureAveragedWeights, HashMap<Object,
-            CompactArray>[] rightArcFeatureAveragedWeights, int dependencySize) {
+                             HashMap<Object, CompactArray>[] leftArcFeatureAveragedWeights,
+                             HashMap<Object, CompactArray>[] rightArcFeatureAveragedWeights, int dependencySize) {
         this.shiftFeatureAveragedWeights = shiftFeatureAveragedWeights;
         this.reduceFeatureAveragedWeights = reduceFeatureAveragedWeights;
         this.leftArcFeatureAveragedWeights = leftArcFeatureAveragedWeights;
@@ -64,9 +64,11 @@ public class BinaryPerceptron {
     }
 
     public BinaryPerceptron(InfStruct infStruct) {
-        this(infStruct.shiftFeatureAveragedWeights, infStruct.reduceFeatureAveragedWeights,
-                infStruct.leftArcFeatureAveragedWeights, infStruct.rightArcFeatureAveragedWeights,
-                infStruct.dependencySize);
+        this(infStruct.shiftFeatureAveragedWeights,
+             infStruct.reduceFeatureAveragedWeights,
+             infStruct.leftArcFeatureAveragedWeights,
+             infStruct.rightArcFeatureAveragedWeights,
+             infStruct.dependencySize);
     }
 
     public void changeWeight(Actions actionType, int slotNum, Object featureName, int labelIndex, float change) {
@@ -83,7 +85,8 @@ public class BinaryPerceptron {
                 shiftFeatureAveragedWeights[slotNum].put(featureName, iteration * change);
             } else {
                 shiftFeatureAveragedWeights[slotNum].put(featureName,
-                        shiftFeatureAveragedWeights[slotNum].get(featureName) + iteration * change);
+                                                         shiftFeatureAveragedWeights[slotNum].get(featureName) +
+                                                         iteration * change);
             }
         } else if (actionType == Actions.Reduce) {
             if (!reduceFeatureWeights[slotNum].containsKey(featureName)) {
@@ -95,14 +98,21 @@ public class BinaryPerceptron {
                 reduceFeatureAveragedWeights[slotNum].put(featureName, iteration * change);
             } else {
                 reduceFeatureAveragedWeights[slotNum].put(featureName,
-                        reduceFeatureAveragedWeights[slotNum].get(featureName) + iteration * change);
+                                                          reduceFeatureAveragedWeights[slotNum].get(featureName) +
+                                                          iteration * change);
             }
         } else if (actionType == Actions.RightArc) {
-            changeFeatureWeight(rightArcFeatureWeights[slotNum], rightArcFeatureAveragedWeights[slotNum], featureName
-                    , labelIndex, change);
+            changeFeatureWeight(rightArcFeatureWeights[slotNum],
+                                rightArcFeatureAveragedWeights[slotNum],
+                                featureName,
+                                labelIndex,
+                                change);
         } else if (actionType == Actions.LeftArc) {
-            changeFeatureWeight(leftArcFeatureWeights[slotNum], leftArcFeatureAveragedWeights[slotNum], featureName,
-                    labelIndex, change);
+            changeFeatureWeight(leftArcFeatureWeights[slotNum],
+                                leftArcFeatureAveragedWeights[slotNum],
+                                featureName,
+                                labelIndex,
+                                change);
         }
     }
 
@@ -265,6 +275,9 @@ public class BinaryPerceptron {
             } else if (action == 1) {
                 score += reduceScore(features, decode);
                 ArcEager.reduce(currentState);
+                currentConfiguration.addAction(action);
+            } else if (action == 2) {
+                ArcEager.unShift(currentState);
                 currentConfiguration.addAction(action);
             } else if (action >= 3 + dependencyRelations.size()) {
                 int label = action - (3 + dependencyRelations.size());
